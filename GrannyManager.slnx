@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="GrannyManager.App/GrannyManager.App.csproj" />
+  <Project Path="GrannyManager.Core/GrannyManager.Core.csproj" />
+  <Project Path="GrannyManager.Data/GrannyManager.Data.csproj" />
+  <Project Path="GrannyManager.Security/GrannyManager.Security.csproj" />
+  <Project Path="GrannyManager.Tests/GrannyManager.Tests.csproj" />
+</Solution>
