@@ -306,9 +306,8 @@ Planned improvements include:
 - Full first public test build polish
 
 ## License
-This project is proprietary and all rights are reserved.
+This project is source-available but proprietary.
 
-No permission is granted to copy, modify, distribute, sublicense, sell, publish, host, or use this software or any portion of it in another project without prior written permission from the copyright holder.
+You may view the source code for personal review and evaluation, but you may not copy, modify, redistribute, repackage, sell, host, or use this software in another project without written permission.
 
-Copyright © 2026 Aaron Marine. All rights reserved.
-
+See the `LICENSE` file for full terms.
