@@ -3,18 +3,267 @@
         xmlns:vm="using:GrannyManager.App.Avalonia.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d"
+        d:DesignWidth="1280"
+        d:DesignHeight="800"
         x:Class="GrannyManager.App.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="GrannyManager.App.Avalonia">
+        Title="Home &amp; Family Finance Manager"
+        Width="1280"
+        Height="800"
+        MinWidth="1100"
+        MinHeight="700"
+        Background="#0B1624">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Grid ColumnDefinitions="260,*"
+          RowDefinitions="Auto,*"
+          Background="#0B1624">
 
+        <!-- Sidebar -->
+        <Border Grid.RowSpan="2"
+                Grid.Column="0"
+                Background="#101D2D"
+                BorderBrush="#26384F"
+                BorderThickness="0,0,1,0"
+                Padding="18">
+
+            <Grid RowDefinitions="Auto,*,Auto">
+
+                <!-- App title -->
+                <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,24">
+                    <TextBlock Text="Home &amp; Family"
+                               Foreground="White"
+                               FontSize="22"
+                               FontWeight="SemiBold"/>
+
+                    <TextBlock Text="Finance Manager"
+                               Foreground="White"
+                               FontSize="22"
+                               FontWeight="SemiBold"/>
+                </StackPanel>
+
+                <!-- Navigation -->
+                <StackPanel Grid.Row="1" Spacing="8">
+                    <Button Content="Dashboard"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="14,10"
+                            Background="#1A2B42"
+                            Foreground="White"/>
+
+                    <Button Content="Household"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="14,10"
+                            Background="Transparent"
+                            Foreground="#DDE7F3"/>
+
+                    <Button Content="Income"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="14,10"
+                            Background="Transparent"
+                            Foreground="#DDE7F3"/>
+
+                    <Button Content="Bills"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="14,10"
+                            Background="Transparent"
+                            Foreground="#DDE7F3"/>
+
+                    <Button Content="Allowance / Savings"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="14,10"
+                            Background="Transparent"
+                            Foreground="#DDE7F3"/>
+
+                    <Button Content="Assets"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="14,10"
+                            Background="Transparent"
+                            Foreground="#DDE7F3"/>
+
+                    <Button Content="Debts"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="14,10"
+                            Background="Transparent"
+                            Foreground="#DDE7F3"/>
+
+                    <Button Content="Documents"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="14,10"
+                            Background="Transparent"
+                            Foreground="#DDE7F3"/>
+
+                    <Button Content="Password Vault"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="14,10"
+                            Background="Transparent"
+                            Foreground="#DDE7F3"/>
+                </StackPanel>
+
+                <!-- Build / copyright footer -->
+                <StackPanel Grid.Row="2"
+                            Spacing="4"
+                            Margin="2,18,0,0">
+                    <TextBlock Text="Build: 0.10.0"
+                               Foreground="#6F8299"
+                               FontSize="12"/>
+
+                    <TextBlock Text="© 2026 Aaron Marine"
+                               Foreground="#6F8299"
+                               FontSize="12"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Top bar -->
+        <Border Grid.Row="0"
+                Grid.Column="1"
+                Background="#0F1B2A"
+                BorderBrush="#26384F"
+                BorderThickness="0,0,0,1"
+                Padding="22,16">
+
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+
+                <TextBox Grid.Column="0"
+                         Watermark="Search for documents, names, keywords, etc."
+                         FontSize="15"
+                         Height="42"
+                         Padding="14,8"
+                         Background="#17263A"
+                         Foreground="White"
+                         BorderBrush="#30445F"
+                         BorderThickness="1"/>
+
+                <Button Grid.Column="1"
+                        Content="Finance Wizard"
+                        Height="42"
+                        Padding="18,0"
+                        Background="#2E8B57"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Main content -->
+        <ScrollViewer Grid.Row="1"
+                      Grid.Column="1"
+                      Padding="28">
+
+            <StackPanel Spacing="22">
+
+                <!-- Summary bar retained at top -->
+                <Border Background="#122238"
+                        BorderBrush="#2A405A"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="0">
+
+                    <Grid ColumnDefinitions="0.95*,0.95*,1.25*,1.0*">
+
+                        <Border Grid.Column="0" Padding="18" BorderBrush="#243951" BorderThickness="0,0,1,0">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Monthly Income"
+                                           Foreground="#9EB4CC"
+                                           FontSize="13"/>
+                                <TextBlock Text="$0.00"
+                                           Foreground="White"
+                                           FontSize="26"
+                                           FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Padding="18" BorderBrush="#243951" BorderThickness="0,0,1,0">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Monthly Bills"
+                                           Foreground="#9EB4CC"
+                                           FontSize="13"/>
+                                <TextBlock Text="$0.00"
+                                           Foreground="White"
+                                           FontSize="26"
+                                           FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="2" Padding="18" BorderBrush="#243951" BorderThickness="0,0,1,0">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Allowance / Savings"
+                                           Foreground="#9EB4CC"
+                                           FontSize="13"/>
+                                <TextBlock Text="$0.00 / $0.00"
+                                           Foreground="White"
+                                           FontSize="24"
+                                           FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="3" Padding="18">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Remaining / Deficit"
+                                           Foreground="#9EB4CC"
+                                           FontSize="13"/>
+                                <TextBlock Text="$0.00"
+                                           Foreground="#D9534F"
+                                           FontSize="26"
+                                           FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Dashboard"
+                               Foreground="White"
+                               FontSize="30"
+                               FontWeight="SemiBold"/>
+
+                    <TextBlock Text="Avalonia shell is running. Next step: connect real case data, recent cases, and dashboard summaries."
+                               Foreground="#AFC0D3"
+                               FontSize="15"/>
+                </StackPanel>
+
+                <!-- Placeholder content -->
+                <Border Background="#122238"
+                        BorderBrush="#2A405A"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="22">
+
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="v0.10.0 Migration Status"
+                                   Foreground="White"
+                                   FontSize="20"
+                                   FontWeight="SemiBold"/>
+
+                        <TextBlock Text="The new tri-platform Avalonia shell is now replacing the original WinForms frame. This screen is intentionally static for the first shell pass."
+                                   Foreground="#C8D4E2"
+                                   FontSize="14"
+                                   TextWrapping="Wrap"/>
+
+                        <TextBlock Text="Next milestones: sidebar navigation commands, dashboard view model, recent cases, and case setup workflow."
+                                   Foreground="#8FA3BA"
+                                   FontSize="14"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+    </Grid>
 </Window>
