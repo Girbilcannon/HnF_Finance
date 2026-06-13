@@ -1,0 +1,364 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="GrannyManager.App.Avalonia.Views.Sections.HouseholdView">
+
+    <Grid ColumnDefinitions="360,*"
+          ColumnSpacing="18">
+
+        <!-- Household list -->
+        <Border Grid.Column="0"
+                Background="#122238"
+                BorderBrush="#2A405A"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="18">
+
+            <Grid RowDefinitions="Auto,Auto,*"
+                  RowSpacing="14">
+
+                <Grid Grid.Row="0"
+                      ColumnDefinitions="*,Auto"
+                      ColumnSpacing="10">
+                    <TextBlock Grid.Column="0"
+                               Text="Household Members"
+                               Foreground="White"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+
+                    <Button Grid.Column="1"
+                            Content="+ Add"
+                            Height="34"
+                            Padding="14,0"
+                            Background="#2E8B57"
+                            Foreground="White"
+                            FontWeight="SemiBold"
+                            IsEnabled="{Binding HasActiveCase}"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"/>
+                </Grid>
+
+                <TextBlock Grid.Row="1"
+                           Text="{Binding StatusMessage}"
+                           Foreground="#8FA3BA"
+                           FontSize="12"
+                           TextWrapping="Wrap"/>
+
+                <!-- Table-style list -->
+                <Border Grid.Row="2"
+                        Background="#0F1B2A"
+                        BorderBrush="#26384F"
+                        BorderThickness="1"
+                        CornerRadius="6">
+
+                    <Grid RowDefinitions="36,*">
+
+                        <!-- Header -->
+                        <Border Grid.Row="0"
+                                Background="#17263A"
+                                BorderBrush="#26384F"
+                                BorderThickness="0,0,0,1"
+                                Padding="12,0">
+                            <Grid ColumnDefinitions="1.25*,0.9*,1.0*"
+                                  ColumnSpacing="10">
+                                <TextBlock Grid.Column="0"
+                                           Text="Name"
+                                           Foreground="#9EB4CC"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+
+                                <TextBlock Grid.Column="1"
+                                           Text="Relationship"
+                                           Foreground="#9EB4CC"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+
+                                <TextBlock Grid.Column="2"
+                                           Text="Role"
+                                           Foreground="#9EB4CC"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <ListBox Grid.Row="1"
+                                 ItemsSource="{Binding People}"
+                                 SelectedItem="{Binding SelectedPerson}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Padding="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding RowBackground}"
+                                            BorderBrush="#26384F"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="12,0"
+                                            Height="40">
+                                        <Grid ColumnDefinitions="1.25*,0.9*,1.0*"
+                                              ColumnSpacing="10">
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding FullName}"
+                                                       Foreground="{Binding RowForeground}"
+                                                       FontSize="13"
+                                                       FontWeight="SemiBold"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Relationship}"
+                                                       Foreground="{Binding RelationshipForeground}"
+                                                       FontSize="13"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding Role}"
+                                                       Foreground="{Binding RoleForeground}"
+                                                       FontSize="13"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Selected profile -->
+        <Border Grid.Column="1"
+                Background="#122238"
+                BorderBrush="#2A405A"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="22">
+
+            <Grid RowDefinitions="Auto,*"
+                  RowSpacing="18">
+
+                <Grid Grid.Row="0"
+                      ColumnDefinitions="*,Auto,Auto,Auto"
+                      ColumnSpacing="10">
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding SelectedFullName}"
+                               Foreground="White"
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+
+                    <Button Grid.Column="1"
+                            Content="Edit"
+                            Height="36"
+                            Padding="16,0"
+                            Background="#1A2B42"
+                            Foreground="White"
+                            IsEnabled="{Binding HasSelectedPerson}"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"/>
+
+                    <Button Grid.Column="2"
+                            Content="Remove"
+                            Height="36"
+                            Padding="16,0"
+                            Background="#3A2430"
+                            Foreground="#FFD6DD"
+                            IsEnabled="{Binding HasSelectedPerson}"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"/>
+
+                    <Button Grid.Column="3"
+                            Content="Export PDF"
+                            Height="36"
+                            Padding="16,0"
+                            Background="#17263A"
+                            Foreground="#DDE7F3"
+                            IsEnabled="{Binding HasSelectedPerson}"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"/>
+                </Grid>
+
+                <ScrollViewer Grid.Row="1"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+
+                    <StackPanel Spacing="18">
+
+                        <!-- Basic Information -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Basic Information"
+                                       Foreground="White"
+                                       FontSize="17"
+                                       FontWeight="SemiBold"/>
+
+                            <Grid RowDefinitions="Auto,Auto,Auto"
+                                  RowSpacing="6">
+                                <Grid Grid.Row="0"
+                                      ColumnDefinitions="150,*">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Name:"
+                                               Foreground="White"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SelectedFullName}"
+                                               Foreground="#DDE7F3"/>
+                                </Grid>
+
+                                <Grid Grid.Row="1"
+                                      ColumnDefinitions="150,*">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Relationship:"
+                                               Foreground="White"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SelectedRelationship}"
+                                               Foreground="#DDE7F3"/>
+                                </Grid>
+
+                                <Grid Grid.Row="2"
+                                      ColumnDefinitions="150,*">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Role / Purpose:"
+                                               Foreground="White"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SelectedRole}"
+                                               Foreground="#DDE7F3"/>
+                                </Grid>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Household / Financial Load -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Household / Financial Load"
+                                       Foreground="White"
+                                       FontSize="17"
+                                       FontWeight="SemiBold"/>
+
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                                  RowSpacing="6">
+                                <Grid Grid.Row="0"
+                                      ColumnDefinitions="210,*">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Lives in household:"
+                                               Foreground="White"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SelectedLivesInHousehold}"
+                                               Foreground="#DDE7F3"/>
+                                </Grid>
+
+                                <Grid Grid.Row="1"
+                                      ColumnDefinitions="210,*">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Pays rent / contributes:"
+                                               Foreground="White"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SelectedPaysRent}"
+                                               Foreground="#DDE7F3"/>
+                                </Grid>
+
+                                <Grid Grid.Row="2"
+                                      ColumnDefinitions="210,*">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Uses household vehicle:"
+                                               Foreground="White"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SelectedUsesHouseholdVehicle}"
+                                               Foreground="#DDE7F3"/>
+                                </Grid>
+
+                                <Grid Grid.Row="3"
+                                      ColumnDefinitions="210,*">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Receives rides:"
+                                               Foreground="White"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SelectedReceivesRides}"
+                                               Foreground="#DDE7F3"/>
+                                </Grid>
+
+                                <Grid Grid.Row="4"
+                                      ColumnDefinitions="210,*">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Monthly contribution:"
+                                               Foreground="White"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SelectedMonthlyContribution}"
+                                               Foreground="#DDE7F3"/>
+                                </Grid>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Notes -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Notes"
+                                       Foreground="White"
+                                       FontSize="17"
+                                       FontWeight="SemiBold"/>
+
+                            <TextBlock Text="{Binding SelectedNotes}"
+                                       Foreground="#DDE7F3"
+                                       FontSize="14"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <!-- Record Info -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Record Info"
+                                       Foreground="White"
+                                       FontSize="17"
+                                       FontWeight="SemiBold"/>
+
+                            <Grid RowDefinitions="Auto,Auto"
+                                  RowSpacing="6">
+                                <Grid Grid.Row="0"
+                                      ColumnDefinitions="150,*">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Created UTC:"
+                                               Foreground="White"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SelectedCreatedUtc}"
+                                               Foreground="#DDE7F3"/>
+                                </Grid>
+
+                                <Grid Grid.Row="1"
+                                      ColumnDefinitions="150,*">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Updated UTC:"
+                                               Foreground="White"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SelectedUpdatedUtc}"
+                                               Foreground="#DDE7F3"/>
+                                </Grid>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

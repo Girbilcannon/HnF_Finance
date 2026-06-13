@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:GrannyManager.App.Avalonia.ViewModels"
+        xmlns:sections="using:GrannyManager.App.Avalonia.Views.Sections"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
@@ -12,8 +13,8 @@
         Title="Home &amp; Family Finance Manager"
         Width="1280"
         Height="800"
-        MinWidth="1100"
-        MinHeight="700"
+        MinWidth="1180"
+        MinHeight="760"
         Background="#0B1624">
 
     <Design.DataContext>
@@ -128,7 +129,7 @@
                 <StackPanel Grid.Row="2"
                             Spacing="4"
                             Margin="2,18,0,0">
-                    <TextBlock Text="Build: 0.10.0"
+                    <TextBlock Text="Build: 0.10.13"
                                Foreground="#6F8299"
                                FontSize="12"/>
 
@@ -171,86 +172,96 @@
             </Grid>
         </Border>
 
-        <!-- Main content -->
-        <ScrollViewer Grid.Row="1"
-                      Grid.Column="1"
-                      Padding="28">
+        <!-- Main content frame -->
+        <Grid Grid.Row="1"
+              Grid.Column="1"
+              RowDefinitions="Auto,Auto,*"
+              Margin="28">
 
-            <StackPanel Spacing="22">
+            <!-- Summary bar retained at top -->
+            <Border Grid.Row="0"
+                    Background="#122238"
+                    BorderBrush="#2A405A"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="0">
 
-                <!-- Summary bar retained at top -->
-                <Border Background="#122238"
-                        BorderBrush="#2A405A"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="0">
+                <Grid ColumnDefinitions="0.95*,0.95*,1.25*,1.0*">
 
-                    <Grid ColumnDefinitions="0.95*,0.95*,1.25*,1.0*">
+                    <Border Grid.Column="0" Padding="16,13" BorderBrush="#243951" BorderThickness="0,0,1,0">
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="Monthly Income"
+                                       Foreground="#9EB4CC"
+                                       FontSize="13"/>
+                            <TextBlock Text="$0.00"
+                                       Foreground="White"
+                                       FontSize="24"
+                                       FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
 
-                        <Border Grid.Column="0" Padding="18" BorderBrush="#243951" BorderThickness="0,0,1,0">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="Monthly Income"
-                                           Foreground="#9EB4CC"
-                                           FontSize="13"/>
-                                <TextBlock Text="$0.00"
-                                           Foreground="White"
-                                           FontSize="26"
-                                           FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </Border>
+                    <Border Grid.Column="1" Padding="16,13" BorderBrush="#243951" BorderThickness="0,0,1,0">
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="Monthly Bills"
+                                       Foreground="#9EB4CC"
+                                       FontSize="13"/>
+                            <TextBlock Text="$0.00"
+                                       Foreground="White"
+                                       FontSize="24"
+                                       FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
 
-                        <Border Grid.Column="1" Padding="18" BorderBrush="#243951" BorderThickness="0,0,1,0">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="Monthly Bills"
-                                           Foreground="#9EB4CC"
-                                           FontSize="13"/>
-                                <TextBlock Text="$0.00"
-                                           Foreground="White"
-                                           FontSize="26"
-                                           FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </Border>
+                    <Border Grid.Column="2" Padding="16,13" BorderBrush="#243951" BorderThickness="0,0,1,0">
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="Allowance / Savings"
+                                       Foreground="#9EB4CC"
+                                       FontSize="13"/>
+                            <TextBlock Text="$0.00 / $0.00"
+                                       Foreground="White"
+                                       FontSize="23"
+                                       FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
 
-                        <Border Grid.Column="2" Padding="18" BorderBrush="#243951" BorderThickness="0,0,1,0">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="Allowance / Savings"
-                                           Foreground="#9EB4CC"
-                                           FontSize="13"/>
-                                <TextBlock Text="$0.00 / $0.00"
-                                           Foreground="White"
-                                           FontSize="24"
-                                           FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </Border>
+                    <Border Grid.Column="3" Padding="16,13">
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="Remaining / Deficit"
+                                       Foreground="#9EB4CC"
+                                       FontSize="13"/>
+                            <TextBlock Text="$0.00"
+                                       Foreground="#D9534F"
+                                       FontSize="24"
+                                       FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
 
-                        <Border Grid.Column="3" Padding="18">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="Remaining / Deficit"
-                                           Foreground="#9EB4CC"
-                                           FontSize="13"/>
-                                <TextBlock Text="$0.00"
-                                           Foreground="#D9534F"
-                                           FontSize="26"
-                                           FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-                </Border>
+            <!-- Current section heading -->
+            <StackPanel Grid.Row="1"
+                        Spacing="5"
+                        Margin="0,20,0,18">
+                <TextBlock Text="{Binding CurrentPageTitle}"
+                           Foreground="White"
+                           FontSize="30"
+                           FontWeight="SemiBold"/>
 
-                <StackPanel Spacing="6">
-                    <TextBlock Text="{Binding CurrentPageTitle}"
-                               Foreground="White"
-                               FontSize="30"
-                               FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding CurrentPageSubtitle}"
+                           Foreground="#AFC0D3"
+                           FontSize="15"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
 
-                    <TextBlock Text="{Binding CurrentPageSubtitle}"
-                               Foreground="#AFC0D3"
-                               FontSize="15"
-                               TextWrapping="Wrap"/>
-                </StackPanel>
+            <!-- Section body -->
+            <Grid Grid.Row="2">
 
-                <!-- Placeholder content -->
-                <Border Background="#122238"
+                <Grid IsVisible="{Binding IsHouseholdSelected}">
+                    <sections:HouseholdView DataContext="{Binding Household}"/>
+                </Grid>
+
+                <Border IsVisible="{Binding IsGenericPlaceholderVisible}"
+                        Background="#122238"
                         BorderBrush="#2A405A"
                         BorderThickness="1"
                         CornerRadius="8"
@@ -273,9 +284,7 @@
                                    TextWrapping="Wrap"/>
                     </StackPanel>
                 </Border>
-
-            </StackPanel>
-        </ScrollViewer>
-
+            </Grid>
+        </Grid>
     </Grid>
 </Window>

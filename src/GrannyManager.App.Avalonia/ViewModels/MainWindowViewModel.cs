@@ -1,10 +1,25 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GrannyManager.Application.Services;
+using GrannyManager.Application.State;
+using GrannyManager.App.Avalonia.ViewModels.Sections;
 
 namespace GrannyManager.App.Avalonia.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase
     {
+        private readonly ActiveCaseState _activeCaseState;
+
+        public MainWindowViewModel()
+        {
+            _activeCaseState = new ActiveCaseState();
+            var householdService = new HouseholdService(_activeCaseState);
+
+            Household = new HouseholdViewModel(_activeCaseState, householdService);
+        }
+
+        public HouseholdViewModel Household { get; }
+
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(CurrentPageTitle))]
         [NotifyPropertyChangedFor(nameof(CurrentPageSubtitle))]
@@ -19,6 +34,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
         [NotifyPropertyChangedFor(nameof(IsDebtsSelected))]
         [NotifyPropertyChangedFor(nameof(IsDocumentsSelected))]
         [NotifyPropertyChangedFor(nameof(IsPasswordVaultSelected))]
+        [NotifyPropertyChangedFor(nameof(IsGenericPlaceholderVisible))]
         private string _currentSection = "Dashboard";
 
         public string CurrentPageTitle => CurrentSection switch
@@ -49,7 +65,6 @@ namespace GrannyManager.App.Avalonia.ViewModels
 
         public string CurrentPageCardTitle => CurrentSection switch
         {
-            "Household" => "Household Placeholder",
             "Income" => "Income Placeholder",
             "Bills" => "Bills Placeholder",
             "AllowanceSavings" => "Allowance / Savings Placeholder",
@@ -57,12 +72,11 @@ namespace GrannyManager.App.Avalonia.ViewModels
             "Debts" => "Debts Placeholder",
             "Documents" => "Documents Placeholder",
             "PasswordVault" => "Password Vault Placeholder",
-            _ => "v0.10.0 Migration Status"
+            _ => "v0.10.9 Migration Status"
         };
 
         public string CurrentPageBody => CurrentSection switch
         {
-            "Household" => "This will become the Avalonia replacement for the People page, renamed to Household in the navigation.",
             "Income" => "This section will connect to the existing income models, repositories, and monthly calculation logic.",
             "Bills" => "This section will replace the WinForms Bills page with a cleaner list/profile/edit workflow.",
             "AllowanceSavings" => "This section will manage allowance and savings entries while the top summary bar remains visible.",
@@ -82,6 +96,8 @@ namespace GrannyManager.App.Avalonia.ViewModels
         public bool IsDebtsSelected => CurrentSection == "Debts";
         public bool IsDocumentsSelected => CurrentSection == "Documents";
         public bool IsPasswordVaultSelected => CurrentSection == "PasswordVault";
+
+        public bool IsGenericPlaceholderVisible => CurrentSection != "Household";
 
         [RelayCommand]
         private void Navigate(string section)
