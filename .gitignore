@@ -1,0 +1,29 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build output
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+
+# Test output
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Publish/output artifacts
+publish/
+artifacts/
+
+# Logs
+*.log
+
+# OS junk
+.DS_Store
+Thumbs.db

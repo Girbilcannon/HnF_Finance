@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AssemblyName>FinanceManager.Application</AssemblyName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\GrannyManager.Core\GrannyManager.Core.csproj" />
+		<ProjectReference Include="..\GrannyManager.Data\GrannyManager.Data.csproj" />
+		<ProjectReference Include="..\GrannyManager.Security\GrannyManager.Security.csproj" />
+	</ItemGroup>
+
+</Project>

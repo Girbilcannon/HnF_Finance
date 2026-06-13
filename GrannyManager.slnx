@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="legacy/GrannyManager.App.WinForms/GrannyManager.App.WinForms.csproj" />
+  <Project Path="src/GrannyManager.App.Avalonia/GrannyManager.App.Avalonia.csproj" Id="ca8f2d50-d8c1-4dd4-b1ed-8ee1d36905b9" />
+  <Project Path="src/GrannyManager.Application/GrannyManager.Application.csproj" Id="fefd8a9b-f51b-460f-89cf-678b0fddab00" />
+  <Project Path="src/GrannyManager.Core/GrannyManager.Core.csproj" />
+  <Project Path="src/GrannyManager.Data/GrannyManager.Data.csproj" />
+  <Project Path="src/GrannyManager.Security/GrannyManager.Security.csproj" />
+  <Project Path="tests/GrannyManager.Tests/GrannyManager.Tests.csproj" />
+</Solution>

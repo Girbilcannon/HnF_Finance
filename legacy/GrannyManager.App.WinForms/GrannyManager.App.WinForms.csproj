@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<AssemblyName>FinanceManager.App.WinForms</AssemblyName>
+		<RootNamespace>FinanceManager.App.WinForms</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Content Include="Help\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\GrannyManager.Core\GrannyManager.Core.csproj" />
+		<ProjectReference Include="..\..\src\GrannyManager.Data\GrannyManager.Data.csproj" />
+		<ProjectReference Include="..\..\src\GrannyManager.Security\GrannyManager.Security.csproj" />
+	</ItemGroup>
+
+</Project>
