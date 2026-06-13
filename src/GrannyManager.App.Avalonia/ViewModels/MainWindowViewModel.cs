@@ -13,12 +13,21 @@ namespace GrannyManager.App.Avalonia.ViewModels
         public MainWindowViewModel()
         {
             _activeCaseState = new ActiveCaseState();
+
             var householdService = new HouseholdService(_activeCaseState);
+            var incomeService = new IncomeService(_activeCaseState);
+            var billsService = new BillsService(_activeCaseState);
 
             Household = new HouseholdViewModel(_activeCaseState, householdService);
+            Income = new IncomeViewModel(_activeCaseState, incomeService);
+            Bills = new BillsViewModel(_activeCaseState, billsService);
         }
 
         public HouseholdViewModel Household { get; }
+
+        public IncomeViewModel Income { get; }
+
+        public BillsViewModel Bills { get; }
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(CurrentPageTitle))]
@@ -40,8 +49,8 @@ namespace GrannyManager.App.Avalonia.ViewModels
         public string CurrentPageTitle => CurrentSection switch
         {
             "Household" => "Household",
-            "Income" => "Income",
-            "Bills" => "Bills",
+            "Income" => "Income Sources",
+            "Bills" => "Bills / Spending",
             "AllowanceSavings" => "Allowance / Savings",
             "Assets" => "Assets",
             "Debts" => "Debts",
@@ -53,8 +62,8 @@ namespace GrannyManager.App.Avalonia.ViewModels
         public string CurrentPageSubtitle => CurrentSection switch
         {
             "Household" => "Manage household members, relationships, roles, notes, and profile details.",
-            "Income" => "Track income sources, payment frequency, tax status, and monthly income estimates.",
-            "Bills" => "Track recurring bills, payment responsibility, due dates, and spending obligations.",
+            "Income" => "Track recurring and irregular income, then normalize each source into a monthly estimate.",
+            "Bills" => "Track recurring bills, spending estimates, payment responsibility, and receipt-based fuel/grocery averages.",
             "AllowanceSavings" => "Track spending allowance and planned savings as separate monthly buckets.",
             "Assets" => "Track vehicles, property, accounts, investments, crypto, and other valuable assets.",
             "Debts" => "Track debts, payment status, balances, and priority payoff information.",
@@ -65,8 +74,6 @@ namespace GrannyManager.App.Avalonia.ViewModels
 
         public string CurrentPageCardTitle => CurrentSection switch
         {
-            "Income" => "Income Placeholder",
-            "Bills" => "Bills Placeholder",
             "AllowanceSavings" => "Allowance / Savings Placeholder",
             "Assets" => "Assets Placeholder",
             "Debts" => "Debts Placeholder",
@@ -77,8 +84,6 @@ namespace GrannyManager.App.Avalonia.ViewModels
 
         public string CurrentPageBody => CurrentSection switch
         {
-            "Income" => "This section will connect to the existing income models, repositories, and monthly calculation logic.",
-            "Bills" => "This section will replace the WinForms Bills page with a cleaner list/profile/edit workflow.",
             "AllowanceSavings" => "This section will manage allowance and savings entries while the top summary bar remains visible.",
             "Assets" => "This section will host the new Assets workflow for vehicles, property, accounts, investments, and valuables.",
             "Debts" => "This section will track outstanding debts and repayment priorities.",
@@ -97,7 +102,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
         public bool IsDocumentsSelected => CurrentSection == "Documents";
         public bool IsPasswordVaultSelected => CurrentSection == "PasswordVault";
 
-        public bool IsGenericPlaceholderVisible => CurrentSection != "Household";
+        public bool IsGenericPlaceholderVisible => CurrentSection != "Household" && CurrentSection != "Income" && CurrentSection != "Bills";
 
         [RelayCommand]
         private void Navigate(string section)
