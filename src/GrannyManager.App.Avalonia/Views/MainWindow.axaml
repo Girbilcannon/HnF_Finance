@@ -20,6 +20,26 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
+    <Window.Styles>
+        <Style Selector="Button.nav-button">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="14,10"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#DDE7F3"/>
+        </Style>
+
+        <Style Selector="Button.nav-button:pointerover">
+            <Setter Property="Background" Value="#17263A"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <Style Selector="Button.nav-button.selected">
+            <Setter Property="Background" Value="#1A2B42"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </Window.Styles>
+
     <Grid ColumnDefinitions="260,*"
           RowDefinitions="Auto,*"
           Background="#0B1624">
@@ -50,67 +70,58 @@
                 <!-- Navigation -->
                 <StackPanel Grid.Row="1" Spacing="8">
                     <Button Content="Dashboard"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Padding="14,10"
-                            Background="#1A2B42"
-                            Foreground="White"/>
+                            Classes="nav-button"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Dashboard"
+                            Classes.selected="{Binding IsDashboardSelected}"/>
 
                     <Button Content="Household"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Padding="14,10"
-                            Background="Transparent"
-                            Foreground="#DDE7F3"/>
+                            Classes="nav-button"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Household"
+                            Classes.selected="{Binding IsHouseholdSelected}"/>
 
                     <Button Content="Income"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Padding="14,10"
-                            Background="Transparent"
-                            Foreground="#DDE7F3"/>
+                            Classes="nav-button"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Income"
+                            Classes.selected="{Binding IsIncomeSelected}"/>
 
                     <Button Content="Bills"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Padding="14,10"
-                            Background="Transparent"
-                            Foreground="#DDE7F3"/>
+                            Classes="nav-button"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Bills"
+                            Classes.selected="{Binding IsBillsSelected}"/>
 
                     <Button Content="Allowance / Savings"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Padding="14,10"
-                            Background="Transparent"
-                            Foreground="#DDE7F3"/>
+                            Classes="nav-button"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="AllowanceSavings"
+                            Classes.selected="{Binding IsAllowanceSavingsSelected}"/>
 
                     <Button Content="Assets"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Padding="14,10"
-                            Background="Transparent"
-                            Foreground="#DDE7F3"/>
+                            Classes="nav-button"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Assets"
+                            Classes.selected="{Binding IsAssetsSelected}"/>
 
                     <Button Content="Debts"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Padding="14,10"
-                            Background="Transparent"
-                            Foreground="#DDE7F3"/>
+                            Classes="nav-button"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Debts"
+                            Classes.selected="{Binding IsDebtsSelected}"/>
 
                     <Button Content="Documents"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Padding="14,10"
-                            Background="Transparent"
-                            Foreground="#DDE7F3"/>
+                            Classes="nav-button"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Documents"
+                            Classes.selected="{Binding IsDocumentsSelected}"/>
 
                     <Button Content="Password Vault"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Padding="14,10"
-                            Background="Transparent"
-                            Foreground="#DDE7F3"/>
+                            Classes="nav-button"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="PasswordVault"
+                            Classes.selected="{Binding IsPasswordVaultSelected}"/>
                 </StackPanel>
 
                 <!-- Build / copyright footer -->
@@ -227,14 +238,15 @@
                 </Border>
 
                 <StackPanel Spacing="6">
-                    <TextBlock Text="Dashboard"
+                    <TextBlock Text="{Binding CurrentPageTitle}"
                                Foreground="White"
                                FontSize="30"
                                FontWeight="SemiBold"/>
 
-                    <TextBlock Text="Avalonia shell is running. Next step: connect real case data, recent cases, and dashboard summaries."
+                    <TextBlock Text="{Binding CurrentPageSubtitle}"
                                Foreground="#AFC0D3"
-                               FontSize="15"/>
+                               FontSize="15"
+                               TextWrapping="Wrap"/>
                 </StackPanel>
 
                 <!-- Placeholder content -->
@@ -245,17 +257,17 @@
                         Padding="22">
 
                     <StackPanel Spacing="12">
-                        <TextBlock Text="v0.10.0 Migration Status"
+                        <TextBlock Text="{Binding CurrentPageCardTitle}"
                                    Foreground="White"
                                    FontSize="20"
                                    FontWeight="SemiBold"/>
 
-                        <TextBlock Text="The new tri-platform Avalonia shell is now replacing the original WinForms frame. This screen is intentionally static for the first shell pass."
+                        <TextBlock Text="{Binding CurrentPageBody}"
                                    Foreground="#C8D4E2"
                                    FontSize="14"
                                    TextWrapping="Wrap"/>
 
-                        <TextBlock Text="Next milestones: sidebar navigation commands, dashboard view model, recent cases, and case setup workflow."
+                        <TextBlock Text="This placeholder confirms the shell navigation is working. The next step is replacing each placeholder with a real page view."
                                    Foreground="#8FA3BA"
                                    FontSize="14"
                                    TextWrapping="Wrap"/>
