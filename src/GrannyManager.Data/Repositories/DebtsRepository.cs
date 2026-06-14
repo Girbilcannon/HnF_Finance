@@ -103,7 +103,6 @@ SELECT $Id;";
         command.ExecuteNonQuery();
     }
 
-
     private void EnsureDebtsTable()
     {
         using var connection = OpenConnection();
@@ -123,7 +122,7 @@ CREATE TABLE IF NOT EXISTS Debts (
     PaymentTracking TEXT NOT NULL DEFAULT 'Not Linked',
     LinkedBillId INTEGER NOT NULL DEFAULT 0,
     LinkedBillName TEXT NOT NULL DEFAULT '',
-    Status TEXT NOT NULL DEFAULT 'Open',
+    Status TEXT NOT NULL DEFAULT 'Current',
     Priority TEXT NOT NULL DEFAULT 'Normal',
     IsActive INTEGER NOT NULL DEFAULT 1,
     Notes TEXT NOT NULL DEFAULT '',
@@ -134,51 +133,6 @@ CREATE TABLE IF NOT EXISTS Debts (
 CREATE INDEX IF NOT EXISTS IX_Debts_DebtName ON Debts(DebtName);
 CREATE INDEX IF NOT EXISTS IX_Debts_IsActive ON Debts(IsActive);";
         command.ExecuteNonQuery();
-
-        EnsureColumn(connection, "Debts", "DebtName", "TEXT NOT NULL DEFAULT ''");
-        EnsureColumn(connection, "Debts", "DebtType", "TEXT NOT NULL DEFAULT ''");
-        EnsureColumn(connection, "Debts", "CreditorCollector", "TEXT NOT NULL DEFAULT ''");
-        EnsureColumn(connection, "Debts", "CurrentBalance", "REAL NOT NULL DEFAULT 0");
-        EnsureColumn(connection, "Debts", "MinimumPayment", "REAL NOT NULL DEFAULT 0");
-        EnsureColumn(connection, "Debts", "PaymentFrequency", "TEXT NOT NULL DEFAULT 'Monthly'");
-        EnsureColumn(connection, "Debts", "DueDate", "TEXT NOT NULL DEFAULT ''");
-        EnsureColumn(connection, "Debts", "ResponsibilityOwner", "TEXT NOT NULL DEFAULT ''");
-        EnsureColumn(connection, "Debts", "PaidBy", "TEXT NOT NULL DEFAULT ''");
-        EnsureColumn(connection, "Debts", "PaymentTracking", "TEXT NOT NULL DEFAULT 'Not Linked'");
-        EnsureColumn(connection, "Debts", "LinkedBillId", "INTEGER NOT NULL DEFAULT 0");
-        EnsureColumn(connection, "Debts", "LinkedBillName", "TEXT NOT NULL DEFAULT ''");
-        EnsureColumn(connection, "Debts", "Status", "TEXT NOT NULL DEFAULT 'Open'");
-        EnsureColumn(connection, "Debts", "Priority", "TEXT NOT NULL DEFAULT 'Normal'");
-        EnsureColumn(connection, "Debts", "IsActive", "INTEGER NOT NULL DEFAULT 1");
-        EnsureColumn(connection, "Debts", "Notes", "TEXT NOT NULL DEFAULT ''");
-        EnsureColumn(connection, "Debts", "CreatedUtc", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP");
-        EnsureColumn(connection, "Debts", "UpdatedUtc", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP");
-    }
-
-    private static void EnsureColumn(SqliteConnection connection, string tableName, string columnName, string columnDefinition)
-    {
-        using var checkCommand = connection.CreateCommand();
-        checkCommand.CommandText = $"PRAGMA table_info({tableName});";
-
-        var exists = false;
-        using (var reader = checkCommand.ExecuteReader())
-        {
-            while (reader.Read())
-            {
-                if (string.Equals(reader.GetString(1), columnName, StringComparison.OrdinalIgnoreCase))
-                {
-                    exists = true;
-                    break;
-                }
-            }
-        }
-
-        if (exists)
-            return;
-
-        using var alterCommand = connection.CreateCommand();
-        alterCommand.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition};";
-        alterCommand.ExecuteNonQuery();
     }
 
     private SqliteConnection OpenConnection()
@@ -195,15 +149,15 @@ CREATE INDEX IF NOT EXISTS IX_Debts_IsActive ON Debts(IsActive);";
         command.Parameters.AddWithValue("$CreditorCollector", item.CreditorCollector.Trim());
         command.Parameters.AddWithValue("$CurrentBalance", item.CurrentBalance);
         command.Parameters.AddWithValue("$MinimumPayment", item.MinimumPayment);
-        command.Parameters.AddWithValue("$PaymentFrequency", item.PaymentFrequency.Trim());
+        command.Parameters.AddWithValue("$PaymentFrequency", string.IsNullOrWhiteSpace(item.PaymentFrequency) ? "Monthly" : item.PaymentFrequency.Trim());
         command.Parameters.AddWithValue("$DueDate", item.DueDate.Trim());
         command.Parameters.AddWithValue("$ResponsibilityOwner", item.ResponsibilityOwner.Trim());
         command.Parameters.AddWithValue("$PaidBy", item.PaidBy.Trim());
-        command.Parameters.AddWithValue("$PaymentTracking", item.PaymentTracking.Trim());
+        command.Parameters.AddWithValue("$PaymentTracking", string.IsNullOrWhiteSpace(item.PaymentTracking) ? "Not Linked" : item.PaymentTracking.Trim());
         command.Parameters.AddWithValue("$LinkedBillId", item.LinkedBillId);
         command.Parameters.AddWithValue("$LinkedBillName", item.LinkedBillName.Trim());
-        command.Parameters.AddWithValue("$Status", item.Status.Trim());
-        command.Parameters.AddWithValue("$Priority", item.Priority.Trim());
+        command.Parameters.AddWithValue("$Status", string.IsNullOrWhiteSpace(item.Status) ? "Current" : item.Status.Trim());
+        command.Parameters.AddWithValue("$Priority", string.IsNullOrWhiteSpace(item.Priority) ? "Normal" : item.Priority.Trim());
         command.Parameters.AddWithValue("$IsActive", item.IsActive ? 1 : 0);
         command.Parameters.AddWithValue("$Notes", item.Notes.Trim());
         command.Parameters.AddWithValue("$CreatedUtc", item.CreatedUtc.ToString("O"));
@@ -218,8 +172,8 @@ CREATE INDEX IF NOT EXISTS IX_Debts_IsActive ON Debts(IsActive);";
             DebtName = reader.GetString(1),
             DebtType = reader.GetString(2),
             CreditorCollector = reader.GetString(3),
-            CurrentBalance = ReadDecimal(reader, 4),
-            MinimumPayment = ReadDecimal(reader, 5),
+            CurrentBalance = Convert.ToDecimal(reader.GetDouble(4)),
+            MinimumPayment = Convert.ToDecimal(reader.GetDouble(5)),
             PaymentFrequency = reader.GetString(6),
             DueDate = reader.GetString(7),
             ResponsibilityOwner = reader.GetString(8),
@@ -234,13 +188,5 @@ CREATE INDEX IF NOT EXISTS IX_Debts_IsActive ON Debts(IsActive);";
             CreatedUtc = DateTime.TryParse(reader.GetString(17), out var created) ? created : DateTime.UtcNow,
             UpdatedUtc = DateTime.TryParse(reader.GetString(18), out var updated) ? updated : DateTime.UtcNow
         };
-    }
-
-    private static decimal ReadDecimal(SqliteDataReader reader, int ordinal)
-    {
-        if (reader.IsDBNull(ordinal))
-            return 0m;
-
-        return Convert.ToDecimal(reader.GetDouble(ordinal));
     }
 }

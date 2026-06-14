@@ -92,7 +92,6 @@ SELECT $Id;";
         command.ExecuteNonQuery();
     }
 
-
     private void EnsureDocumentRecordsTable()
     {
         using var connection = OpenConnection();

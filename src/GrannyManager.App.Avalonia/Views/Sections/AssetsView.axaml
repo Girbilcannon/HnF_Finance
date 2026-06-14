@@ -1,0 +1,322 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="GrannyManager.App.Avalonia.Views.Sections.AssetsView">
+
+    <Grid ColumnDefinitions="430,*"
+          ColumnSpacing="18">
+
+        <!-- Assets list -->
+        <Border Grid.Column="0"
+                Background="#122238"
+                BorderBrush="#2A405A"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="18">
+
+            <Grid RowDefinitions="Auto,Auto,*"
+                  RowSpacing="14">
+
+                <Grid Grid.Row="0"
+                      ColumnDefinitions="*,Auto"
+                      ColumnSpacing="10">
+                    <TextBlock Grid.Column="0"
+                               Text="Assets"
+                               Foreground="White"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+
+                    <Button Grid.Column="1"
+                            Content="+ Add"
+                            Height="34"
+                            Padding="14,0"
+                            Background="#2E8B57"
+                            Foreground="White"
+                            FontWeight="SemiBold"
+                            IsEnabled="{Binding HasActiveCase}"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"/>
+                </Grid>
+
+                <TextBlock Grid.Row="1"
+                           Text="{Binding StatusMessage}"
+                           Foreground="#8FA3BA"
+                           FontSize="12"
+                           TextWrapping="Wrap"/>
+
+                <Border Grid.Row="2"
+                        Background="#0F1B2A"
+                        BorderBrush="#26384F"
+                        BorderThickness="1"
+                        CornerRadius="6">
+
+                    <Grid RowDefinitions="36,*">
+
+                        <Border Grid.Row="0"
+                                Background="#17263A"
+                                BorderBrush="#26384F"
+                                BorderThickness="0,0,0,1"
+                                Padding="12,0">
+                            <Grid ColumnDefinitions="1.25*,0.75*,0.8*,0.9*"
+                                  ColumnSpacing="10">
+                                <TextBlock Grid.Column="0" Text="Asset" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="Type" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="Value / Balance" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="3" Text="Status" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <ListBox Grid.Row="1"
+                                 ItemsSource="{Binding Assets}"
+                                 SelectedItem="{Binding SelectedAsset}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Padding="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding RowBackground}"
+                                            BorderBrush="#26384F"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="12,0"
+                                            Height="40">
+                                        <Grid ColumnDefinitions="1.25*,0.75*,0.8*,0.9*"
+                                              ColumnSpacing="10">
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding AssetName}"
+                                                       Foreground="{Binding RowForeground}"
+                                                       FontSize="13"
+                                                       FontWeight="SemiBold"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding AssetType}"
+                                                       Foreground="{Binding MutedForeground}"
+                                                       FontSize="13"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding ValueOrBalance}"
+                                                       Foreground="{Binding MutedForeground}"
+                                                       FontSize="13"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <TextBlock Grid.Column="3"
+                                                       Text="{Binding Status}"
+                                                       Foreground="{Binding MutedForeground}"
+                                                       FontSize="13"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Selected asset profile -->
+        <Border Grid.Column="1"
+                Background="#122238"
+                BorderBrush="#2A405A"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="22">
+
+            <Grid RowDefinitions="Auto,*"
+                  RowSpacing="18">
+
+                <WrapPanel Grid.Row="0"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Stretch"
+                           VerticalAlignment="Top">
+
+                    <TextBlock Text="{Binding SelectedAssetName}"
+                               Foreground="White"
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               MinWidth="300"
+                               MaxWidth="460"
+                               Margin="0,0,18,10"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis"
+                               VerticalAlignment="Center"/>
+
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Spacing="10"
+                                Margin="0,0,0,10">
+                        <Button Content="Edit"
+                                Height="36"
+                                Padding="16,0"
+                                Background="#1A2B42"
+                                Foreground="White"
+                                IsEnabled="{Binding HasSelectedAsset}"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"/>
+
+                        <Button Content="Remove"
+                                Height="36"
+                                Padding="16,0"
+                                Background="#3A2430"
+                                Foreground="#FFD6DD"
+                                IsEnabled="{Binding HasSelectedAsset}"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"/>
+
+                        <Button Content="Export PDF"
+                                Height="36"
+                                Padding="16,0"
+                                Background="#17263A"
+                                Foreground="#DDE7F3"
+                                IsEnabled="{Binding HasSelectedAsset}"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"/>
+                    </StackPanel>
+                </WrapPanel>
+
+                <ScrollViewer Grid.Row="1"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+
+                    <StackPanel Spacing="18">
+
+                        <!-- Basic Information -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Basic Information" Foreground="White" FontSize="17" FontWeight="SemiBold"/>
+
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                                  RowSpacing="6">
+                                <Grid Grid.Row="0" ColumnDefinitions="190,*">
+                                    <TextBlock Grid.Column="0" Text="Asset:" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedAssetName}" Foreground="#DDE7F3"/>
+                                </Grid>
+                                <Grid Grid.Row="1" ColumnDefinitions="190,*">
+                                    <TextBlock Grid.Column="0" Text="Type:" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedAssetType}" Foreground="#DDE7F3"/>
+                                </Grid>
+                                <Grid Grid.Row="2" ColumnDefinitions="190,*">
+                                    <TextBlock Grid.Column="0" Text="Owner / responsible:" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedOwner}" Foreground="#DDE7F3"/>
+                                </Grid>
+                                <Grid Grid.Row="3" ColumnDefinitions="190,*">
+                                    <TextBlock Grid.Column="0" Text="Estimated value:" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedEstimatedValue}" Foreground="#DDE7F3"/>
+                                </Grid>
+                                <Grid Grid.Row="4" ColumnDefinitions="190,*">
+                                    <TextBlock Grid.Column="0" Text="Status:" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedStatus}" Foreground="#DDE7F3"/>
+                                </Grid>
+                                <Grid Grid.Row="5" ColumnDefinitions="190,*">
+                                    <TextBlock Grid.Column="0" Text="Active:" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedActive}" Foreground="#DDE7F3"/>
+                                </Grid>
+                                <Grid Grid.Row="6" ColumnDefinitions="190,*">
+                                    <TextBlock Grid.Column="0" Text="Location / institution:" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedLocationOrInstitution}" Foreground="#DDE7F3"/>
+                                </Grid>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Vehicle Information -->
+                        <StackPanel Spacing="8" IsVisible="{Binding IsVehicleSelected}">
+                            <TextBlock Text="Vehicle Information" Foreground="White" FontSize="17" FontWeight="SemiBold"/>
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="6">
+                                <Grid Grid.Row="0" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Year:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedVehicleYear}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="1" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Make:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedVehicleMake}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="2" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Model:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedVehicleModel}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="3" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="VIN:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedVehicleVin}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="4" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="License plate:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedVehiclePlate}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="5" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Registration status:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedRegistrationStatus}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="6" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Registration due:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedRegistrationDueDate}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="7" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Mileage:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedMileage}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="8" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Estimated MPG:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedMpg}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="9" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Primary driver:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedPrimaryDriver}" Foreground="#DDE7F3"/></Grid>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Property Information -->
+                        <StackPanel Spacing="8" IsVisible="{Binding IsPropertySelected}">
+                            <TextBlock Text="Property Information" Foreground="White" FontSize="17" FontWeight="SemiBold"/>
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
+                                <Grid Grid.Row="0" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Property type:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedPropertyType}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="1" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Address:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedPropertyAddress}" Foreground="#DDE7F3" TextWrapping="Wrap"/></Grid>
+                                <Grid Grid.Row="2" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Occupants / users:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedOccupants}" Foreground="#DDE7F3" TextWrapping="Wrap"/></Grid>
+                                <Grid Grid.Row="3" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="HOA / management:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedHoaOrManagement}" Foreground="#DDE7F3"/></Grid>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Bank Information -->
+                        <StackPanel Spacing="8" IsVisible="{Binding IsBankSelected}">
+                            <TextBlock Text="Bank / Cash Account Information" Foreground="White" FontSize="17" FontWeight="SemiBold"/>
+                            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="6">
+                                <Grid Grid.Row="0" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Institution:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedInstitutionName}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="1" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Account nickname:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedAccountNickname}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="2" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Current balance:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedCurrentBalance}" Foreground="#DDE7F3"/></Grid>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Valuable Item Information -->
+                        <StackPanel Spacing="8" IsVisible="{Binding IsValuableItemSelected}">
+                            <TextBlock Text="Valuable Item Information" Foreground="White" FontSize="17" FontWeight="SemiBold"/>
+                            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="6">
+                                <Grid Grid.Row="0" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Description:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedValuableDescription}" Foreground="#DDE7F3" TextWrapping="Wrap"/></Grid>
+                                <Grid Grid.Row="1" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Serial / identifier:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedSerialOrIdentifier}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="2" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Storage location:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedStorageLocation}" Foreground="#DDE7F3"/></Grid>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Other Asset Information -->
+                        <StackPanel Spacing="8" IsVisible="{Binding IsOtherSelected}">
+                            <TextBlock Text="Other Asset Information" Foreground="White" FontSize="17" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding SelectedOtherDetails}" Foreground="#DDE7F3" FontSize="14" TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <!-- Linked Money Records -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Linked Money Records" Foreground="White" FontSize="17" FontWeight="SemiBold"/>
+                            <Grid RowDefinitions="Auto,Auto" RowSpacing="6">
+                                <Grid Grid.Row="0" ColumnDefinitions="190,*">
+                                    <TextBlock Grid.Column="0" Text="Related bill / expense:" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedLinkedBill}" Foreground="#DDE7F3"/>
+                                </Grid>
+                                <Grid Grid.Row="1" ColumnDefinitions="190,*">
+                                    <TextBlock Grid.Column="0" Text="Related income source:" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedLinkedIncome}" Foreground="#DDE7F3"/>
+                                </Grid>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Notes -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Notes" Foreground="White" FontSize="17" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding SelectedNotes}" Foreground="#DDE7F3" FontSize="14" TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <!-- Record Info -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Record Info" Foreground="White" FontSize="17" FontWeight="SemiBold"/>
+                            <Grid RowDefinitions="Auto,Auto" RowSpacing="6">
+                                <Grid Grid.Row="0" ColumnDefinitions="150,*">
+                                    <TextBlock Grid.Column="0" Text="Created UTC:" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedCreatedUtc}" Foreground="#DDE7F3"/>
+                                </Grid>
+                                <Grid Grid.Row="1" ColumnDefinitions="150,*">
+                                    <TextBlock Grid.Column="0" Text="Updated UTC:" Foreground="White" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding SelectedUpdatedUtc}" Foreground="#DDE7F3"/>
+                                </Grid>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

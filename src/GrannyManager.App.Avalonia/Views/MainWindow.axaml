@@ -129,7 +129,7 @@
                 <StackPanel Grid.Row="2"
                             Spacing="4"
                             Margin="2,18,0,0">
-                    <TextBlock Text="Build: 0.10.17"
+                    <TextBlock Text="Build: 0.10.26"
                                Foreground="#6F8299"
                                FontSize="12"/>
 
@@ -266,6 +266,22 @@
 
                 <Grid IsVisible="{Binding IsBillsSelected}">
                     <sections:BillsView DataContext="{Binding Bills}"/>
+                </Grid>
+
+                <Grid IsVisible="{Binding IsAllowanceSavingsSelected}">
+                    <sections:AllowanceSavingsView DataContext="{Binding AllowanceSavings}"/>
+                </Grid>
+
+                <Grid IsVisible="{Binding IsAssetsSelected}">
+                    <sections:AssetsView DataContext="{Binding Assets}"/>
+                </Grid>
+
+                <Grid IsVisible="{Binding IsDebtsSelected}">
+                    <sections:DebtsView DataContext="{Binding Debts}"/>
+                </Grid>
+
+                <Grid IsVisible="{Binding IsDocumentsSelected}">
+                    <sections:DocumentsView DataContext="{Binding Documents}"/>
                 </Grid>
 
                 <Border IsVisible="{Binding IsGenericPlaceholderVisible}"

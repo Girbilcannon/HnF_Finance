@@ -17,10 +17,18 @@ namespace GrannyManager.App.Avalonia.ViewModels
             var householdService = new HouseholdService(_activeCaseState);
             var incomeService = new IncomeService(_activeCaseState);
             var billsService = new BillsService(_activeCaseState);
+            var allowanceSavingsService = new AllowanceSavingsService(_activeCaseState);
+            var assetsService = new AssetsService(_activeCaseState);
+            var debtsService = new DebtsService(_activeCaseState);
+            var documentsService = new DocumentsService(_activeCaseState);
 
             Household = new HouseholdViewModel(_activeCaseState, householdService);
             Income = new IncomeViewModel(_activeCaseState, incomeService);
             Bills = new BillsViewModel(_activeCaseState, billsService);
+            AllowanceSavings = new AllowanceSavingsViewModel(_activeCaseState, allowanceSavingsService);
+            Assets = new AssetsViewModel(_activeCaseState, assetsService);
+            Debts = new DebtsViewModel(_activeCaseState, debtsService);
+            Documents = new DocumentsViewModel(_activeCaseState, documentsService);
         }
 
         public HouseholdViewModel Household { get; }
@@ -28,6 +36,14 @@ namespace GrannyManager.App.Avalonia.ViewModels
         public IncomeViewModel Income { get; }
 
         public BillsViewModel Bills { get; }
+
+        public AllowanceSavingsViewModel AllowanceSavings { get; }
+
+        public AssetsViewModel Assets { get; }
+
+        public DebtsViewModel Debts { get; }
+
+        public DocumentsViewModel Documents { get; }
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(CurrentPageTitle))]
@@ -74,9 +90,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
 
         public string CurrentPageCardTitle => CurrentSection switch
         {
-            "AllowanceSavings" => "Allowance / Savings Placeholder",
             "Assets" => "Assets Placeholder",
-            "Debts" => "Debts Placeholder",
             "Documents" => "Documents Placeholder",
             "PasswordVault" => "Password Vault Placeholder",
             _ => "v0.10.9 Migration Status"
@@ -84,9 +98,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
 
         public string CurrentPageBody => CurrentSection switch
         {
-            "AllowanceSavings" => "This section will manage allowance and savings entries while the top summary bar remains visible.",
             "Assets" => "This section will host the new Assets workflow for vehicles, property, accounts, investments, and valuables.",
-            "Debts" => "This section will track outstanding debts and repayment priorities.",
             "Documents" => "This section will manage imported documents, categories, and search integration.",
             "PasswordVault" => "This section will later connect to the secure credential vault.",
             _ => "The new tri-platform Avalonia shell is replacing the original WinForms frame. Sidebar navigation now updates this content area while keeping the summary bar fixed at the top."
@@ -102,7 +114,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
         public bool IsDocumentsSelected => CurrentSection == "Documents";
         public bool IsPasswordVaultSelected => CurrentSection == "PasswordVault";
 
-        public bool IsGenericPlaceholderVisible => CurrentSection != "Household" && CurrentSection != "Income" && CurrentSection != "Bills";
+        public bool IsGenericPlaceholderVisible => CurrentSection != "Household" && CurrentSection != "Income" && CurrentSection != "Bills" && CurrentSection != "AllowanceSavings" && CurrentSection != "Assets" && CurrentSection != "Debts" && CurrentSection != "Documents";
 
         [RelayCommand]
         private void Navigate(string section)
