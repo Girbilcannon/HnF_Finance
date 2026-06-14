@@ -1,0 +1,41 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.NewCaseDialog"
+        Title="Start New Case"
+        Width="620"
+        Height="620"
+        MinWidth="560"
+        MinHeight="560"
+        WindowStartupLocation="CenterOwner"
+        Background="#0B1624">
+    <Border Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="22">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="18">
+            <StackPanel Grid.Row="0" Spacing="6">
+                <TextBlock Text="Start New Case" Foreground="White" FontSize="24" FontWeight="SemiBold"/>
+                <TextBlock Text="Create a local case folder and security PIN." Foreground="#AFC0D3" FontSize="13" TextWrapping="Wrap"/>
+            </StackPanel>
+            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="12">
+                    <StackPanel Spacing="6"><TextBlock Text="Person this case is for" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/><TextBox Name="PrimaryPersonTextBox" Watermark="Example: Mary Smith" Height="38" Padding="12,7" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/></StackPanel>
+                    <StackPanel Spacing="6"><TextBlock Text="Case name" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/><TextBox Name="CaseNameTextBox" Watermark="Example: Mary Smith finances" Height="38" Padding="12,7" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/></StackPanel>
+                    <StackPanel Spacing="6"><TextBlock Text="Who is managing this case?" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/><TextBox Name="ManagerNameTextBox" Watermark="Example: Aaron" Height="38" Padding="12,7" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/></StackPanel>
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="File save location" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10"><TextBox Grid.Column="0" Name="CaseRootTextBox" Height="38" Padding="12,7" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/><Button Grid.Column="1" Content="Browse" Height="38" Padding="16,0" Background="#17263A" Foreground="#DDE7F3" BorderBrush="#30445F" Click="BrowseButton_Click" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/></Grid>
+                    </StackPanel>
+                    <Border Background="#0F1B2A" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,8,0,0">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Security pin is required to open the project. Don't forget to write it down so you don't forget." Foreground="#AFC0D3" FontSize="12" TextWrapping="Wrap"/>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <StackPanel Grid.Column="0" Spacing="6"><TextBlock Text="Security PIN" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/><TextBox Name="PinTextBox" MaxLength="4" PasswordChar="●" Height="38" Padding="12,7" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/></StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="6"><TextBlock Text="Verify PIN" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/><TextBox Name="ConfirmPinTextBox" MaxLength="4" PasswordChar="●" Height="38" Padding="12,7" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/></StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Name="ValidationTextBlock" Foreground="#FFD6DD" FontSize="12" TextWrapping="Wrap"/>
+                </StackPanel>
+            </ScrollViewer>
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10"><Button Grid.Column="1" Content="Cancel" Height="40" Padding="18,0" Background="#17263A" Foreground="#DDE7F3" BorderBrush="#30445F" Click="CancelButton_Click" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/><Button Grid.Column="2" Content="Get Started!" Height="40" Padding="18,0" Background="#2E8B57" Foreground="White" FontWeight="SemiBold" Click="GetStartedButton_Click" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/></Grid>
+        </Grid>
+    </Border>
+</Window>

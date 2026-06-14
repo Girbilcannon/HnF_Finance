@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using GrannyManager.Application.Services;
 using GrannyManager.Application.State;
 using GrannyManager.App.Avalonia.ViewModels.Sections;
+using GrannyManager.Core.Services;
 
 namespace GrannyManager.App.Avalonia.ViewModels
 {
@@ -14,6 +15,9 @@ namespace GrannyManager.App.Avalonia.ViewModels
         {
             _activeCaseState = new ActiveCaseState();
 
+            var caseFolderService = new CaseFolderService();
+            var recentCasesService = new RecentCasesService();
+
             var householdService = new HouseholdService(_activeCaseState);
             var incomeService = new IncomeService(_activeCaseState);
             var billsService = new BillsService(_activeCaseState);
@@ -21,6 +25,8 @@ namespace GrannyManager.App.Avalonia.ViewModels
             var assetsService = new AssetsService(_activeCaseState);
             var debtsService = new DebtsService(_activeCaseState);
             var documentsService = new DocumentsService(_activeCaseState);
+
+            Dashboard = new DashboardViewModel(_activeCaseState, caseFolderService, recentCasesService);
 
             Household = new HouseholdViewModel(_activeCaseState, householdService);
             Income = new IncomeViewModel(_activeCaseState, incomeService);
@@ -30,6 +36,8 @@ namespace GrannyManager.App.Avalonia.ViewModels
             Debts = new DebtsViewModel(_activeCaseState, debtsService);
             Documents = new DocumentsViewModel(_activeCaseState, documentsService);
         }
+
+        public DashboardViewModel Dashboard { get; }
 
         public HouseholdViewModel Household { get; }
 
@@ -51,6 +59,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
         [NotifyPropertyChangedFor(nameof(CurrentPageCardTitle))]
         [NotifyPropertyChangedFor(nameof(CurrentPageBody))]
         [NotifyPropertyChangedFor(nameof(IsDashboardSelected))]
+        [NotifyPropertyChangedFor(nameof(IsNotDashboardSelected))]
         [NotifyPropertyChangedFor(nameof(IsHouseholdSelected))]
         [NotifyPropertyChangedFor(nameof(IsIncomeSelected))]
         [NotifyPropertyChangedFor(nameof(IsBillsSelected))]
@@ -85,7 +94,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
             "Debts" => "Track debts, payment status, balances, and priority payoff information.",
             "Documents" => "Import, categorize, and find important documents attached to the current case.",
             "PasswordVault" => "Store sensitive account credentials and recovery notes in the protected vault.",
-            _ => "Avalonia shell is running. The summary bar stays visible while sections change below it."
+            _ => string.Empty
         };
 
         public string CurrentPageCardTitle => CurrentSection switch
@@ -93,7 +102,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
             "Assets" => "Assets Placeholder",
             "Documents" => "Documents Placeholder",
             "PasswordVault" => "Password Vault Placeholder",
-            _ => "v0.10.9 Migration Status"
+            _ => "Dashboard"
         };
 
         public string CurrentPageBody => CurrentSection switch
@@ -101,10 +110,11 @@ namespace GrannyManager.App.Avalonia.ViewModels
             "Assets" => "This section will host the new Assets workflow for vehicles, property, accounts, investments, and valuables.",
             "Documents" => "This section will manage imported documents, categories, and search integration.",
             "PasswordVault" => "This section will later connect to the secure credential vault.",
-            _ => "The new tri-platform Avalonia shell is replacing the original WinForms frame. Sidebar navigation now updates this content area while keeping the summary bar fixed at the top."
+            _ => "Create or open a case to begin."
         };
 
         public bool IsDashboardSelected => CurrentSection == "Dashboard";
+        public bool IsNotDashboardSelected => !IsDashboardSelected;
         public bool IsHouseholdSelected => CurrentSection == "Household";
         public bool IsIncomeSelected => CurrentSection == "Income";
         public bool IsBillsSelected => CurrentSection == "Bills";
@@ -114,7 +124,14 @@ namespace GrannyManager.App.Avalonia.ViewModels
         public bool IsDocumentsSelected => CurrentSection == "Documents";
         public bool IsPasswordVaultSelected => CurrentSection == "PasswordVault";
 
-        public bool IsGenericPlaceholderVisible => CurrentSection != "Household" && CurrentSection != "Income" && CurrentSection != "Bills" && CurrentSection != "AllowanceSavings" && CurrentSection != "Assets" && CurrentSection != "Debts" && CurrentSection != "Documents";
+        public bool IsGenericPlaceholderVisible => CurrentSection != "Dashboard" && CurrentSection != "Household" && CurrentSection != "Income" && CurrentSection != "Bills" && CurrentSection != "AllowanceSavings" && CurrentSection != "Assets" && CurrentSection != "Debts" && CurrentSection != "Documents";
+
+        [RelayCommand]
+        private void Help()
+        {
+            CurrentSection = "Dashboard";
+            Dashboard.HelpCommand.Execute(null);
+        }
 
         [RelayCommand]
         private void Navigate(string section)

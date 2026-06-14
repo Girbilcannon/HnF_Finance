@@ -18,7 +18,7 @@ public sealed class CaseFolderService
         return Path.Combine(documents, "GrannyManager Cases");
     }
 
-    public CaseProfile CreateCase(string displayName, string primaryPersonName, string rootFolder, string? securityPin = null)
+    public CaseProfile CreateCase(string displayName, string primaryPersonName, string rootFolder, string? securityPin = null, string? caseManagerName = null)
     {
         if (string.IsNullOrWhiteSpace(displayName))
         {
@@ -55,6 +55,7 @@ public sealed class CaseFolderService
         {
             DisplayName = displayName.Trim(),
             PrimaryPersonName = primaryPersonName.Trim(),
+            CaseManagerName = (caseManagerName ?? string.Empty).Trim(),
             CaseFolderPath = caseFolder,
             CreatedAt = DateTime.Now,
             LastOpenedAt = DateTime.Now

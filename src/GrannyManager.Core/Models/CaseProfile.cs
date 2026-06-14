@@ -5,6 +5,7 @@ public sealed class CaseProfile
     public string CaseId { get; set; } = Guid.NewGuid().ToString("N");
     public string DisplayName { get; set; } = string.Empty;
     public string PrimaryPersonName { get; set; } = string.Empty;
+    public string CaseManagerName { get; set; } = string.Empty;
     public string CaseFolderPath { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime LastOpenedAt { get; set; } = DateTime.Now;

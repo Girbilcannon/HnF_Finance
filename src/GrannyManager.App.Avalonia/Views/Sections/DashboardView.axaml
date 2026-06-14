@@ -1,0 +1,77 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="GrannyManager.App.Avalonia.Views.Sections.DashboardView">
+    <Grid ColumnDefinitions="1.05*,0.95*" ColumnSpacing="18">
+        <Border Grid.Column="0" Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="22">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="18">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{Binding WelcomeText}" Foreground="White" FontSize="26" FontWeight="SemiBold"/>
+                        <StackPanel Spacing="8" IsVisible="{Binding HasNoActiveCase}">
+                            <TextBlock Text="You currently have no open case. Please use the recent cases panel to the right to open a case or start a new one." Foreground="#AFC0D3" FontSize="14" TextWrapping="Wrap"/>
+                            <TextBlock Text="Need help getting started? Use the Case Setup Wizard." Foreground="#AFC0D3" FontSize="14" TextWrapping="Wrap"/>
+                            <Button Content="Launch Case Setup Wizard!" Height="38" Width="230" Background="#2F80C1" Foreground="White" BorderBrush="#8FBCE8" FontWeight="SemiBold" Command="{Binding StartWizardCommand}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <Border Background="#0F1B2A" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6" Padding="16" IsVisible="{Binding HasActiveCase}">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{Binding ActiveCaseTitle}" Foreground="White" FontSize="17" FontWeight="SemiBold"/>
+                            <Grid RowDefinitions="Auto,Auto" RowSpacing="6">
+                                <Grid Grid.Row="0" ColumnDefinitions="150,*"><TextBlock Grid.Column="0" Text="Primary person:" Foreground="#9EB4CC" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding ActiveCasePrimaryPerson}" Foreground="#DDE7F3"/></Grid>
+                                <Grid Grid.Row="1" ColumnDefinitions="150,*"><TextBlock Grid.Column="0" Text="Case path:" Foreground="#9EB4CC" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding ActiveCasePath}" Foreground="#DDE7F3" TextWrapping="Wrap"/></Grid>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="#0F1B2A" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6" Padding="16" IsVisible="{Binding HasActiveCase}">
+                        <StackPanel Spacing="12"><TextBlock Text="Case Summary" Foreground="White" FontSize="17" FontWeight="SemiBold"/><TextBlock Text="Live metrics and projections will populate here as the case sections are wired into the dashboard." Foreground="#AFC0D3" FontSize="13" TextWrapping="Wrap"/><Button Content="More Case Details" Height="38" Width="180" Background="#17263A" Foreground="#DDE7F3" BorderBrush="#30445F" Command="{Binding MoreCaseDetailsCommand}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/></StackPanel>
+                    </Border>
+                    <Border Background="#0F1B2A" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6" Padding="16" IsVisible="{Binding HasActiveCase}">
+                        <StackPanel Spacing="10"><TextBlock Text="Important Documents" Foreground="White" FontSize="17" FontWeight="SemiBold"/><Border Background="#122238" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6" Padding="12"><TextBlock Text="Important document list will populate here after Documents import/open behavior is wired." Foreground="#8FA3BA" FontSize="13" TextWrapping="Wrap"/></Border></StackPanel>
+                    </Border>
+                    <Border Background="#0F1B2A" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6" Padding="14"><TextBlock Text="{Binding StatusMessage}" Foreground="#AFC0D3" FontSize="13" TextWrapping="Wrap"/></Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+        <Border Grid.Column="1" Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="22">
+            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="14">
+                <StackPanel Grid.Row="0" Spacing="5"><TextBlock Text="Recent Cases" Foreground="White" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="Open a recent case to restore the active case and load data into each section." Foreground="#AFC0D3" FontSize="13" TextWrapping="Wrap"/></StackPanel>
+                <Border Grid.Row="1" Background="#0F1B2A" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6">
+                    <ListBox Name="RecentCasesListBox" ItemsSource="{Binding RecentCases}" SelectedItem="{Binding SelectedRecentCase}" Background="Transparent" BorderThickness="0" Padding="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListBox.Styles>
+                            <Style Selector="ListBoxItem">
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Margin" Value="0"/>
+                                <Setter Property="Background" Value="#0F1B2A"/>
+                            </Style>
+
+                            <Style Selector="ListBoxItem:pointerover">
+                                <Setter Property="Background" Value="#2F80C1"/>
+                            </Style>
+
+                            <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#2F80C1"/>
+                            </Style>
+
+                            <Style Selector="ListBoxItem:selected">
+                                <Setter Property="Background" Value="#122B42"/>
+                            </Style>
+
+                            <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#122B42"/>
+                            </Style>
+
+                            <Style Selector="ListBoxItem:selected:pointerover">
+                                <Setter Property="Background" Value="#2F80C1"/>
+                            </Style>
+
+                            <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#2F80C1"/>
+                            </Style>
+                        </ListBox.Styles><ListBox.ItemTemplate><DataTemplate><Border BorderBrush="{Binding CardBorderBrush}" BorderThickness="{Binding CardBorderThickness}" CornerRadius="4" Margin="0" Padding="12" Background="{Binding CardBackground}"><StackPanel Spacing="4"><TextBlock Text="{Binding DisplayName}" Foreground="White" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding LastOpenedText}" Foreground="#9EB4CC" FontSize="12"/><TextBlock Text="{Binding ManagedByText}" Foreground="#8FA3BA" FontSize="12"/><TextBlock Text="{Binding CaseFilePathDisplay}" Foreground="#6F8299" FontSize="11" TextWrapping="Wrap"/></StackPanel></Border></DataTemplate></ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+                <WrapPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center"><Button Name="OpenSelectedCaseButton" Content="Open Selected" Height="38" Padding="16,0" Margin="0,0,10,0" Background="#2E8B57" Foreground="White" FontWeight="SemiBold" IsEnabled="{Binding HasSelectedRecentCase}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/><Button Content="Remove" Height="38" Padding="16,0" Margin="0,0,10,0" Background="#3A2430" Foreground="#FFD6DD" IsEnabled="{Binding HasSelectedRecentCase}" Command="{Binding RemoveSelectedRecentCaseCommand}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/><Button Content="Browse" Height="38" Padding="16,0" Background="#17263A" Foreground="#DDE7F3" BorderBrush="#30445F" Click="BrowseCaseButton_Click" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/></WrapPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

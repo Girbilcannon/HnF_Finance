@@ -1,0 +1,83 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.UnlockPinDialog"
+        Title="Unlock Case"
+        Width="420"
+        Height="250"
+        MinWidth="400"
+        MinHeight="230"
+        WindowStartupLocation="CenterOwner"
+        Background="#0B1624">
+
+    <Border Background="#122238"
+            BorderBrush="#2A405A"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="22">
+
+        <Grid RowDefinitions="Auto,*,Auto"
+              RowSpacing="16">
+
+            <StackPanel Grid.Row="0" Spacing="6">
+                <TextBlock Text="Unlock Case"
+                           Foreground="White"
+                           FontSize="22"
+                           FontWeight="SemiBold"/>
+
+                <TextBlock Text="Enter the 4-digit security PIN for this case."
+                           Foreground="#AFC0D3"
+                           FontSize="13"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="1" Spacing="8">
+                <TextBlock Text="Security PIN"
+                           Foreground="#9EB4CC"
+                           FontSize="12"
+                           FontWeight="SemiBold"/>
+
+                <TextBox Name="PinTextBox"
+                         MaxLength="4"
+                         PasswordChar="●"
+                         Height="38"
+                         Width="150"
+                         HorizontalAlignment="Left"
+                         Padding="12,7"
+                         Background="#0F1B2A"
+                         Foreground="White"
+                         BorderBrush="#30445F"/>
+
+                <TextBlock Name="ValidationTextBlock"
+                           Foreground="#FFD6DD"
+                           FontSize="12"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <Grid Grid.Row="2"
+                  ColumnDefinitions="*,Auto,Auto"
+                  ColumnSpacing="10">
+                <Button Grid.Column="1"
+                        Name="CancelButton"
+                        Content="Cancel"
+                        Height="38"
+                        Padding="18,0"
+                        Background="#17263A"
+                        Foreground="#DDE7F3"
+                        BorderBrush="#30445F"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"/>
+
+                <Button Grid.Column="2"
+                        Name="UnlockButton"
+                        Content="Unlock"
+                        Height="38"
+                        Padding="18,0"
+                        Background="#2E8B57"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"/>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
