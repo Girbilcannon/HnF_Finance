@@ -25,6 +25,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
             var assetsService = new AssetsService(_activeCaseState);
             var debtsService = new DebtsService(_activeCaseState);
             var documentsService = new DocumentsService(_activeCaseState);
+            var passwordVaultService = new PasswordVaultService(_activeCaseState, caseFolderService);
 
             Dashboard = new DashboardViewModel(_activeCaseState, caseFolderService, recentCasesService);
 
@@ -35,6 +36,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
             Assets = new AssetsViewModel(_activeCaseState, assetsService);
             Debts = new DebtsViewModel(_activeCaseState, debtsService);
             Documents = new DocumentsViewModel(_activeCaseState, documentsService);
+            PasswordVault = new PasswordVaultViewModel(_activeCaseState, passwordVaultService);
         }
 
         public DashboardViewModel Dashboard { get; }
@@ -52,6 +54,8 @@ namespace GrannyManager.App.Avalonia.ViewModels
         public DebtsViewModel Debts { get; }
 
         public DocumentsViewModel Documents { get; }
+
+        public PasswordVaultViewModel PasswordVault { get; }
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(CurrentPageTitle))]
@@ -124,7 +128,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
         public bool IsDocumentsSelected => CurrentSection == "Documents";
         public bool IsPasswordVaultSelected => CurrentSection == "PasswordVault";
 
-        public bool IsGenericPlaceholderVisible => CurrentSection != "Dashboard" && CurrentSection != "Household" && CurrentSection != "Income" && CurrentSection != "Bills" && CurrentSection != "AllowanceSavings" && CurrentSection != "Assets" && CurrentSection != "Debts" && CurrentSection != "Documents";
+        public bool IsGenericPlaceholderVisible => CurrentSection != "Dashboard" && CurrentSection != "Household" && CurrentSection != "Income" && CurrentSection != "Bills" && CurrentSection != "AllowanceSavings" && CurrentSection != "Assets" && CurrentSection != "Debts" && CurrentSection != "Documents" && CurrentSection != "PasswordVault";
 
         [RelayCommand]
         private void Help()

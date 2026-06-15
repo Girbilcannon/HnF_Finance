@@ -1,25 +1,48 @@
-﻿using Avalonia;
-using System;
+﻿using System;
+using Avalonia;
+using GrannyManager.App.Avalonia.Services;
 
 namespace GrannyManager.App.Avalonia
 {
     internal sealed class Program
     {
-        // Initialization code. Don't use any Avalonia, third-party APIs or any
-        // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
-        // yet and stuff might break.
         [STAThread]
-        public static void Main(string[] args) => BuildAvaloniaApp()
-            .StartWithClassicDesktopLifetime(args);
+        public static void Main(string[] args)
+        {
+            StartupDiagnostics.ResetLog();
+            StartupDiagnostics.Mark("Program.Main entered.");
 
-        // Avalonia configuration, don't remove; also used by visual designer.
+            try
+            {
+                StartupDiagnostics.Mark("BuildAvaloniaApp starting.");
+                var appBuilder = BuildAvaloniaApp();
+                StartupDiagnostics.Mark("BuildAvaloniaApp completed. Starting classic desktop lifetime.");
+
+                appBuilder.StartWithClassicDesktopLifetime(args);
+
+                StartupDiagnostics.Mark("Classic desktop lifetime exited.");
+            }
+            catch (System.Exception ex)
+            {
+                StartupDiagnostics.MarkException("Fatal startup exception", ex);
+                throw;
+            }
+        }
+
         public static AppBuilder BuildAvaloniaApp()
-            => AppBuilder.Configure<App>()
+        {
+            StartupDiagnostics.Mark("AppBuilder.Configure starting.");
+
+            var builder = AppBuilder.Configure<App>()
                 .UsePlatformDetect()
 #if DEBUG
                 .WithDeveloperTools()
 #endif
                 .WithInterFont()
                 .LogToTrace();
+
+            StartupDiagnostics.Mark("AppBuilder.Configure completed.");
+            return builder;
+        }
     }
 }
