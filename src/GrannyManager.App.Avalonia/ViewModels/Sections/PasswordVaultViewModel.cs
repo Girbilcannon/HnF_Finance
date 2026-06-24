@@ -36,6 +36,12 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsUnlocked))]
     [NotifyPropertyChangedFor(nameof(CanUnlock))]
     [NotifyPropertyChangedFor(nameof(CanAddEntry))]
+    [NotifyPropertyChangedFor(nameof(CanEditEntry))]
+    [NotifyPropertyChangedFor(nameof(CanRemoveEntry))]
+    [NotifyPropertyChangedFor(nameof(CanCopySelectedUserName))]
+    [NotifyPropertyChangedFor(nameof(CanCopySelectedPassword))]
+    [NotifyPropertyChangedFor(nameof(CanRevealSelectedPassword))]
+    [NotifyPropertyChangedFor(nameof(CanHideSelectedPassword))]
     private bool _isVaultUnlocked;
 
     [ObservableProperty]
@@ -87,6 +93,7 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
     partial void OnSelectedEntryChanged(PasswordVaultItemViewModel? value)
     {
         IsSelectedPasswordRevealed = false;
+        RefreshSelectedEntryActionState();
     }
 
     public string SelectedTitle => SelectedItem?.Title ?? "No vault entry selected";
@@ -132,6 +139,7 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
         IsVaultUnlocked = true;
         VaultExists = true;
         Pin = string.Empty;
+        RefreshSelectedEntryActionState();
         StatusMessage = result.StatusMessage;
     }
 
@@ -145,6 +153,7 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
         _vaultData = null;
         IsVaultUnlocked = false;
         LoadStatus();
+        RefreshSelectedEntryActionState();
         StatusMessage = "Password vault locked.";
     }
 
@@ -174,6 +183,7 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
         var itemViewModel = new PasswordVaultItemViewModel(item);
         Items.Add(itemViewModel);
         SelectedEntry = itemViewModel;
+        RefreshSelectedEntryActionState();
         return true;
     }
 
@@ -223,6 +233,8 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanCopySelectedPassword));
         OnPropertyChanged(nameof(CanRevealSelectedPassword));
         OnPropertyChanged(nameof(CanHideSelectedPassword));
+        OnPropertyChanged(nameof(CanEditEntry));
+        OnPropertyChanged(nameof(CanRemoveEntry));
         OnPropertyChanged(nameof(SelectedCreatedText));
         OnPropertyChanged(nameof(SelectedUpdatedText));
         return true;
@@ -243,6 +255,7 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
         Items.Remove(SelectedEntry);
         IsSelectedPasswordRevealed = false;
         SelectedEntry = Items.FirstOrDefault();
+        RefreshSelectedEntryActionState();
 
         return SaveVaultData("Vault entry removed.");
     }
@@ -262,6 +275,7 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
         }
 
         IsSelectedPasswordRevealed = true;
+        RefreshSelectedEntryActionState();
         StatusMessage = "Password revealed. Use Hide Password when finished.";
         return true;
     }
@@ -269,12 +283,26 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
     public void HideSelectedPassword()
     {
         IsSelectedPasswordRevealed = false;
+        RefreshSelectedEntryActionState();
         StatusMessage = "Password hidden.";
     }
 
     public void SetClipboardStatus(string statusMessage)
     {
         StatusMessage = statusMessage;
+    }
+
+    private void RefreshSelectedEntryActionState()
+    {
+        OnPropertyChanged(nameof(HasSelectedEntry));
+        OnPropertyChanged(nameof(CanEditEntry));
+        OnPropertyChanged(nameof(CanRemoveEntry));
+        OnPropertyChanged(nameof(HasSelectedPassword));
+        OnPropertyChanged(nameof(CanCopySelectedUserName));
+        OnPropertyChanged(nameof(CanCopySelectedPassword));
+        OnPropertyChanged(nameof(CanRevealSelectedPassword));
+        OnPropertyChanged(nameof(CanHideSelectedPassword));
+        OnPropertyChanged(nameof(SelectedPasswordDisplay));
     }
 
     private bool EnsureUnlockedForEdit()
