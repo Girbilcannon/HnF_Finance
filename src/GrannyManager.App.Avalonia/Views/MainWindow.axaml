@@ -129,7 +129,7 @@
                 <StackPanel Grid.Row="2"
                             Spacing="4"
                             Margin="2,18,0,0">
-                    <TextBlock Text="Build: 0.10.43"
+                    <TextBlock Text="Build: 0.10.46"
                                Foreground="#6F8299"
                                FontSize="12"/>
 

@@ -30,6 +30,12 @@ public sealed class PasswordVaultService
         _caseFolderService = caseFolderService ?? throw new ArgumentNullException(nameof(caseFolderService));
     }
 
+    public bool VerifyActiveCasePin(string pin)
+    {
+        var activeCase = _activeCaseState.ActiveCase;
+        return activeCase is not null && activeCase.IsValid && _caseFolderService.VerifySecurityPin(activeCase, pin);
+    }
+
     public PasswordVaultStatus GetStatus()
     {
         var activeCase = _activeCaseState.ActiveCase;
@@ -102,6 +108,36 @@ public sealed class PasswordVaultService
         catch (Exception ex)
         {
             return PasswordVaultUnlockResult.Fail($"Could not unlock vault: {ex.Message}");
+        }
+    }
+
+    public PasswordVaultSaveResult SaveUnlockedVault(string pin, PasswordVaultData vaultData)
+    {
+        var activeCase = _activeCaseState.ActiveCase;
+
+        if (activeCase is null || !activeCase.IsValid)
+        {
+            return PasswordVaultSaveResult.Fail("No active case is open.");
+        }
+
+        if (vaultData is null)
+        {
+            return PasswordVaultSaveResult.Fail("No vault data is available to save.");
+        }
+
+        if (!_caseFolderService.VerifySecurityPin(activeCase, pin))
+        {
+            return PasswordVaultSaveResult.Fail("Could not save vault because the case PIN was not verified.");
+        }
+
+        try
+        {
+            SaveVault(activeCase.CaseFolderPath, pin, vaultData);
+            return PasswordVaultSaveResult.Ok("Encrypted vault saved.");
+        }
+        catch (Exception ex)
+        {
+            return PasswordVaultSaveResult.Fail($"Could not save vault: {ex.Message}");
         }
     }
 
@@ -210,5 +246,21 @@ public sealed record PasswordVaultUnlockResult(
     public static PasswordVaultUnlockResult Ok(PasswordVaultData vaultData, string statusMessage)
     {
         return new PasswordVaultUnlockResult(true, statusMessage, vaultData);
+    }
+}
+
+
+public sealed record PasswordVaultSaveResult(
+    bool Success,
+    string StatusMessage)
+{
+    public static PasswordVaultSaveResult Fail(string statusMessage)
+    {
+        return new PasswordVaultSaveResult(false, statusMessage);
+    }
+
+    public static PasswordVaultSaveResult Ok(string statusMessage)
+    {
+        return new PasswordVaultSaveResult(true, statusMessage);
     }
 }
