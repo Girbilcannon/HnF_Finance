@@ -1,11 +1,14 @@
 using System;
 using Avalonia.Controls;
+using GrannyManager.App.Avalonia.Services.Security;
 using GrannyManager.App.Avalonia.ViewModels;
 
 namespace GrannyManager.App.Avalonia.Views
 {
     public partial class MainWindow : Window
     {
+        private readonly CaseSecurityLockCoordinator _caseSecurityLockCoordinator;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -13,6 +16,11 @@ namespace GrannyManager.App.Avalonia.Views
             var startNewCaseButton = this.FindControl<Button>("StartNewCaseButton");
             if (startNewCaseButton is not null)
                 startNewCaseButton.Click += StartNewCaseButton_Click;
+
+            _caseSecurityLockCoordinator = new CaseSecurityLockCoordinator(reason => SecureLockActiveCase(reason));
+            _caseSecurityLockCoordinator.Start();
+
+            Closed += (_, _) => _caseSecurityLockCoordinator.Dispose();
         }
 
         private async void StartNewCaseButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
@@ -38,6 +46,12 @@ namespace GrannyManager.App.Avalonia.Views
                 dialog = new NewCaseDialog(dashboard.DefaultCaseRootFolder);
                 dialog.SetValidationMessage(message);
             }
+        }
+
+        private void SecureLockActiveCase(string reason)
+        {
+            if (DataContext is MainWindowViewModel mainViewModel)
+                mainViewModel.SecureLockActiveCase(reason);
         }
     }
 }

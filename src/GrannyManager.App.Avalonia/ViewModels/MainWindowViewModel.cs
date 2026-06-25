@@ -130,6 +130,18 @@ namespace GrannyManager.App.Avalonia.ViewModels
 
         public bool IsGenericPlaceholderVisible => CurrentSection != "Dashboard" && CurrentSection != "Household" && CurrentSection != "Income" && CurrentSection != "Bills" && CurrentSection != "AllowanceSavings" && CurrentSection != "Assets" && CurrentSection != "Debts" && CurrentSection != "Documents" && CurrentSection != "PasswordVault";
 
+        public void SecureLockActiveCase(string reason)
+        {
+            if (!_activeCaseState.HasActiveCase)
+                return;
+
+            _activeCaseState.ClearActiveCase();
+            CurrentSection = "Dashboard";
+            Dashboard.StatusMessage = string.IsNullOrWhiteSpace(reason)
+                ? "Case locked for security. Reopen it from Recent Cases and enter the case PIN."
+                : reason;
+        }
+
         [RelayCommand]
         private void Help()
         {
