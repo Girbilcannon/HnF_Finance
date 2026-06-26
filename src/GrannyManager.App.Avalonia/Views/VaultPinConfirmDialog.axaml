@@ -19,12 +19,12 @@
               RowSpacing="16">
 
             <StackPanel Grid.Row="0" Spacing="6">
-                <TextBlock Text="Confirm Case PIN"
+                <TextBlock Name="TitleTextBlock" Text="Confirm Case PIN"
                            Foreground="White"
                            FontSize="22"
                            FontWeight="SemiBold"/>
 
-                <TextBlock Text="Enter the active case PIN to reveal this password."
+                <TextBlock Name="MessageTextBlock" Text="Enter the active case PIN to reveal this password."
                            Foreground="#AFC0D3"
                            FontSize="13"
                            TextWrapping="Wrap"/>

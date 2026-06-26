@@ -86,6 +86,7 @@ public sealed class PasswordVaultService
             if (!File.Exists(vaultPath))
             {
                 var created = new PasswordVaultData();
+                NormalizeVaultData(created);
                 SaveVault(activeCase.CaseFolderPath, pin, created);
 
                 return PasswordVaultUnlockResult.Ok(
@@ -94,6 +95,7 @@ public sealed class PasswordVaultService
             }
 
             var data = LoadVault(activeCase.CaseFolderPath, pin);
+            NormalizeVaultData(data);
 
             return PasswordVaultUnlockResult.Ok(
                 data,
@@ -151,6 +153,18 @@ public sealed class PasswordVaultService
     public static string GetVaultPath(string caseFolderPath)
     {
         return Path.Combine(EnsureVaultFolder(caseFolderPath), "password-vault.hnfvault");
+    }
+
+    private static void NormalizeVaultData(PasswordVaultData data)
+    {
+        foreach (var item in data.Items)
+        {
+            if (!string.IsNullOrWhiteSpace(item.Notes) && string.IsNullOrWhiteSpace(item.PublicNotes))
+            {
+                item.PublicNotes = item.Notes;
+                item.Notes = string.Empty;
+            }
+        }
     }
 
     private static PasswordVaultData LoadVault(string caseFolderPath, string pin)

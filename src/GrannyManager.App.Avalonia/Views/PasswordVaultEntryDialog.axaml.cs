@@ -11,7 +11,8 @@ namespace GrannyManager.App.Avalonia.Views
         private readonly TextBox? _websiteTextBox;
         private readonly TextBox? _userNameTextBox;
         private readonly TextBox? _passwordTextBox;
-        private readonly TextBox? _notesTextBox;
+        private readonly TextBox? _publicNotesTextBox;
+        private readonly TextBox? _secureNotesTextBox;
         private readonly TextBlock? _validationTextBlock;
 
         public PasswordVaultEntryDialog()
@@ -23,7 +24,8 @@ namespace GrannyManager.App.Avalonia.Views
             _websiteTextBox = this.FindControl<TextBox>("WebsiteTextBox");
             _userNameTextBox = this.FindControl<TextBox>("UserNameTextBox");
             _passwordTextBox = this.FindControl<TextBox>("PasswordTextBox");
-            _notesTextBox = this.FindControl<TextBox>("NotesTextBox");
+            _publicNotesTextBox = this.FindControl<TextBox>("PublicNotesTextBox");
+            _secureNotesTextBox = this.FindControl<TextBox>("SecureNotesTextBox");
             _validationTextBlock = this.FindControl<TextBlock>("ValidationTextBlock");
 
             var cancelButton = this.FindControl<Button>("CancelButton");
@@ -42,7 +44,8 @@ namespace GrannyManager.App.Avalonia.Views
             _userNameTextBox?.Text ?? string.Empty,
             _passwordTextBox?.Text ?? string.Empty,
             _websiteTextBox?.Text ?? string.Empty,
-            _notesTextBox?.Text ?? string.Empty);
+            _publicNotesTextBox?.Text ?? string.Empty,
+            _secureNotesTextBox?.Text ?? string.Empty);
 
         public void SetMode(string title, PasswordVaultEntryInput? input = null)
         {
@@ -64,8 +67,11 @@ namespace GrannyManager.App.Avalonia.Views
             if (_websiteTextBox is not null)
                 _websiteTextBox.Text = input.Website;
 
-            if (_notesTextBox is not null)
-                _notesTextBox.Text = input.Notes;
+            if (_publicNotesTextBox is not null)
+                _publicNotesTextBox.Text = input.PublicNotes;
+
+            if (_secureNotesTextBox is not null)
+                _secureNotesTextBox.Text = input.SecureNotes;
         }
 
         private void Dialog_KeyDown(object? sender, KeyEventArgs e)

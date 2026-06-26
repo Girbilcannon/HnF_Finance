@@ -42,6 +42,8 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(CanCopySelectedPassword))]
     [NotifyPropertyChangedFor(nameof(CanRevealSelectedPassword))]
     [NotifyPropertyChangedFor(nameof(CanHideSelectedPassword))]
+    [NotifyPropertyChangedFor(nameof(CanRevealSelectedSecureNotes))]
+    [NotifyPropertyChangedFor(nameof(CanHideSelectedSecureNotes))]
     private bool _isVaultUnlocked;
 
     [ObservableProperty]
@@ -63,19 +65,29 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
     private bool _isSelectedPasswordRevealed;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedSecureNotesDisplay))]
+    [NotifyPropertyChangedFor(nameof(CanRevealSelectedSecureNotes))]
+    [NotifyPropertyChangedFor(nameof(CanHideSelectedSecureNotes))]
+    private bool _isSelectedSecureNotesRevealed;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedEntry))]
     [NotifyPropertyChangedFor(nameof(CanEditEntry))]
     [NotifyPropertyChangedFor(nameof(CanRemoveEntry))]
     [NotifyPropertyChangedFor(nameof(SelectedTitle))]
     [NotifyPropertyChangedFor(nameof(SelectedUserName))]
     [NotifyPropertyChangedFor(nameof(SelectedWebsite))]
-    [NotifyPropertyChangedFor(nameof(SelectedNotes))]
+    [NotifyPropertyChangedFor(nameof(SelectedPublicNotes))]
+    [NotifyPropertyChangedFor(nameof(SelectedSecureNotesDisplay))]
+    [NotifyPropertyChangedFor(nameof(HasSelectedSecureNotes))]
     [NotifyPropertyChangedFor(nameof(SelectedPasswordDisplay))]
     [NotifyPropertyChangedFor(nameof(HasSelectedPassword))]
     [NotifyPropertyChangedFor(nameof(CanCopySelectedUserName))]
     [NotifyPropertyChangedFor(nameof(CanCopySelectedPassword))]
     [NotifyPropertyChangedFor(nameof(CanRevealSelectedPassword))]
     [NotifyPropertyChangedFor(nameof(CanHideSelectedPassword))]
+    [NotifyPropertyChangedFor(nameof(CanRevealSelectedSecureNotes))]
+    [NotifyPropertyChangedFor(nameof(CanHideSelectedSecureNotes))]
     [NotifyPropertyChangedFor(nameof(SelectedCreatedText))]
     [NotifyPropertyChangedFor(nameof(SelectedUpdatedText))]
     private PasswordVaultItemViewModel? _selectedEntry;
@@ -93,21 +105,32 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
     partial void OnSelectedEntryChanged(PasswordVaultItemViewModel? value)
     {
         IsSelectedPasswordRevealed = false;
+        IsSelectedSecureNotesRevealed = false;
         RefreshSelectedEntryActionState();
     }
 
     public string SelectedTitle => SelectedItem?.Title ?? "No vault entry selected";
     public string SelectedUserName => Clean(SelectedItem?.UserName);
     public string SelectedWebsite => Clean(SelectedItem?.Website);
-    public string SelectedNotes => Clean(SelectedItem?.Notes);
+    public string SelectedPublicNotes => Clean(SelectedItem?.PublicNotes);
+
     public bool HasSelectedPassword => !string.IsNullOrWhiteSpace(SelectedItem?.Password);
     public string SelectedPasswordDisplay => HasSelectedPassword
         ? IsSelectedPasswordRevealed ? SelectedItem!.Password : "••••••••••••"
         : "No password saved";
+
+    public bool HasSelectedSecureNotes => !string.IsNullOrWhiteSpace(SelectedItem?.SecureNotes);
+    public string SelectedSecureNotesDisplay => HasSelectedSecureNotes
+        ? IsSelectedSecureNotesRevealed ? SelectedItem!.SecureNotes : "••••••••••••"
+        : "No secure notes saved";
+
     public bool CanCopySelectedUserName => IsVaultUnlocked && HasSelectedEntry && !string.IsNullOrWhiteSpace(SelectedItem?.UserName);
     public bool CanCopySelectedPassword => IsVaultUnlocked && HasSelectedPassword;
     public bool CanRevealSelectedPassword => IsVaultUnlocked && HasSelectedPassword && !IsSelectedPasswordRevealed;
     public bool CanHideSelectedPassword => IsVaultUnlocked && HasSelectedPassword && IsSelectedPasswordRevealed;
+    public bool CanRevealSelectedSecureNotes => IsVaultUnlocked && HasSelectedSecureNotes && !IsSelectedSecureNotesRevealed;
+    public bool CanHideSelectedSecureNotes => IsVaultUnlocked && HasSelectedSecureNotes && IsSelectedSecureNotesRevealed;
+
     public string SelectedUserNameForCopy => SelectedItem?.UserName ?? string.Empty;
     public string SelectedPasswordForCopy => SelectedItem?.Password ?? string.Empty;
     public string SelectedCreatedText => FormatDate(SelectedItem?.CreatedUtc);
@@ -170,7 +193,9 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
             UserName = input.UserName.Trim(),
             Password = input.Password,
             Website = input.Website.Trim(),
-            Notes = input.Notes.Trim(),
+            Notes = string.Empty,
+            PublicNotes = input.PublicNotes.Trim(),
+            SecureNotes = input.SecureNotes.Trim(),
             CreatedUtc = now,
             UpdatedUtc = now
         };
@@ -197,7 +222,8 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
             SelectedItem.UserName,
             SelectedItem.Password,
             SelectedItem.Website,
-            SelectedItem.Notes);
+            SelectedItem.PublicNotes,
+            SelectedItem.SecureNotes);
     }
 
     public bool UpdateSelectedEntry(PasswordVaultEntryInput input)
@@ -215,28 +241,18 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
         SelectedItem.UserName = input.UserName.Trim();
         SelectedItem.Password = input.Password;
         SelectedItem.Website = input.Website.Trim();
-        SelectedItem.Notes = input.Notes.Trim();
+        SelectedItem.Notes = string.Empty;
+        SelectedItem.PublicNotes = input.PublicNotes.Trim();
+        SelectedItem.SecureNotes = input.SecureNotes.Trim();
         SelectedItem.UpdatedUtc = DateTime.UtcNow;
 
         if (!SaveVaultData("Vault entry updated."))
             return false;
 
         IsSelectedPasswordRevealed = false;
+        IsSelectedSecureNotesRevealed = false;
         SelectedEntry.Refresh();
-        OnPropertyChanged(nameof(SelectedTitle));
-        OnPropertyChanged(nameof(SelectedUserName));
-        OnPropertyChanged(nameof(SelectedWebsite));
-        OnPropertyChanged(nameof(SelectedNotes));
-        OnPropertyChanged(nameof(SelectedPasswordDisplay));
-        OnPropertyChanged(nameof(HasSelectedPassword));
-        OnPropertyChanged(nameof(CanCopySelectedUserName));
-        OnPropertyChanged(nameof(CanCopySelectedPassword));
-        OnPropertyChanged(nameof(CanRevealSelectedPassword));
-        OnPropertyChanged(nameof(CanHideSelectedPassword));
-        OnPropertyChanged(nameof(CanEditEntry));
-        OnPropertyChanged(nameof(CanRemoveEntry));
-        OnPropertyChanged(nameof(SelectedCreatedText));
-        OnPropertyChanged(nameof(SelectedUpdatedText));
+        RefreshSelectedDetails();
         return true;
     }
 
@@ -254,10 +270,23 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
         _vaultData!.Items.RemoveAll(item => item.Id == SelectedItem.Id);
         Items.Remove(SelectedEntry);
         IsSelectedPasswordRevealed = false;
+        IsSelectedSecureNotesRevealed = false;
         SelectedEntry = Items.FirstOrDefault();
         RefreshSelectedEntryActionState();
 
         return SaveVaultData("Vault entry removed.");
+    }
+
+    public bool VerifyPinForSensitiveEdit(string pin)
+    {
+        if (!_passwordVaultService.VerifyActiveCasePin(pin))
+        {
+            StatusMessage = "That PIN did not match this case.";
+            return false;
+        }
+
+        StatusMessage = "PIN confirmed. Editing vault entry.";
+        return true;
     }
 
     public bool RevealSelectedPassword(string pin)
@@ -287,9 +316,49 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
         StatusMessage = "Password hidden.";
     }
 
+    public bool RevealSelectedSecureNotes(string pin)
+    {
+        if (!CanRevealSelectedSecureNotes)
+        {
+            StatusMessage = "Select a vault entry with secure notes first.";
+            return false;
+        }
+
+        if (!_passwordVaultService.VerifyActiveCasePin(pin))
+        {
+            StatusMessage = "That PIN did not match this case.";
+            return false;
+        }
+
+        IsSelectedSecureNotesRevealed = true;
+        RefreshSelectedEntryActionState();
+        StatusMessage = "Secure notes revealed. Use Hide Secure Notes when finished.";
+        return true;
+    }
+
+    public void HideSelectedSecureNotes()
+    {
+        IsSelectedSecureNotesRevealed = false;
+        RefreshSelectedEntryActionState();
+        StatusMessage = "Secure notes hidden.";
+    }
+
     public void SetClipboardStatus(string statusMessage)
     {
         StatusMessage = statusMessage;
+    }
+
+    private void RefreshSelectedDetails()
+    {
+        OnPropertyChanged(nameof(SelectedTitle));
+        OnPropertyChanged(nameof(SelectedUserName));
+        OnPropertyChanged(nameof(SelectedWebsite));
+        OnPropertyChanged(nameof(SelectedPublicNotes));
+        OnPropertyChanged(nameof(SelectedSecureNotesDisplay));
+        OnPropertyChanged(nameof(SelectedPasswordDisplay));
+        OnPropertyChanged(nameof(SelectedCreatedText));
+        OnPropertyChanged(nameof(SelectedUpdatedText));
+        RefreshSelectedEntryActionState();
     }
 
     private void RefreshSelectedEntryActionState()
@@ -303,6 +372,10 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanRevealSelectedPassword));
         OnPropertyChanged(nameof(CanHideSelectedPassword));
         OnPropertyChanged(nameof(SelectedPasswordDisplay));
+        OnPropertyChanged(nameof(HasSelectedSecureNotes));
+        OnPropertyChanged(nameof(CanRevealSelectedSecureNotes));
+        OnPropertyChanged(nameof(CanHideSelectedSecureNotes));
+        OnPropertyChanged(nameof(SelectedSecureNotesDisplay));
     }
 
     private bool EnsureUnlockedForEdit()
@@ -389,7 +462,8 @@ public sealed record PasswordVaultEntryInput(
     string UserName,
     string Password,
     string Website,
-    string Notes);
+    string PublicNotes,
+    string SecureNotes);
 
 public sealed partial class PasswordVaultItemViewModel : ObservableObject
 {

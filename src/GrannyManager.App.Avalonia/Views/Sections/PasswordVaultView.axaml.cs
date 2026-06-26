@@ -44,6 +44,14 @@ namespace GrannyManager.App.Avalonia.Views.Sections
             var hidePasswordButton = this.FindControl<Button>("HidePasswordButton");
             if (hidePasswordButton is not null)
                 hidePasswordButton.Click += HidePasswordButton_Click;
+
+            var revealSecureNotesButton = this.FindControl<Button>("RevealSecureNotesButton");
+            if (revealSecureNotesButton is not null)
+                revealSecureNotesButton.Click += RevealSecureNotesButton_Click;
+
+            var hideSecureNotesButton = this.FindControl<Button>("HideSecureNotesButton");
+            if (hideSecureNotesButton is not null)
+                hideSecureNotesButton.Click += HideSecureNotesButton_Click;
         }
 
         private void PinTextBox_KeyDown(object? sender, KeyEventArgs e)
@@ -87,6 +95,9 @@ namespace GrannyManager.App.Avalonia.Views.Sections
             if (owner is null)
                 return;
 
+            if (!await ConfirmPinForEditAsync(owner, viewModel))
+                return;
+
             var dialog = new PasswordVaultEntryDialog();
             dialog.SetMode("Edit Vault Entry", input);
 
@@ -95,9 +106,42 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                 viewModel.UpdateSelectedEntry(dialog.EntryInput);
         }
 
-        private void RemoveButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+        private async Task<bool> ConfirmPinForEditAsync(Window owner, PasswordVaultViewModel viewModel)
         {
-            if (DataContext is PasswordVaultViewModel viewModel && viewModel.CanRemoveEntry)
+            var dialog = new VaultPinConfirmDialog();
+            dialog.SetPrompt("Confirm Case PIN", "Enter the active case PIN to edit this vault entry.", "Continue");
+
+            for (var attempt = 0; attempt < 3; attempt++)
+            {
+                var result = await dialog.ShowDialog<bool>(owner);
+                if (!result)
+                    return false;
+
+                if (viewModel.VerifyPinForSensitiveEdit(dialog.Pin))
+                    return true;
+
+                dialog = new VaultPinConfirmDialog();
+                dialog.SetPrompt("Confirm Case PIN", "Enter the active case PIN to edit this vault entry.", "Continue");
+                dialog.SetValidationMessage("That PIN did not match this case.");
+            }
+
+            return false;
+        }
+
+        private async void RemoveButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            if (DataContext is not PasswordVaultViewModel viewModel || !viewModel.CanRemoveEntry)
+                return;
+
+            var owner = TopLevel.GetTopLevel(this) as Window;
+            if (owner is null)
+                return;
+
+            var dialog = new ConfirmDeleteVaultEntryDialog();
+            dialog.SetEntryTitle(string.Empty);
+
+            var result = await dialog.ShowDialog<bool>(owner);
+            if (result)
                 viewModel.RemoveSelectedEntry();
         }
 
@@ -127,6 +171,7 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                 return;
 
             var dialog = new VaultPinConfirmDialog();
+            dialog.SetPrompt("Confirm Case PIN", "Enter the active case PIN to reveal this password.", "Reveal");
 
             for (var attempt = 0; attempt < 3; attempt++)
             {
@@ -138,6 +183,7 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                     return;
 
                 dialog = new VaultPinConfirmDialog();
+                dialog.SetPrompt("Confirm Case PIN", "Enter the active case PIN to reveal this password.", "Reveal");
                 dialog.SetValidationMessage("That PIN did not match this case.");
             }
         }
@@ -146,6 +192,40 @@ namespace GrannyManager.App.Avalonia.Views.Sections
         {
             if (DataContext is PasswordVaultViewModel viewModel)
                 viewModel.HideSelectedPassword();
+        }
+
+
+        private async void RevealSecureNotesButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            if (DataContext is not PasswordVaultViewModel viewModel)
+                return;
+
+            var owner = TopLevel.GetTopLevel(this) as Window;
+            if (owner is null)
+                return;
+
+            var dialog = new VaultPinConfirmDialog();
+            dialog.SetPrompt("Confirm Case PIN", "Enter the active case PIN to reveal secure notes.", "Reveal Notes");
+
+            for (var attempt = 0; attempt < 3; attempt++)
+            {
+                var result = await dialog.ShowDialog<bool>(owner);
+                if (!result)
+                    return;
+
+                if (viewModel.RevealSelectedSecureNotes(dialog.Pin))
+                    return;
+
+                dialog = new VaultPinConfirmDialog();
+                dialog.SetPrompt("Confirm Case PIN", "Enter the active case PIN to reveal secure notes.", "Reveal Notes");
+                dialog.SetValidationMessage("That PIN did not match this case.");
+            }
+        }
+
+        private void HideSecureNotesButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            if (DataContext is PasswordVaultViewModel viewModel)
+                viewModel.HideSelectedSecureNotes();
         }
 
         private async Task CopyToClipboardWithAutoClear(string value, string statusMessage)

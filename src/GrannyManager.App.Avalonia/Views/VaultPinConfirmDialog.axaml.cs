@@ -5,6 +5,9 @@ namespace GrannyManager.App.Avalonia.Views
 {
     public partial class VaultPinConfirmDialog : Window
     {
+        private readonly TextBlock? _titleTextBlock;
+        private readonly TextBlock? _messageTextBlock;
+        private readonly Button? _revealButton;
         private readonly TextBox? _pinTextBox;
         private readonly TextBlock? _validationTextBlock;
 
@@ -12,6 +15,9 @@ namespace GrannyManager.App.Avalonia.Views
         {
             InitializeComponent();
 
+            _titleTextBlock = this.FindControl<TextBlock>("TitleTextBlock");
+            _messageTextBlock = this.FindControl<TextBlock>("MessageTextBlock");
+            _revealButton = this.FindControl<Button>("RevealButton");
             _pinTextBox = this.FindControl<TextBox>("PinTextBox");
             _validationTextBlock = this.FindControl<TextBlock>("ValidationTextBlock");
 
@@ -22,12 +28,23 @@ namespace GrannyManager.App.Avalonia.Views
             if (cancelButton is not null)
                 cancelButton.Click += (_, _) => Close(false);
 
-            var revealButton = this.FindControl<Button>("RevealButton");
-            if (revealButton is not null)
-                revealButton.Click += (_, _) => Close(true);
+            if (_revealButton is not null)
+                _revealButton.Click += (_, _) => Close(true);
         }
 
         public string Pin => _pinTextBox?.Text ?? string.Empty;
+
+        public void SetPrompt(string title, string message, string confirmButtonText)
+        {
+            if (_titleTextBlock is not null)
+                _titleTextBlock.Text = title;
+
+            if (_messageTextBlock is not null)
+                _messageTextBlock.Text = message;
+
+            if (_revealButton is not null)
+                _revealButton.Content = confirmButtonText;
+        }
 
         public void SetValidationMessage(string message)
         {
