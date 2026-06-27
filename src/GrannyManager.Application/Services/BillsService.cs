@@ -98,6 +98,7 @@ public sealed class BillsService
         {
             var repository = CreateRepository(activeCase.CaseFolderPath);
             repository.Upsert(bill);
+            AppDataChangeNotifier.NotifyBillsChanged();
             statusMessage = "Bill saved.";
             return true;
         }
@@ -129,6 +130,7 @@ public sealed class BillsService
         {
             var repository = CreateRepository(activeCase.CaseFolderPath);
             repository.Delete(id);
+            AppDataChangeNotifier.NotifyBillsChanged();
             statusMessage = "Bill removed.";
             return true;
         }
@@ -178,6 +180,7 @@ public sealed class BillsService
                 Amount = amount
             });
 
+            AppDataChangeNotifier.NotifyBillsChanged();
             statusMessage = "Receipt added.";
             return true;
         }
@@ -204,6 +207,7 @@ public sealed class BillsService
             var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
             var repository = new BillReceiptsRepository(databasePath);
             repository.Delete(receiptId);
+            AppDataChangeNotifier.NotifyBillsChanged();
             statusMessage = "Receipt deleted.";
             return true;
         }

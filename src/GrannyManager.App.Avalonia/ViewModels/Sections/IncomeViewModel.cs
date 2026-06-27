@@ -20,6 +20,8 @@ public sealed partial class IncomeViewModel : ViewModelBase
         if (activeCaseState is not null)
             activeCaseState.ActiveCaseChanged += (_, _) => LoadSources();
 
+        AppDataChangeNotifier.IncomeSourcesChanged += (_, _) => LoadSources();
+
         LoadSources();
     }
 

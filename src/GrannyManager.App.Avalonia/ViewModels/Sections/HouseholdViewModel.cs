@@ -20,6 +20,8 @@ public sealed partial class HouseholdViewModel : ViewModelBase
         if (activeCaseState is not null)
             activeCaseState.ActiveCaseChanged += (_, _) => LoadPeople();
 
+        AppDataChangeNotifier.HouseholdChanged += (_, _) => LoadPeople();
+
         LoadPeople();
     }
 

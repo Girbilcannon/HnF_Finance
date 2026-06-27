@@ -95,6 +95,7 @@ public sealed class IncomeService
         {
             var repository = CreateRepository(activeCase.CaseFolderPath);
             repository.Upsert(source);
+            AppDataChangeNotifier.NotifyIncomeSourcesChanged();
             statusMessage = "Income source saved.";
             return true;
         }
@@ -126,6 +127,7 @@ public sealed class IncomeService
         {
             var repository = CreateRepository(activeCase.CaseFolderPath);
             repository.Delete(id);
+            AppDataChangeNotifier.NotifyIncomeSourcesChanged();
             statusMessage = "Income source removed.";
             return true;
         }

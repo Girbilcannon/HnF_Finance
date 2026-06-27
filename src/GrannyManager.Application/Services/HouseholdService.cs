@@ -120,6 +120,7 @@ public sealed class HouseholdService
             var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
             var repository = new IncomeSourcesRepository(databasePath);
             repository.Upsert(source);
+            AppDataChangeNotifier.NotifyIncomeSourcesChanged();
             statusMessage = "Income source saved.";
             return true;
         }
@@ -157,6 +158,7 @@ public sealed class HouseholdService
         {
             var repository = CreateHouseholdRepository(activeCase.CaseFolderPath);
             repository.Upsert(person);
+            AppDataChangeNotifier.NotifyHouseholdChanged();
             statusMessage = "Household member saved.";
             return true;
         }
@@ -188,6 +190,7 @@ public sealed class HouseholdService
         {
             var repository = CreateHouseholdRepository(activeCase.CaseFolderPath);
             repository.Delete(id);
+            AppDataChangeNotifier.NotifyHouseholdChanged();
             statusMessage = "Household member removed.";
             return true;
         }
