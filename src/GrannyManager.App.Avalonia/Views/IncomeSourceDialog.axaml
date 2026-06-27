@@ -1,0 +1,183 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.IncomeSourceDialog"
+        Title="Income Source"
+        Width="580"
+        Height="760"
+        MinWidth="540"
+        MinHeight="660"
+        WindowStartupLocation="CenterOwner"
+        Background="#101C2C">
+
+    <Border Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="22">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="18">
+            <StackPanel Grid.Row="0" Spacing="6">
+                <TextBlock Name="DialogTitleTextBlock" Text="Income Source" Foreground="White" FontSize="24" FontWeight="SemiBold"/>
+                <TextBlock Text="Track recurring income, deposits, and household contribution sources." Foreground="#B8CBE0" FontSize="13" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="14">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Source Name" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="SourceNameTextBox" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Income Type" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="IncomeTypeComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                <ComboBoxItem Content="Social Security"/>
+                                <ComboBoxItem Content="Pension"/>
+                                <ComboBoxItem Content="Survivor Benefits"/>
+                                <ComboBoxItem Content="Disability"/>
+                                <ComboBoxItem Content="Employment / Wages"/>
+                                <ComboBoxItem Content="Family Contribution"/>
+                                <ComboBoxItem Content="Rental Income"/>
+                                <ComboBoxItem Content="Retirement Account"/>
+                                <ComboBoxItem Content="Settlement / Lump Sum"/>
+                                <ComboBoxItem Content="Other"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Frequency" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="FrequencyComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                <ComboBoxItem Content="Weekly"/>
+                                <ComboBoxItem Content="Every 2 Weeks"/>
+                                <ComboBoxItem Content="Twice Monthly"/>
+                                <ComboBoxItem Content="Monthly"/>
+                                <ComboBoxItem Content="Quarterly"/>
+                                <ComboBoxItem Content="Yearly"/>
+                                <ComboBoxItem Content="One-Time / Irregular"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <CheckBox Name="TaxesWithheldCheckBox" Content="Taxes withheld" Foreground="#DDE7F3"/>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Name="AmountLabelTextBlock" Text="Gross Pay" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="AmountTextBox" Watermark="0.00" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Expected Day / Date" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBox Name="ExpectedDayTextBox" Watermark="1st, 3rd Wednesday, etc." Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Deposit Destination" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="DepositDestinationComboBox"
+                                      Background="#0F1B2A"
+                                      Foreground="White"
+                                      BorderBrush="#30445F"
+                                      MinHeight="36">
+                                <ComboBoxItem Content="Cash/Check"/>
+                                <ComboBoxItem Content="Select Bank Account"/>
+                                <ComboBoxItem Content="Select Multiple Bank Accounts"/>
+                                <ComboBoxItem Content="Create Bank Account"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Name="BankAccountPanel"
+                                Spacing="8"
+                                IsVisible="False">
+                        <TextBlock Text="Bank Account"
+                                   Foreground="#9EB4CC"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"/>
+
+                        <ComboBox Name="BankAccountComboBox"
+                                  Background="#0F1B2A"
+                                  Foreground="White"
+                                  BorderBrush="#30445F"
+                                  MinHeight="36"
+                                  IsEnabled="False">
+                            <ComboBoxItem Content="Choose account"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Name="MultipleBankAccountsPanel"
+                                Spacing="8"
+                                IsVisible="False">
+                        <TextBlock Text="Bank Accounts"
+                                   Foreground="#9EB4CC"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"/>
+
+                        <Border Background="#0F1B2A"
+                                BorderBrush="#26384F"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="10">
+                            <StackPanel Spacing="8">
+                                <Grid ColumnDefinitions="*,Auto"
+                                      ColumnSpacing="8">
+                                    <ComboBox Grid.Column="0"
+                                              Background="#0F1B2A"
+                                              Foreground="White"
+                                              BorderBrush="#30445F"
+                                              MinHeight="34"
+                                              IsEnabled="False">
+                                        <ComboBoxItem Content="Choose account"/>
+                                    </ComboBox>
+
+                                    <Button Grid.Column="1"
+                                            Content="🗑"
+                                            Width="34"
+                                            Height="34"
+                                            Background="#8B2E2E"
+                                            Foreground="White"
+                                            BorderBrush="#B84A4A"
+                                            IsEnabled="False"
+                                            HorizontalContentAlignment="Center"
+                                            VerticalContentAlignment="Center"/>
+                                </Grid>
+
+                                <Button Name="AddBankAccountLineButton"
+                                        Content="+"
+                                        Width="34"
+                                        Height="34"
+                                        Background="#2E8B57"
+                                        Foreground="White"
+                                        IsEnabled="False"
+                                        HorizontalAlignment="Left"
+                                        HorizontalContentAlignment="Center"
+                                        VerticalContentAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <TextBlock Name="CreateBankAccountPlaceholderTextBlock"
+                               Text="Create Bank Account will be available after the Assets section is wired."
+                               Foreground="#9EB4CC"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               IsVisible="False"/>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Linked Household Member" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <ComboBox Name="HouseholdPersonComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36"/>
+                    </StackPanel>
+
+                    <CheckBox Name="IsActiveCheckBox" Content="Active income source" Foreground="#DDE7F3"/>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Notes" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="NotesTextBox" MinHeight="120" AcceptsReturn="True" TextWrapping="Wrap" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <TextBlock Name="ValidationTextBlock" Text="" Foreground="#FFB0B0" FontSize="12" TextWrapping="Wrap"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Name="CancelButton" Content="Cancel" Height="38" Padding="18,0" Background="#17263A" Foreground="#DDE7F3" BorderBrush="#30445F" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                <Button Name="SaveButton" Content="Save" Height="38" Padding="18,0" Background="#2E8B57" Foreground="White" FontWeight="SemiBold" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

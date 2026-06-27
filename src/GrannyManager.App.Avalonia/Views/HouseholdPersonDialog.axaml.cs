@@ -1,6 +1,7 @@
 using System;
 using Avalonia.Controls;
 using GrannyManager.Core.Models;
+using System.Collections.Generic;
 
 namespace GrannyManager.App.Avalonia.Views
 {
@@ -17,9 +18,17 @@ namespace GrannyManager.App.Avalonia.Views
         private readonly CheckBox? _receivesRidesCheckBox;
         private readonly ComboBox? _contributionHandlingComboBox;
         private readonly Grid? _linkedIncomeSourcePanel;
+        private readonly Grid? _createIncomeSourcePanel;
         private readonly ComboBox? _linkedIncomeSourceComboBox;
+        private readonly Button? _createIncomeSourceFromHouseholdButton;
+        private readonly List<IncomeSource> _incomeSources = new();
+        private readonly List<HouseholdPerson> _householdPeopleForIncomeDialog = new();
         private readonly CheckBox? _isActiveCheckBox;
         private readonly TextBox? _notesTextBox;
+
+        private Func<IncomeSource>? _createBlankIncomeSource;
+        private Func<IncomeSource, bool>? _saveIncomeSource;
+        private Func<IReadOnlyList<IncomeSource>>? _reloadIncomeSources;
 
         private HouseholdPerson _person = new();
 
@@ -38,12 +47,17 @@ namespace GrannyManager.App.Avalonia.Views
             _receivesRidesCheckBox = this.FindControl<CheckBox>("ReceivesRidesCheckBox");
             _contributionHandlingComboBox = this.FindControl<ComboBox>("ContributionHandlingComboBox");
             _linkedIncomeSourcePanel = this.FindControl<Grid>("LinkedIncomeSourcePanel");
+            _createIncomeSourcePanel = this.FindControl<Grid>("CreateIncomeSourcePanel");
             _linkedIncomeSourceComboBox = this.FindControl<ComboBox>("LinkedIncomeSourceComboBox");
+            _createIncomeSourceFromHouseholdButton = this.FindControl<Button>("CreateIncomeSourceFromHouseholdButton");
             _isActiveCheckBox = this.FindControl<CheckBox>("IsActiveCheckBox");
             _notesTextBox = this.FindControl<TextBox>("NotesTextBox");
 
             if (_contributionHandlingComboBox is not null)
                 _contributionHandlingComboBox.SelectionChanged += (_, _) => RefreshContributionVisibility();
+
+            if (_createIncomeSourceFromHouseholdButton is not null)
+                _createIncomeSourceFromHouseholdButton.Click += async (_, _) => await CreateIncomeSourceFromHouseholdAsync();
 
             var cancelButton = this.FindControl<Button>("CancelButton");
             if (cancelButton is not null)
@@ -56,8 +70,27 @@ namespace GrannyManager.App.Avalonia.Views
 
         public HouseholdPerson Person => _person;
 
-        public void SetMode(string title, HouseholdPerson person)
+        public void SetMode(
+            string title,
+            HouseholdPerson person,
+            IReadOnlyList<IncomeSource>? incomeSources = null,
+            IReadOnlyList<HouseholdPerson>? householdPeople = null,
+            Func<IncomeSource>? createBlankIncomeSource = null,
+            Func<IncomeSource, bool>? saveIncomeSource = null,
+            Func<IReadOnlyList<IncomeSource>>? reloadIncomeSources = null)
         {
+            _createBlankIncomeSource = createBlankIncomeSource;
+            _saveIncomeSource = saveIncomeSource;
+            _reloadIncomeSources = reloadIncomeSources;
+
+            _incomeSources.Clear();
+            if (incomeSources is not null)
+                _incomeSources.AddRange(incomeSources);
+
+            _householdPeopleForIncomeDialog.Clear();
+            if (householdPeople is not null)
+                _householdPeopleForIncomeDialog.AddRange(householdPeople);
+
             _person = person ?? new HouseholdPerson();
 
             if (_dialogTitleTextBlock is not null)
@@ -88,8 +121,7 @@ namespace GrannyManager.App.Avalonia.Views
                 ? "No Contribution"
                 : _person.ContributionHandling);
 
-            if (_linkedIncomeSourceComboBox is not null)
-                _linkedIncomeSourceComboBox.SelectedIndex = 0;
+            PopulateIncomeSources(_person.LinkedIncomeSourceId);
 
             if (_isActiveCheckBox is not null)
                 _isActiveCheckBox.IsChecked = _person.IsActive;
@@ -98,6 +130,31 @@ namespace GrannyManager.App.Avalonia.Views
                 _notesTextBox.Text = _person.Notes;
 
             RefreshContributionVisibility();
+        }
+
+        private void PopulateIncomeSources(long selectedId)
+        {
+            if (_linkedIncomeSourceComboBox is null)
+                return;
+
+            _linkedIncomeSourceComboBox.Items.Clear();
+            _linkedIncomeSourceComboBox.Items.Add(new ComboBoxItem { Content = "Select income source", Tag = 0L });
+
+            foreach (var source in _incomeSources)
+                _linkedIncomeSourceComboBox.Items.Add(new ComboBoxItem { Content = source.SourceName, Tag = source.Id });
+
+            _linkedIncomeSourceComboBox.SelectedIndex = 0;
+
+            for (var index = 1; index < _linkedIncomeSourceComboBox.ItemCount; index++)
+            {
+                if (_linkedIncomeSourceComboBox.Items[index] is ComboBoxItem item &&
+                    item.Tag is long id &&
+                    id == selectedId)
+                {
+                    _linkedIncomeSourceComboBox.SelectedIndex = index;
+                    return;
+                }
+            }
         }
 
         private void SelectContributionHandling(string value)
@@ -129,8 +186,53 @@ namespace GrannyManager.App.Avalonia.Views
 
         private void RefreshContributionVisibility()
         {
+            var mode = GetContributionHandling();
+
             if (_linkedIncomeSourcePanel is not null)
-                _linkedIncomeSourcePanel.IsVisible = GetContributionHandling() == "Select Income Source";
+                _linkedIncomeSourcePanel.IsVisible = mode == "Select Income Source";
+
+            if (_createIncomeSourcePanel is not null)
+                _createIncomeSourcePanel.IsVisible = mode == "Add Income Source";
+        }
+
+
+        private async System.Threading.Tasks.Task CreateIncomeSourceFromHouseholdAsync()
+        {
+            if (_createBlankIncomeSource is null || _saveIncomeSource is null)
+                return;
+
+            var owner = this.Owner as Window;
+            if (owner is null)
+                return;
+
+            var source = _createBlankIncomeSource();
+
+            if (string.IsNullOrWhiteSpace(source.SourceName) && !string.IsNullOrWhiteSpace(_fullNameTextBox?.Text))
+                source.SourceName = $"{_fullNameTextBox.Text.Trim()} Contribution";
+
+            if (_person.Id > 0)
+            {
+                source.LinkedHouseholdPersonId = _person.Id;
+                source.LinkedHouseholdPersonName = _person.FullName;
+            }
+
+            var dialog = new IncomeSourceDialog();
+            dialog.SetMode("Add Income Source", source, _householdPeopleForIncomeDialog);
+
+            var result = await dialog.ShowDialog<bool>(owner);
+            if (!result)
+                return;
+
+            if (!_saveIncomeSource(dialog.Source))
+                return;
+
+            _incomeSources.Clear();
+            if (_reloadIncomeSources is not null)
+                _incomeSources.AddRange(_reloadIncomeSources());
+
+            PopulateIncomeSources(dialog.Source.Id);
+            SelectContributionHandling("Select Income Source");
+            RefreshContributionVisibility();
         }
 
         private void SaveAndClose()
@@ -156,7 +258,15 @@ namespace GrannyManager.App.Avalonia.Views
             _person.ContributionHandling = GetContributionHandling();
             _person.MonthlyContribution = 0m;
 
-            if (_person.ContributionHandling != "Select Income Source")
+            if (_person.ContributionHandling == "Select Income Source" &&
+                _linkedIncomeSourceComboBox?.SelectedItem is ComboBoxItem selectedIncome &&
+                selectedIncome.Tag is long incomeId &&
+                incomeId > 0)
+            {
+                _person.LinkedIncomeSourceId = incomeId;
+                _person.LinkedIncomeSourceName = selectedIncome.Content?.ToString() ?? string.Empty;
+            }
+            else
             {
                 _person.LinkedIncomeSourceId = 0;
                 _person.LinkedIncomeSourceName = string.Empty;

@@ -1,4 +1,7 @@
-﻿using GrannyManager.Application.State;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using GrannyManager.Application.State;
 using GrannyManager.Core.Models;
 using GrannyManager.Data.Database;
 using GrannyManager.Data.Repositories;
@@ -28,8 +31,7 @@ public sealed class IncomeService
 
         try
         {
-            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
-            var repository = new IncomeSourcesRepository(databasePath);
+            var repository = CreateRepository(activeCase.CaseFolderPath);
             var sources = SortForIncomeList(repository.GetAll());
 
             return new IncomeLoadResult(
@@ -46,6 +48,98 @@ public sealed class IncomeService
                 StatusMessage: $"Could not load income sources: {ex.Message}",
                 Sources: Array.Empty<IncomeSource>());
         }
+    }
+
+    public IReadOnlyList<HouseholdPerson> LoadHouseholdPeople()
+    {
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+            return Array.Empty<HouseholdPerson>();
+
+        try
+        {
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            var repository = new HouseholdPeopleRepository(databasePath);
+            return repository.GetAll().Where(p => p.IsActive).OrderBy(p => p.FullName).ToList();
+        }
+        catch
+        {
+            return Array.Empty<HouseholdPerson>();
+        }
+    }
+
+    public bool SaveSource(IncomeSource source, out string statusMessage)
+    {
+        statusMessage = string.Empty;
+
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+        {
+            statusMessage = "Open a case before saving income sources.";
+            return false;
+        }
+
+        if (source is null)
+        {
+            statusMessage = "No income source was provided.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(source.SourceName))
+        {
+            statusMessage = "Enter a source name before saving.";
+            return false;
+        }
+
+        try
+        {
+            var repository = CreateRepository(activeCase.CaseFolderPath);
+            repository.Upsert(source);
+            statusMessage = "Income source saved.";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Could not save income source: {ex.Message}";
+            return false;
+        }
+    }
+
+    public bool DeleteSource(long id, out string statusMessage)
+    {
+        statusMessage = string.Empty;
+
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+        {
+            statusMessage = "Open a case before removing income sources.";
+            return false;
+        }
+
+        if (id <= 0)
+        {
+            statusMessage = "Select an income source before removing.";
+            return false;
+        }
+
+        try
+        {
+            var repository = CreateRepository(activeCase.CaseFolderPath);
+            repository.Delete(id);
+            statusMessage = "Income source removed.";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Could not remove income source: {ex.Message}";
+            return false;
+        }
+    }
+
+    private static IncomeSourcesRepository CreateRepository(string caseFolderPath)
+    {
+        var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(caseFolderPath);
+        return new IncomeSourcesRepository(databasePath);
     }
 
     private static IReadOnlyList<IncomeSource> SortForIncomeList(IEnumerable<IncomeSource> sources)

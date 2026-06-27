@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -91,7 +92,21 @@ public sealed partial class HouseholdViewModel : ViewModelBase
         }
     }
 
-    public string SelectedBillsPaid => "No bills linked.";
+    public string SelectedBillsPaid
+    {
+        get
+        {
+            var person = SelectedPerson?.Person;
+            if (person is null)
+                return "No bills linked.";
+
+            var bills = _householdService.LoadBillsPaidByPerson(person.Id, person.FullName);
+            if (bills.Count == 0)
+                return "No bills linked.";
+
+            return string.Join(", ", bills.Select(bill => $"{bill.BillName} ({bill.AmountText})"));
+        }
+    }
 
     partial void OnSelectedPersonChanged(HouseholdRowViewModel? oldValue, HouseholdRowViewModel? newValue)
     {
@@ -139,6 +154,40 @@ public sealed partial class HouseholdViewModel : ViewModelBase
         };
     }
 
+    public IReadOnlyList<IncomeSource> GetIncomeSources()
+    {
+        return _householdService.LoadIncomeSources();
+    }
+
+    public IReadOnlyList<HouseholdPerson> GetHouseholdPeople()
+    {
+        return _householdService.LoadPeople().People;
+    }
+
+    public IncomeSource CreateBlankIncomeSource()
+    {
+        return new IncomeSource
+        {
+            IncomeType = "Family Contribution",
+            Frequency = "Monthly",
+            DepositDestination = "Cash/Check",
+            IsActive = true
+        };
+    }
+
+    public bool SaveIncomeSource(IncomeSource source)
+    {
+        if (!_householdService.SaveIncomeSource(source, out var message))
+        {
+            StatusMessage = message;
+            return false;
+        }
+
+        StatusMessage = message;
+        return true;
+    }
+
+
     public bool SavePerson(HouseholdPerson person)
     {
         if (!_householdService.SavePerson(person, out var message))
@@ -165,6 +214,11 @@ public sealed partial class HouseholdViewModel : ViewModelBase
         LoadPeople();
         StatusMessage = message;
         return true;
+    }
+
+    public void RefreshFromNavigation()
+    {
+        LoadPeople();
     }
 
     private void LoadPeople()

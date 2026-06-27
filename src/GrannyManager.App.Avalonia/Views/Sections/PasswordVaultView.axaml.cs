@@ -1,6 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
+using Avalonia.VisualTree;
 using GrannyManager.App.Avalonia.ViewModels.Sections;
 using GrannyManager.App.Avalonia.Views;
 using System.Threading.Tasks;
@@ -52,6 +54,26 @@ namespace GrannyManager.App.Avalonia.Views.Sections
             var hideSecureNotesButton = this.FindControl<Button>("HideSecureNotesButton");
             if (hideSecureNotesButton is not null)
                 hideSecureNotesButton.Click += HideSecureNotesButton_Click;
+        }
+
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            base.OnAttachedToVisualTree(e);
+            RefreshWhenVisible();
+        }
+
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+
+            if (change.Property == IsVisibleProperty)
+                RefreshWhenVisible();
+        }
+
+        private void RefreshWhenVisible()
+        {
+            if (IsVisible && DataContext is PasswordVaultViewModel viewModel)
+                viewModel.RefreshFromNavigation();
         }
 
         private void PinTextBox_KeyDown(object? sender, KeyEventArgs e)

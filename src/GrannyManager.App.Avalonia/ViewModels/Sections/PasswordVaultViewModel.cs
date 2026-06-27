@@ -409,6 +409,12 @@ public sealed partial class PasswordVaultViewModel : ViewModelBase
         return true;
     }
 
+    public void RefreshFromNavigation()
+    {
+        if (!IsVaultUnlocked)
+            LoadStatus();
+    }
+
     private void ResetForCaseChange()
     {
         Items.Clear();

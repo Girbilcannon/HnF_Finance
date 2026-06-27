@@ -2,141 +2,69 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="GrannyManager.App.Avalonia.Views.Sections.BillsView">
 
-    <Grid ColumnDefinitions="430,*"
-          ColumnSpacing="18">
+    <UserControl.Styles>
+        <Style Selector="ListBox.clean-list">
+            <Setter Property="Background" Value="#0F1B2A"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
 
-        <!-- Bills list -->
-        <Border Grid.Column="0"
-                Background="#122238"
-                BorderBrush="#2A405A"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="18">
+        <Style Selector="ListBox.clean-list ListBoxItem">
+            <Setter Property="Background" Value="#0F1B2A"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="MinHeight" Value="42"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
 
-            <Grid RowDefinitions="Auto,Auto,*,Auto"
-                  RowSpacing="14">
+        <Style Selector="ListBox.clean-list ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2F80C1"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
 
-                <Grid Grid.Row="0"
-                      ColumnDefinitions="*,Auto"
-                      ColumnSpacing="10">
-                    <TextBlock Grid.Column="0"
-                               Text="Bills / Spending"
-                               Foreground="White"
-                               FontSize="20"
-                               FontWeight="SemiBold"
-                               VerticalAlignment="Center"/>
+        <Style Selector="ListBox.clean-list ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#173A5A"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
 
-                    <Button Grid.Column="1"
-                            Content="+ Add"
-                            Height="34"
-                            Padding="14,0"
-                            Background="#2E8B57"
-                            Foreground="White"
-                            FontWeight="SemiBold"
-                            IsEnabled="{Binding HasActiveCase}"
-                            HorizontalContentAlignment="Center"
-                            VerticalContentAlignment="Center"/>
+        <Style Selector="ListBox.clean-list ListBoxItem:focus /template/ ContentPresenter">
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="430,*" ColumnSpacing="18">
+
+        <Border Grid.Column="0" Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="18">
+            <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="14">
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <TextBlock Grid.Column="0" Text="Bills / Spending" Foreground="White" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <Button Name="AddBillButton" Grid.Column="1" Content="+ Add" Height="34" Padding="14,0" Background="#2E8B57" Foreground="White" FontWeight="SemiBold" IsEnabled="{Binding CanAddBill}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
                 </Grid>
 
-                <TextBlock Grid.Row="1"
-                           Text="{Binding StatusMessage}"
-                           Foreground="#8FA3BA"
-                           FontSize="12"
-                           TextWrapping="Wrap"/>
+                <TextBlock Grid.Row="1" Text="{Binding StatusMessage}" Foreground="#8FA3BA" FontSize="12" TextWrapping="Wrap"/>
 
-                <!-- Table-style list -->
-                <Border Grid.Row="2"
-                        Background="#0F1B2A"
-                        BorderBrush="#26384F"
-                        BorderThickness="1"
-                        CornerRadius="6">
-
+                <Border Grid.Row="2" Background="#0F1B2A" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6">
                     <Grid RowDefinitions="36,*">
-
-                        <!-- Header -->
-                        <Border Grid.Row="0"
-                                Background="#17263A"
-                                BorderBrush="#26384F"
-                                BorderThickness="0,0,0,1"
-                                Padding="12,0">
-                            <Grid ColumnDefinitions="1.3*,0.9*,0.75*,0.85*"
-                                  ColumnSpacing="10">
-                                <TextBlock Grid.Column="0"
-                                           Text="Bill / Expense"
-                                           Foreground="#9EB4CC"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"/>
-
-                                <TextBlock Grid.Column="1"
-                                           Text="Category"
-                                           Foreground="#9EB4CC"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"/>
-
-                                <TextBlock Grid.Column="2"
-                                           Text="Amount"
-                                           Foreground="#9EB4CC"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"/>
-
-                                <TextBlock Grid.Column="3"
-                                           Text="Monthly"
-                                           Foreground="#9EB4CC"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"/>
+                        <Border Grid.Row="0" Background="#17263A" BorderBrush="#26384F" BorderThickness="0,0,0,1" Padding="12,0">
+                            <Grid ColumnDefinitions="1.25*,0.85*,0.75*,0.85*" ColumnSpacing="10">
+                                <TextBlock Grid.Column="0" Text="Bill" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="Category" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="Amount" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="3" Text="Freq." Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
-                        <ListBox Grid.Row="1"
-                                 ItemsSource="{Binding Bills}"
-                                 SelectedItem="{Binding SelectedBill}"
-                                 Background="Transparent"
-                                 BorderThickness="0"
-                                 Padding="0"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
-
+                        <ListBox Grid.Row="1" Classes="clean-list" ItemsSource="{Binding Bills}" SelectedItem="{Binding SelectedBill}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{Binding RowBackground}"
-                                            BorderBrush="#26384F"
-                                            BorderThickness="0,0,0,1"
-                                            Padding="12,0"
-                                            Height="40">
-                                        <Grid ColumnDefinitions="1.3*,0.9*,0.75*,0.85*"
-                                              ColumnSpacing="10">
-                                            <TextBlock Grid.Column="0"
-                                                       Text="{Binding BillName}"
-                                                       Foreground="{Binding RowForeground}"
-                                                       FontSize="13"
-                                                       FontWeight="SemiBold"
-                                                       VerticalAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis"/>
-
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding Category}"
-                                                       Foreground="{Binding MutedForeground}"
-                                                       FontSize="13"
-                                                       VerticalAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis"/>
-
-                                            <TextBlock Grid.Column="2"
-                                                       Text="{Binding Amount}"
-                                                       Foreground="{Binding MutedForeground}"
-                                                       FontSize="13"
-                                                       VerticalAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis"/>
-
-                                            <TextBlock Grid.Column="3"
-                                                       Text="{Binding MonthlyEquivalent}"
-                                                       Foreground="{Binding MutedForeground}"
-                                                       FontSize="13"
-                                                       VerticalAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis"/>
+                                    <Border Background="Transparent" BorderBrush="#26384F" BorderThickness="0,0,0,1" Padding="12,0" Height="42">
+                                        <Grid ColumnDefinitions="1.25*,0.85*,0.75*,0.85*" ColumnSpacing="10">
+                                            <TextBlock Grid.Column="0" Text="{Binding BillName}" Foreground="{Binding NameForeground}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Category}" Foreground="{Binding DetailForeground}" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding Amount}" Foreground="{Binding DetailForeground}" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding Frequency}" Foreground="{Binding DetailForeground}" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -145,228 +73,82 @@
                     </Grid>
                 </Border>
 
-                <!-- Average calculators -->
                 <StackPanel Grid.Row="3"
                             Orientation="Horizontal"
-                            HorizontalAlignment="Center"
-                            Spacing="12">
-                    <Button Content="{Binding FuelSummary}"
-                            Height="38"
-                            MinWidth="94"
-                            Padding="16,0"
-                            Background="#2E8B57"
-                            Foreground="White"
-                            FontWeight="SemiBold"
-                            Command="{Binding OpenFuelCalculatorCommand}"
+                            HorizontalAlignment="Right"
+                            Spacing="8">
+                    <Button Name="FuelAverageButton"
+                            Content="Fuel Avg."
+                            Height="34"
+                            Padding="14,0"
+                            Background="#17263A"
+                            Foreground="#DDE7F3"
+                            BorderBrush="#30445F"
+                            IsEnabled="{Binding HasActiveCase}"
                             HorizontalContentAlignment="Center"
                             VerticalContentAlignment="Center"/>
 
-                    <Button Content="{Binding GrocerySummary}"
-                            Height="38"
-                            MinWidth="112"
-                            Padding="16,0"
-                            Background="#2E8B57"
-                            Foreground="White"
-                            FontWeight="SemiBold"
-                            Command="{Binding OpenGroceryCalculatorCommand}"
+                    <Button Name="GroceryAverageButton"
+                            Content="Grocery Avg."
+                            Height="34"
+                            Padding="14,0"
+                            Background="#17263A"
+                            Foreground="#DDE7F3"
+                            BorderBrush="#30445F"
+                            IsEnabled="{Binding HasActiveCase}"
                             HorizontalContentAlignment="Center"
                             VerticalContentAlignment="Center"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Selected bill profile -->
-        <Border Grid.Column="1"
-                Background="#122238"
-                BorderBrush="#2A405A"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="22">
-
-            <Grid RowDefinitions="Auto,*"
-                  RowSpacing="18">
-
-                <WrapPanel Grid.Row="0"
-                           Orientation="Horizontal"
-                           HorizontalAlignment="Stretch"
-                           VerticalAlignment="Top">
-
-                    <TextBlock Text="{Binding SelectedBillName}"
-                               Foreground="White"
-                               FontSize="24"
-                               FontWeight="SemiBold"
-                               MinWidth="300"
-                               MaxWidth="460"
-                               Margin="0,0,18,10"
-                               TextWrapping="NoWrap"
-                               TextTrimming="CharacterEllipsis"
-                               VerticalAlignment="Center"/>
-
-                    <StackPanel Orientation="Horizontal"
-                                HorizontalAlignment="Right"
-                                Spacing="10"
-                                Margin="0,0,0,10">
-                        <Button Content="Edit"
-                                Height="36"
-                                Padding="16,0"
-                                Background="#1A2B42"
-                                Foreground="White"
-                                IsEnabled="{Binding HasSelectedBill}"
-                                HorizontalContentAlignment="Center"
-                                VerticalContentAlignment="Center"/>
-
-                        <Button Content="Remove"
-                                Height="36"
-                                Padding="16,0"
-                                Background="#3A2430"
-                                Foreground="#FFD6DD"
-                                IsEnabled="{Binding HasSelectedBill}"
-                                HorizontalContentAlignment="Center"
-                                VerticalContentAlignment="Center"/>
-
-                        <Button Content="Export PDF"
-                                Height="36"
-                                Padding="16,0"
-                                Background="#17263A"
-                                Foreground="#DDE7F3"
-                                IsEnabled="{Binding HasSelectedBill}"
-                                HorizontalContentAlignment="Center"
-                                VerticalContentAlignment="Center"/>
+        <Border Grid.Column="1" Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="22">
+            <Grid RowDefinitions="Auto,*" RowSpacing="18">
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <TextBlock Grid.Column="0" Text="{Binding SelectedBillName}" Foreground="White" FontSize="24" FontWeight="SemiBold" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                        <Button Name="EditBillButton" Content="Edit" Height="36" Padding="16,0" Background="#1A2B42" Foreground="White" IsEnabled="{Binding CanEditBill}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                        <Button Name="RemoveBillButton" Content="Remove" Height="36" Padding="16,0" Background="#8B2E2E" Foreground="White" BorderBrush="#B84A4A" IsEnabled="{Binding CanRemoveBill}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
                     </StackPanel>
-                </WrapPanel>
+                </Grid>
 
-                <ScrollViewer Grid.Row="1"
-                              HorizontalScrollBarVisibility="Disabled"
-                              VerticalScrollBarVisibility="Auto">
-
+                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="18">
-
-                        <!-- Basic Information -->
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Basic Information"
-                                       Foreground="White"
-                                       FontSize="17"
-                                       FontWeight="SemiBold"/>
-
-                            <Grid RowDefinitions="Auto,Auto,Auto,Auto"
-                                  RowSpacing="6">
-                                <Grid Grid.Row="0" ColumnDefinitions="165,*">
-                                    <TextBlock Grid.Column="0" Text="Bill / expense:" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedBillName}" Foreground="#DDE7F3"/>
+                        <Border Background="#0F1B2A" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6" Padding="16">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Bill Details" Foreground="White" FontSize="17" FontWeight="SemiBold"/>
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="6">
+                                    <Grid Grid.Row="0" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Category:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedCategory}" Foreground="#DDE7F3"/></Grid>
+                                    <Grid Grid.Row="1" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Priority:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedPriority}" Foreground="#DDE7F3"/></Grid>
+                                    <Grid Grid.Row="2" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Amount:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedAmount}" Foreground="#DDE7F3"/></Grid>
+                                    <Grid Grid.Row="3" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Frequency:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedFrequency}" Foreground="#DDE7F3"/></Grid>
+                                    <Grid Grid.Row="4" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Monthly equivalent:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedMonthlyEquivalent}" Foreground="#DDE7F3"/></Grid>
+                                    <Grid Grid.Row="5" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Due date:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedDueDate}" Foreground="#DDE7F3"/></Grid>
+                                    <Grid Grid.Row="6" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Payment method:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedPaymentMethod}" Foreground="#DDE7F3"/></Grid>
+                                    <Grid Grid.Row="7" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Past due amount:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedPastDueAmount}" Foreground="#DDE7F3"/></Grid>
+                                    <Grid Grid.Row="8" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Who pays this:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedPaidBy}" Foreground="#DDE7F3"/></Grid>
+                                    <Grid Grid.Row="9" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Responsibility / Owner:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedResponsibilityOwner}" Foreground="#DDE7F3"/></Grid>
+                                    <Grid Grid.Row="10" ColumnDefinitions="190,*"><TextBlock Grid.Column="0" Text="Active:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedActive}" Foreground="#DDE7F3"/></Grid>
                                 </Grid>
+                            </StackPanel>
+                        </Border>
 
-                                <Grid Grid.Row="1" ColumnDefinitions="165,*">
-                                    <TextBlock Grid.Column="0" Text="Category:" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedCategory}" Foreground="#DDE7F3"/>
+                        <Border Background="#0F1B2A" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6" Padding="16">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Notes" Foreground="White" FontSize="17" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding SelectedNotes}" Foreground="#DDE7F3" FontSize="14" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#0F1B2A" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6" Padding="16">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Record Info" Foreground="White" FontSize="17" FontWeight="SemiBold"/>
+                                <Grid RowDefinitions="Auto,Auto" RowSpacing="6">
+                                    <Grid Grid.Row="0" ColumnDefinitions="150,*"><TextBlock Grid.Column="0" Text="Created:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedCreatedUtc}" Foreground="#DDE7F3"/></Grid>
+                                    <Grid Grid.Row="1" ColumnDefinitions="150,*"><TextBlock Grid.Column="0" Text="Updated:" Foreground="White" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="{Binding SelectedUpdatedUtc}" Foreground="#DDE7F3"/></Grid>
                                 </Grid>
-
-                                <Grid Grid.Row="2" ColumnDefinitions="165,*">
-                                    <TextBlock Grid.Column="0" Text="Priority:" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedPriority}" Foreground="#DDE7F3"/>
-                                </Grid>
-
-                                <Grid Grid.Row="3" ColumnDefinitions="165,*">
-                                    <TextBlock Grid.Column="0" Text="Active:" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedActive}" Foreground="#DDE7F3"/>
-                                </Grid>
-                            </Grid>
-                        </StackPanel>
-
-                        <!-- Payment Details -->
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Payment Details"
-                                       Foreground="White"
-                                       FontSize="17"
-                                       FontWeight="SemiBold"/>
-
-                            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
-                                  RowSpacing="6">
-                                <Grid Grid.Row="0" ColumnDefinitions="190,*">
-                                    <TextBlock Grid.Column="0" Text="Amount:" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedAmount}" Foreground="#DDE7F3"/>
-                                </Grid>
-
-                                <Grid Grid.Row="1" ColumnDefinitions="190,*">
-                                    <TextBlock Grid.Column="0" Text="Frequency:" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedFrequency}" Foreground="#DDE7F3"/>
-                                </Grid>
-
-                                <Grid Grid.Row="2" ColumnDefinitions="190,*">
-                                    <TextBlock Grid.Column="0" Text="Monthly equivalent:" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedMonthlyEquivalent}" Foreground="#DDE7F3"/>
-                                </Grid>
-
-                                <Grid Grid.Row="3" ColumnDefinitions="190,*">
-                                    <TextBlock Grid.Column="0" Text="Due date / expected date:" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedDueDate}" Foreground="#DDE7F3"/>
-                                </Grid>
-
-                                <Grid Grid.Row="4" ColumnDefinitions="190,*">
-                                    <TextBlock Grid.Column="0" Text="Payment method:" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedPaymentMethod}" Foreground="#DDE7F3"/>
-                                </Grid>
-
-                                <Grid Grid.Row="5" ColumnDefinitions="190,*">
-                                    <TextBlock Grid.Column="0" Text="Past due amount:" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedPastDueAmount}" Foreground="#DDE7F3"/>
-                                </Grid>
-                            </Grid>
-                        </StackPanel>
-
-                        <!-- Responsibility -->
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Responsibility"
-                                       Foreground="White"
-                                       FontSize="17"
-                                       FontWeight="SemiBold"/>
-
-                            <Grid RowDefinitions="Auto,Auto"
-                                  RowSpacing="6">
-                                <Grid Grid.Row="0" ColumnDefinitions="190,*">
-                                    <TextBlock Grid.Column="0" Text="Who pays this?" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedPaidBy}" Foreground="#DDE7F3"/>
-                                </Grid>
-
-                                <Grid Grid.Row="1" ColumnDefinitions="190,*">
-                                    <TextBlock Grid.Column="0" Text="Responsibility / owner:" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedResponsibilityOwner}" Foreground="#DDE7F3"/>
-                                </Grid>
-                            </Grid>
-                        </StackPanel>
-
-                        <!-- Notes -->
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Notes"
-                                       Foreground="White"
-                                       FontSize="17"
-                                       FontWeight="SemiBold"/>
-
-                            <TextBlock Text="{Binding SelectedNotes}"
-                                       Foreground="#DDE7F3"
-                                       FontSize="14"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-
-                        <!-- Record Info -->
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Record Info"
-                                       Foreground="White"
-                                       FontSize="17"
-                                       FontWeight="SemiBold"/>
-
-                            <Grid RowDefinitions="Auto,Auto"
-                                  RowSpacing="6">
-                                <Grid Grid.Row="0" ColumnDefinitions="150,*">
-                                    <TextBlock Grid.Column="0" Text="Created UTC:" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedCreatedUtc}" Foreground="#DDE7F3"/>
-                                </Grid>
-
-                                <Grid Grid.Row="1" ColumnDefinitions="150,*">
-                                    <TextBlock Grid.Column="0" Text="Updated UTC:" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding SelectedUpdatedUtc}" Foreground="#DDE7F3"/>
-                                </Grid>
-                            </Grid>
-                        </StackPanel>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>

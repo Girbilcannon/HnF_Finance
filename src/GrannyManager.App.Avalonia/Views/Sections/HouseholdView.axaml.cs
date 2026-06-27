@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.VisualTree;
 using GrannyManager.App.Avalonia.ViewModels.Sections;
 using GrannyManager.App.Avalonia.Views;
 
@@ -33,7 +35,14 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                 return;
 
             var dialog = new HouseholdPersonDialog();
-            dialog.SetMode("Add Household Member", viewModel.CreateBlankPerson());
+            dialog.SetMode(
+                "Add Household Member",
+                viewModel.CreateBlankPerson(),
+                viewModel.GetIncomeSources(),
+                viewModel.GetHouseholdPeople(),
+                viewModel.CreateBlankIncomeSource,
+                viewModel.SaveIncomeSource,
+                viewModel.GetIncomeSources);
 
             var result = await dialog.ShowDialog<bool>(owner);
             if (result)
@@ -54,7 +63,14 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                 return;
 
             var dialog = new HouseholdPersonDialog();
-            dialog.SetMode("Edit Household Member", person);
+            dialog.SetMode(
+                "Edit Household Member",
+                person,
+                viewModel.GetIncomeSources(),
+                viewModel.GetHouseholdPeople(),
+                viewModel.CreateBlankIncomeSource,
+                viewModel.SaveIncomeSource,
+                viewModel.GetIncomeSources);
 
             var result = await dialog.ShowDialog<bool>(owner);
             if (result)
@@ -75,6 +91,26 @@ namespace GrannyManager.App.Avalonia.Views.Sections
             var result = await dialog.ShowDialog<bool>(owner);
             if (result)
                 viewModel.RemoveSelectedPerson();
+        }
+
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            base.OnAttachedToVisualTree(e);
+            RefreshWhenVisible();
+        }
+
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+
+            if (change.Property == IsVisibleProperty)
+                RefreshWhenVisible();
+        }
+
+        private void RefreshWhenVisible()
+        {
+            if (IsVisible && DataContext is HouseholdViewModel viewModel)
+                viewModel.RefreshFromNavigation();
         }
     }
 }

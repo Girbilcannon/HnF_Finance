@@ -131,10 +131,30 @@
                                           Background="#0F1B2A"
                                           Foreground="White"
                                           BorderBrush="#30445F"
-                                          MinHeight="36"
-                                          IsEnabled="False">
-                                    <ComboBoxItem Content="Income source linking will be available after the Income section is wired."/>
-                                </ComboBox>
+                                          MinHeight="36"/>
+                            </Grid>
+
+                            <Grid Name="CreateIncomeSourcePanel"
+                                  ColumnDefinitions="210,*"
+                                  ColumnSpacing="10"
+                                  IsVisible="False">
+                                <TextBlock Grid.Column="0"
+                                           Text=""
+                                           Foreground="#9EB4CC"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"/>
+
+                                <Button Name="CreateIncomeSourceFromHouseholdButton"
+                                        Grid.Column="1"
+                                        Content="Add Income Source"
+                                        Height="36"
+                                        Padding="14,0"
+                                        Background="#2E8B57"
+                                        Foreground="White"
+                                        FontWeight="SemiBold"
+                                        HorizontalAlignment="Left"
+                                        HorizontalContentAlignment="Center"
+                                        VerticalContentAlignment="Center"/>
                             </Grid>
                         </StackPanel>
                     </Border>

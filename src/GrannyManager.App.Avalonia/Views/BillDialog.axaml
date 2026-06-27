@@ -1,0 +1,186 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.BillDialog"
+        Title="Bill / Spending"
+        Width="600"
+        Height="800"
+        MinWidth="560"
+        MinHeight="700"
+        WindowStartupLocation="CenterOwner"
+        Background="#101C2C">
+
+    <Border Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="22">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="18">
+            <StackPanel Grid.Row="0" Spacing="6">
+                <TextBlock Name="DialogTitleTextBlock" Text="Bill / Spending" Foreground="White" FontSize="24" FontWeight="SemiBold"/>
+                <TextBlock Text="Track bills, regular spending, payment responsibility, and household payer links." Foreground="#B8CBE0" FontSize="13" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="14">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Bill Name" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="BillNameTextBox" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Category" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="CategoryComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                <ComboBoxItem Content="Housing"/>
+                                <ComboBoxItem Content="Utilities"/>
+                                <ComboBoxItem Content="Insurance"/>
+                                <ComboBoxItem Content="Vehicle"/>
+                                <ComboBoxItem Content="Medical"/>
+                                <ComboBoxItem Content="Food / Groceries"/>
+                                <ComboBoxItem Content="Fuel"/>
+                                <ComboBoxItem Content="Debt Payment"/>
+                                <ComboBoxItem Content="Subscription"/>
+                                <ComboBoxItem Content="Other"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Priority" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="PriorityComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                <ComboBoxItem Content="High"/>
+                                <ComboBoxItem Content="Normal"/>
+                                <ComboBoxItem Content="Low"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Amount" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBox Name="AmountTextBox" Watermark="0.00" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Frequency" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="FrequencyComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                <ComboBoxItem Content="Weekly"/>
+                                <ComboBoxItem Content="Every 2 Weeks"/>
+                                <ComboBoxItem Content="Twice Monthly"/>
+                                <ComboBoxItem Content="Monthly"/>
+                                <ComboBoxItem Content="Quarterly"/>
+                                <ComboBoxItem Content="Yearly"/>
+                                <ComboBoxItem Content="One-Time / Irregular"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Due Date" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBox Name="DueDateTextBox" Watermark="1st, 15th, varies..." Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Past Due Amount" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBox Name="PastDueAmountTextBox" Watermark="0.00" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <CheckBox Name="AutopayCheckBox" Content="Autopay" Foreground="#DDE7F3"/>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Payment Method" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <ComboBox Name="PaymentMethodComboBox"
+                                  Background="#0F1B2A"
+                                  Foreground="White"
+                                  BorderBrush="#30445F"
+                                  MinHeight="36">
+                            <ComboBoxItem Content="Bank/Debit"/>
+                            <ComboBoxItem Content="Credit Card"/>
+                            <ComboBoxItem Content="Cash/Check"/>
+                            <ComboBoxItem Content="Other"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Name="PaymentBankPanel"
+                                Spacing="5"
+                                IsVisible="False">
+                        <TextBlock Text="Linked Bank Account"
+                                   Foreground="#9EB4CC"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"/>
+                        <ComboBox Name="PaymentBankAccountComboBox"
+                                  Background="#0F1B2A"
+                                  Foreground="White"
+                                  BorderBrush="#30445F"
+                                  MinHeight="36">
+                            <ComboBoxItem Content="Select bank account"/>
+                            <ComboBoxItem Content="Add bank account"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Name="PaymentDebtPanel"
+                                Spacing="5"
+                                IsVisible="False">
+                        <TextBlock Text="Linked Credit Card Debt"
+                                   Foreground="#9EB4CC"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"/>
+                        <ComboBox Name="PaymentDebtComboBox"
+                                  Background="#0F1B2A"
+                                  Foreground="White"
+                                  BorderBrush="#30445F"
+                                  MinHeight="36">
+                            <ComboBoxItem Content="Select debt"/>
+                            <ComboBoxItem Content="Add debt"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Name="PaymentOtherPanel"
+                                Spacing="5"
+                                IsVisible="False">
+                        <TextBlock Text="Other Payment Method"
+                                   Foreground="#9EB4CC"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"/>
+                        <TextBox Name="PaymentOtherTextBox"
+                                 Padding="12"
+                                 Background="#0F1B2A"
+                                 Foreground="White"
+                                 BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Who Pays This?" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <ComboBox Name="PaidByComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36"/>
+                    </StackPanel>
+
+                    <StackPanel Name="OutsidePayerPanel" Spacing="5" IsVisible="False">
+                        <TextBlock Text="Outside Payer" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="OutsidePayerTextBox" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Responsibility / Owner" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <ComboBox Name="ResponsibilityOwnerComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36"/>
+                    </StackPanel>
+
+                    <StackPanel Name="OutsideOwnerPanel" Spacing="5" IsVisible="False">
+                        <TextBlock Text="Outside Owner" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="OutsideOwnerTextBox" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <CheckBox Name="IsActiveCheckBox" Content="Active bill/spending record" Foreground="#DDE7F3"/>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Notes" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="NotesTextBox" MinHeight="110" AcceptsReturn="True" TextWrapping="Wrap" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <TextBlock Name="ValidationTextBlock" Text="" Foreground="#FFB0B0" FontSize="12" TextWrapping="Wrap"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Name="CancelButton" Content="Cancel" Height="38" Padding="18,0" Background="#17263A" Foreground="#DDE7F3" BorderBrush="#30445F" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                <Button Name="SaveButton" Content="Save" Height="38" Padding="18,0" Background="#2E8B57" Foreground="White" FontWeight="SemiBold" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

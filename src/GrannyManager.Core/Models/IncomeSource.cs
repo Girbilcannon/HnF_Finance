@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 
 namespace GrannyManager.Core.Models;
@@ -6,49 +7,24 @@ public sealed class IncomeSource
 {
     public long Id { get; set; }
     public string SourceName { get; set; } = string.Empty;
-    public string IncomeType { get; set; } = string.Empty;
+    public string IncomeType { get; set; } = "Social Security";
     public decimal Amount { get; set; }
-    public bool TaxesWithheld { get; set; }
     public string Frequency { get; set; } = "Monthly";
+    public bool TaxesWithheld { get; set; }
     public string ExpectedDayOrDate { get; set; } = string.Empty;
-    public string DepositedToAccount { get; set; } = string.Empty;
-    public string DepositMethod { get; set; } = "Cash";
-    public long LinkedBankAssetId { get; set; }
-    public string LinkedBankAssetName { get; set; } = string.Empty;
+    public string DepositDestination { get; set; } = string.Empty;
+    public long LinkedHouseholdPersonId { get; set; }
+    public string LinkedHouseholdPersonName { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
     public string Notes { get; set; } = string.Empty;
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
 
+    public string TaxHandlingText => TaxesWithheld ? "Taxes withheld" : "No taxes withheld";
+    public string AmountLabel => TaxesWithheld ? "After Taxes" : "Gross Pay";
+    public string DepositDisplayText => string.IsNullOrWhiteSpace(DepositDestination) ? "Not specified" : DepositDestination.Trim();
     public decimal MonthlyEquivalent => CalculateMonthlyEquivalent(Amount, Frequency, IsActive);
-
     public string MonthlyEquivalentText => MonthlyEquivalent.ToString("C2", CultureInfo.CurrentCulture);
-
-    public string AmountLabel => TaxesWithheld ? "Payment Amount (After Taxes)" : "Gross Pay";
-
-    public string TaxHandlingText => TaxesWithheld ? "Taxes withheld" : "Taxes not withheld / unknown";
-
-    public string DepositDisplayText
-    {
-        get
-        {
-            var method = string.IsNullOrWhiteSpace(DepositMethod) ? DepositedToAccount : DepositMethod;
-
-            if (string.Equals(method, "Select Bank Account", StringComparison.OrdinalIgnoreCase))
-                return string.IsNullOrWhiteSpace(LinkedBankAssetName) ? "Bank account not selected" : LinkedBankAssetName;
-
-            if (string.Equals(method, "Add Bank Account", StringComparison.OrdinalIgnoreCase))
-                return string.IsNullOrWhiteSpace(LinkedBankAssetName) ? "Bank account not selected" : LinkedBankAssetName;
-
-            if (string.Equals(method, "Bank Account", StringComparison.OrdinalIgnoreCase))
-                return string.IsNullOrWhiteSpace(LinkedBankAssetName) ? "Bank account not selected" : LinkedBankAssetName;
-
-            if (!string.IsNullOrWhiteSpace(method))
-                return method;
-
-            return string.IsNullOrWhiteSpace(DepositedToAccount) ? "Not specified" : DepositedToAccount;
-        }
-    }
 
     public static decimal CalculateMonthlyEquivalent(decimal amount, string? frequency, bool isActive = true)
     {

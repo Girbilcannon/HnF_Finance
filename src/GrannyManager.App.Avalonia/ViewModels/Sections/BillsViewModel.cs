@@ -1,11 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using GrannyManager.Application.Services;
 using GrannyManager.Application.State;
 using GrannyManager.Core.Models;
-using System;
-using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace GrannyManager.App.Avalonia.ViewModels.Sections;
 
@@ -23,10 +23,12 @@ public sealed partial class BillsViewModel : ViewModelBase
         LoadBills();
     }
 
-    public ObservableCollection<BillListItemViewModel> Bills { get; } = new();
+    public ObservableCollection<BillRowViewModel> Bills { get; } = new();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedBill))]
+    [NotifyPropertyChangedFor(nameof(CanEditBill))]
+    [NotifyPropertyChangedFor(nameof(CanRemoveBill))]
     [NotifyPropertyChangedFor(nameof(SelectedBillName))]
     [NotifyPropertyChangedFor(nameof(SelectedCategory))]
     [NotifyPropertyChangedFor(nameof(SelectedPriority))]
@@ -42,39 +44,37 @@ public sealed partial class BillsViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(SelectedNotes))]
     [NotifyPropertyChangedFor(nameof(SelectedCreatedUtc))]
     [NotifyPropertyChangedFor(nameof(SelectedUpdatedUtc))]
-    private BillListItemViewModel? _selectedBill;
+    private BillRowViewModel? _selectedBill;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanAddBill))]
+    private bool _hasActiveCase;
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
-    [ObservableProperty]
-    private bool _hasActiveCase;
-
-    [ObservableProperty]
-    private string _fuelSummary = "Fuel average calculator";
-
-    [ObservableProperty]
-    private string _grocerySummary = "Grocery average calculator";
-
     public bool HasSelectedBill => SelectedBill is not null;
+    public bool CanAddBill => HasActiveCase;
+    public bool CanEditBill => HasActiveCase && HasSelectedBill;
+    public bool CanRemoveBill => HasActiveCase && HasSelectedBill && (SelectedBill?.Bill.Id ?? 0) > 0;
 
     public string SelectedBillName => SelectedBill?.Bill.BillName ?? "No bill selected";
     public string SelectedCategory => Clean(SelectedBill?.Bill.Category);
     public string SelectedPriority => Clean(SelectedBill?.Bill.Priority);
     public string SelectedActive => YesNo(SelectedBill?.Bill.IsActive);
-    public string SelectedAmount => FormatMoney(SelectedBill?.Bill.Amount);
+    public string SelectedAmount => SelectedBill?.Bill.AmountText ?? "$0.00";
     public string SelectedFrequency => Clean(SelectedBill?.Bill.Frequency);
-    public string SelectedMonthlyEquivalent => FormatMoney(SelectedBill?.Bill.MonthlyEquivalent);
+    public string SelectedMonthlyEquivalent => SelectedBill?.Bill.MonthlyEquivalentText ?? "$0.00";
     public string SelectedDueDate => Clean(SelectedBill?.Bill.DueDate);
     public string SelectedPaymentMethod => SelectedBill?.Bill.AutopayText ?? "Manual payment";
-    public string SelectedPastDueAmount => FormatMoney(SelectedBill?.Bill.PastDueAmount);
+    public string SelectedPastDueAmount => SelectedBill?.Bill.PastDueAmountText ?? "$0.00";
     public string SelectedPaidBy => Clean(SelectedBill?.Bill.PaidBy);
     public string SelectedResponsibilityOwner => Clean(SelectedBill?.Bill.ResponsibilityOwner);
     public string SelectedNotes => Clean(SelectedBill?.Bill.Notes);
-    public string SelectedCreatedUtc => FormatUtc(SelectedBill?.Bill.CreatedUtc);
-    public string SelectedUpdatedUtc => FormatUtc(SelectedBill?.Bill.UpdatedUtc);
+    public string SelectedCreatedUtc => FormatDate(SelectedBill?.Bill.CreatedUtc);
+    public string SelectedUpdatedUtc => FormatDate(SelectedBill?.Bill.UpdatedUtc);
 
-    partial void OnSelectedBillChanged(BillListItemViewModel? oldValue, BillListItemViewModel? newValue)
+    partial void OnSelectedBillChanged(BillRowViewModel? oldValue, BillRowViewModel? newValue)
     {
         if (oldValue is not null)
             oldValue.IsSelected = false;
@@ -83,24 +83,123 @@ public sealed partial class BillsViewModel : ViewModelBase
             newValue.IsSelected = true;
     }
 
-    [RelayCommand]
-    private void OpenFuelCalculator()
+    public Bill CreateBlankBill()
     {
-        StatusMessage = HasActiveCase
-            ? "Fuel calculator window will be wired in the next Bills pass."
-            : "Open or create a case before using the fuel calculator.";
+        return new Bill
+        {
+            Category = "Utilities",
+            Frequency = "Monthly",
+            PaymentMethod = "Cash/Check",
+            PaidBy = "Self (Primary Person)",
+            ResponsibilityOwner = "Self (Primary Person)",
+            Priority = "Normal",
+            IsActive = true
+        };
     }
 
-    [RelayCommand]
-    private void OpenGroceryCalculator()
+    public Bill? CreateEditableCopyOfSelectedBill()
     {
-        StatusMessage = HasActiveCase
-            ? "Grocery calculator window will be wired in the next Bills pass."
-            : "Open or create a case before using the grocery calculator.";
+        var bill = SelectedBill?.Bill;
+        if (bill is null)
+            return null;
+
+        return new Bill
+        {
+            Id = bill.Id,
+            BillName = bill.BillName,
+            Category = bill.Category,
+            Amount = bill.Amount,
+            Frequency = bill.Frequency,
+            DueDate = bill.DueDate,
+            PaymentMethod = bill.PaymentMethod,
+            IsAutopay = bill.IsAutopay,
+            PastDueAmount = bill.PastDueAmount,
+            PaidBy = bill.PaidBy,
+            PaidByHouseholdPersonId = bill.PaidByHouseholdPersonId,
+            ResponsibilityOwner = bill.ResponsibilityOwner,
+            ResponsibilityOwnerHouseholdPersonId = bill.ResponsibilityOwnerHouseholdPersonId,
+            Priority = bill.Priority,
+            IsActive = bill.IsActive,
+            Notes = bill.Notes,
+            CreatedUtc = bill.CreatedUtc,
+            UpdatedUtc = bill.UpdatedUtc
+        };
+    }
+
+    public IReadOnlyList<HouseholdPerson> GetHouseholdPeople()
+    {
+        return _billsService.LoadHouseholdPeople();
+    }
+
+    public IReadOnlyList<BillReceipt> LoadReceipts(string receiptType)
+    {
+        return _billsService.LoadReceipts(receiptType);
+    }
+
+    public ReceiptAverageSummary LoadReceiptAverage(string receiptType)
+    {
+        return _billsService.LoadReceiptAverage(receiptType);
+    }
+
+    public bool AddReceipt(string receiptType, DateTime receiptDate, decimal amount, out string message)
+    {
+        var result = _billsService.AddReceipt(receiptType, receiptDate, amount, out message);
+        if (result)
+            LoadBills();
+        else
+            StatusMessage = message;
+
+        return result;
+    }
+
+    public bool DeleteReceipt(long receiptId, out string message)
+    {
+        var result = _billsService.DeleteReceipt(receiptId, out message);
+        if (result)
+            LoadBills();
+        else
+            StatusMessage = message;
+
+        return result;
+    }
+
+
+    public bool SaveBill(Bill bill)
+    {
+        if (!_billsService.SaveBill(bill, out var message))
+        {
+            StatusMessage = message;
+            return false;
+        }
+
+        LoadBills();
+        SelectedBill = Bills.FirstOrDefault(item => item.Bill.Id == bill.Id) ?? Bills.FirstOrDefault();
+        StatusMessage = message;
+        return true;
+    }
+
+    public bool RemoveSelectedBill()
+    {
+        var selectedId = SelectedBill?.Bill.Id ?? 0;
+        if (!_billsService.DeleteBill(selectedId, out var message))
+        {
+            StatusMessage = message;
+            return false;
+        }
+
+        LoadBills();
+        StatusMessage = message;
+        return true;
+    }
+
+    public void RefreshFromNavigation()
+    {
+        LoadBills();
     }
 
     private void LoadBills()
     {
+        var selectedId = SelectedBill?.Bill.Id ?? 0;
         var result = _billsService.LoadBills();
 
         HasActiveCase = result.HasActiveCase;
@@ -111,116 +210,37 @@ public sealed partial class BillsViewModel : ViewModelBase
         var index = 0;
         foreach (var bill in result.Bills)
         {
-            Bills.Add(new BillListItemViewModel(bill, index));
+            Bills.Add(new BillRowViewModel(bill, index));
             index++;
         }
 
-        SelectedBill = Bills.FirstOrDefault();
-
-        UpdateReceiptSummaries();
+        SelectedBill = Bills.FirstOrDefault(item => item.Bill.Id == selectedId) ?? Bills.FirstOrDefault();
     }
 
-    private void UpdateReceiptSummaries()
-    {
-        if (!HasActiveCase)
-        {
-            FuelSummary = "Fuel";
-            GrocerySummary = "Grocery";
-            return;
-        }
-
-        try
-        {
-            FuelSummary = FormatReceiptSummary(_billsService.LoadReceiptAverage("Fuel"));
-            GrocerySummary = FormatReceiptSummary(_billsService.LoadReceiptAverage("Grocery"));
-        }
-        catch
-        {
-            FuelSummary = "Fuel";
-            GrocerySummary = "Grocery";
-        }
-    }
-
-    private static string FormatReceiptSummary(ReceiptAverageSummary summary)
-    {
-        return summary.RoundedMonthlyEstimate > 0m
-            ? $"{summary.ReceiptType}: {summary.RoundedMonthlyEstimate:C0}/mo"
-            : summary.ReceiptType;
-    }
-
-    private static string Clean(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? "None" : value.Trim();
-    }
-
-    private static string YesNo(bool? value)
-    {
-        return value == true ? "Yes" : "No";
-    }
-
-    private static string FormatMoney(decimal? value)
-    {
-        return (value ?? 0m).ToString("C2");
-    }
-
-    private static string FormatUtc(DateTime? value)
-    {
-        if (value is null || value.Value == default)
-            return "Not saved";
-
-        return value.Value.ToUniversalTime().ToString("yyyy-MM-dd HH:mm");
-    }
+    private static string Clean(string? value) => string.IsNullOrWhiteSpace(value) ? "None" : value.Trim();
+    private static string YesNo(bool? value) => value == true ? "Yes" : "No";
+    private static string FormatDate(DateTime? value) => value is null || value.Value == default ? "Not saved" : value.Value.ToLocalTime().ToString("MMM d, yyyy h:mm tt");
 }
 
-public sealed partial class BillListItemViewModel : ObservableObject
+public sealed partial class BillRowViewModel : ObservableObject
 {
-    public BillListItemViewModel(Bill bill, int index)
+    public BillRowViewModel(Bill bill, int index)
     {
         Bill = bill ?? throw new ArgumentNullException(nameof(bill));
         Index = index;
     }
 
     public Bill Bill { get; }
-
     public int Index { get; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(RowBackground))]
-    [NotifyPropertyChangedFor(nameof(RowForeground))]
-    [NotifyPropertyChangedFor(nameof(MutedForeground))]
     private bool _isSelected;
 
     public string BillName => string.IsNullOrWhiteSpace(Bill.BillName) ? "Unnamed Bill" : Bill.BillName.Trim();
-    public string Category => string.IsNullOrWhiteSpace(Bill.Category) ? "None" : Bill.Category.Trim();
-    public string Amount => Bill.Amount.ToString("C2");
-    public string MonthlyEquivalent => Bill.MonthlyEquivalent.ToString("C2");
-
+    public string Category => string.IsNullOrWhiteSpace(Bill.Category) ? "Other" : Bill.Category.Trim();
+    public string Amount => Bill.AmountText;
+    public string Frequency => string.IsNullOrWhiteSpace(Bill.Frequency) ? "Monthly" : Bill.Frequency.Trim();
     public bool IsInactive => !Bill.IsActive;
-
-    public string RowBackground
-    {
-        get
-        {
-            if (IsSelected)
-                return "#2A6FA8";
-
-            if (IsInactive)
-                return "#1A1F29";
-
-            return Index % 2 == 0 ? "#122238" : "#0F1B2A";
-        }
-    }
-
-    public string RowForeground
-    {
-        get
-        {
-            if (IsSelected)
-                return "White";
-
-            return IsInactive ? "#7D8795" : "#DDE7F3";
-        }
-    }
-
-    public string MutedForeground => IsSelected ? "White" : IsInactive ? "#707A88" : "#C8D4E2";
+    public string NameForeground => IsInactive ? "#7D8795" : "White";
+    public string DetailForeground => IsInactive ? "#707A88" : "#C8D4E2";
 }

@@ -1,0 +1,26 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.ConfirmDeleteIncomeSourceDialog"
+        Title="Confirm Remove"
+        Width="440"
+        Height="220"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="#101C2C">
+
+    <Border Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="22">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="18">
+            <StackPanel Grid.Row="0" Spacing="6">
+                <TextBlock Text="Remove Income Source?" Foreground="White" FontSize="22" FontWeight="SemiBold"/>
+                <TextBlock Text="Are you sure you would like to remove this income source?" Foreground="#C8D4E2" FontSize="13" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <TextBlock Grid.Row="1" Text="This removes the selected record from the active case." Foreground="#9EB4CC" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center"/>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Name="CancelButton" Content="Cancel" Height="38" Padding="18,0" Background="#17263A" Foreground="#DDE7F3" BorderBrush="#30445F" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                <Button Name="RemoveButton" Content="Remove" Height="38" Padding="18,0" Background="#8B2E2E" Foreground="White" BorderBrush="#B84A4A" FontWeight="SemiBold" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

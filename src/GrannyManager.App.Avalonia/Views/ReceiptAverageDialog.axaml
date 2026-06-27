@@ -1,0 +1,131 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.ReceiptAverageDialog"
+        Title="Receipt Average"
+        Width="620"
+        Height="540"
+        WindowStartupLocation="CenterOwner"
+        Background="#101C2C">
+
+    <Border Background="#122238"
+            BorderBrush="#2A405A"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="22">
+        <Grid RowDefinitions="Auto,Auto,*,Auto"
+              RowSpacing="16">
+            <StackPanel Grid.Row="0" Spacing="6">
+                <TextBlock Name="TitleTextBlock"
+                           Text="Receipt Average"
+                           Foreground="White"
+                           FontSize="24"
+                           FontWeight="SemiBold"/>
+                <TextBlock Text="Add receipts to calculate a rounded monthly average. This calculated value appears in the Bills list."
+                           Foreground="#B8CBE0"
+                           FontSize="13"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <Grid Grid.Row="1"
+                  ColumnDefinitions="*,*"
+                  ColumnSpacing="12">
+                <StackPanel Grid.Column="0" Spacing="5">
+                    <TextBlock Text="Receipt Amount"
+                               Foreground="#9EB4CC"
+                               FontSize="12"
+                               FontWeight="SemiBold"/>
+                    <TextBox Name="AmountTextBox"
+                             Watermark="0.00"
+                             Padding="12"
+                             Background="#0F1B2A"
+                             Foreground="White"
+                             BorderBrush="#30445F"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Spacing="5">
+                    <TextBlock Text="Receipt Date"
+                               Foreground="#9EB4CC"
+                               FontSize="12"
+                               FontWeight="SemiBold"/>
+                    <CalendarDatePicker Name="ReceiptDatePicker"
+                                        Watermark="MM/DD/YYYY"
+                                        Width="190"
+                                        HorizontalAlignment="Left"
+                                        Background="#0F1B2A"
+                                        Foreground="White"
+                                        BorderBrush="#30445F"/>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Grid.Row="2" Spacing="10">
+                <Button Name="AddReceiptButton"
+                        Content="Add Receipt"
+                        Height="36"
+                        Padding="14,0"
+                        HorizontalAlignment="Left"
+                        Background="#2E8B57"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"/>
+
+                <TextBlock Name="SummaryTextBlock"
+                           Text="No receipts added."
+                           Foreground="#DDE7F3"
+                           FontSize="14"
+                           TextWrapping="Wrap"/>
+
+                <Border Background="#0F1B2A"
+                        BorderBrush="#26384F"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                    <ListBox Name="ReceiptsListBox"
+                             Background="Transparent"
+                             Foreground="White"
+                             BorderThickness="0"
+                             Height="220"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*,Auto"
+                                      ColumnSpacing="8"
+                                      Margin="8,4">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding DisplayText}"
+                                               Foreground="#DDE7F3"
+                                               VerticalAlignment="Center"/>
+                                    <Button Grid.Column="1"
+                                            Content="🗑"
+                                            Width="34"
+                                            Height="30"
+                                            Background="#8B2E2E"
+                                            Foreground="White"
+                                            BorderBrush="#B84A4A"
+                                            Tag="{Binding Id}"
+                                            Click="DeleteReceipt_Click"
+                                            HorizontalContentAlignment="Center"
+                                            VerticalContentAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+            </StackPanel>
+
+            <StackPanel Grid.Row="3"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right">
+                <Button Name="CloseButton"
+                        Content="Close"
+                        Height="38"
+                        Padding="18,0"
+                        Background="#17263A"
+                        Foreground="#DDE7F3"
+                        BorderBrush="#30445F"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

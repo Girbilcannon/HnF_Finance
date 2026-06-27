@@ -31,7 +31,7 @@ public sealed class HouseholdService
 
         try
         {
-            var repository = CreateRepository(activeCase.CaseFolderPath);
+            var repository = CreateHouseholdRepository(activeCase.CaseFolderPath);
             var people = SortForHouseholdList(repository.GetAll());
 
             return new HouseholdLoadResult(
@@ -47,6 +47,86 @@ public sealed class HouseholdService
                 HasActiveCase: true,
                 StatusMessage: $"Could not load household records: {ex.Message}",
                 People: Array.Empty<HouseholdPerson>());
+        }
+    }
+
+    public IReadOnlyList<IncomeSource> LoadIncomeSources()
+    {
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+            return Array.Empty<IncomeSource>();
+
+        try
+        {
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            var repository = new IncomeSourcesRepository(databasePath);
+            return repository.GetAll().Where(source => source.IsActive).OrderBy(source => source.SourceName).ToList();
+        }
+        catch
+        {
+            return Array.Empty<IncomeSource>();
+        }
+    }
+
+    public IReadOnlyList<Bill> LoadBillsPaidByPerson(long householdPersonId, string householdPersonName)
+    {
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+            return Array.Empty<Bill>();
+
+        try
+        {
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            var repository = new BillsRepository(databasePath);
+            return repository.GetAll()
+                .Where(bill => bill.IsActive)
+                .Where(bill =>
+                    (householdPersonId > 0 && bill.PaidByHouseholdPersonId == householdPersonId) ||
+                    (!string.IsNullOrWhiteSpace(householdPersonName) && string.Equals(bill.PaidBy, householdPersonName, StringComparison.OrdinalIgnoreCase)))
+                .OrderBy(bill => bill.BillName)
+                .ToList();
+        }
+        catch
+        {
+            return Array.Empty<Bill>();
+        }
+    }
+
+    public bool SaveIncomeSource(IncomeSource source, out string statusMessage)
+    {
+        statusMessage = string.Empty;
+
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+        {
+            statusMessage = "Open a case before saving income sources.";
+            return false;
+        }
+
+        if (source is null)
+        {
+            statusMessage = "No income source was provided.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(source.SourceName))
+        {
+            statusMessage = "Enter a source name before saving.";
+            return false;
+        }
+
+        try
+        {
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            var repository = new IncomeSourcesRepository(databasePath);
+            repository.Upsert(source);
+            statusMessage = "Income source saved.";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Could not save income source: {ex.Message}";
+            return false;
         }
     }
 
@@ -75,7 +155,7 @@ public sealed class HouseholdService
 
         try
         {
-            var repository = CreateRepository(activeCase.CaseFolderPath);
+            var repository = CreateHouseholdRepository(activeCase.CaseFolderPath);
             repository.Upsert(person);
             statusMessage = "Household member saved.";
             return true;
@@ -106,7 +186,7 @@ public sealed class HouseholdService
 
         try
         {
-            var repository = CreateRepository(activeCase.CaseFolderPath);
+            var repository = CreateHouseholdRepository(activeCase.CaseFolderPath);
             repository.Delete(id);
             statusMessage = "Household member removed.";
             return true;
@@ -118,7 +198,7 @@ public sealed class HouseholdService
         }
     }
 
-    private static HouseholdPeopleRepository CreateRepository(string caseFolderPath)
+    private static HouseholdPeopleRepository CreateHouseholdRepository(string caseFolderPath)
     {
         var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(caseFolderPath);
         return new HouseholdPeopleRepository(databasePath);

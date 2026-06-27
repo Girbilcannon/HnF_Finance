@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 
 namespace GrannyManager.Core.Models;
@@ -6,14 +7,17 @@ public sealed class Bill
 {
     public long Id { get; set; }
     public string BillName { get; set; } = string.Empty;
-    public string Category { get; set; } = string.Empty;
+    public string Category { get; set; } = "Utilities";
     public decimal Amount { get; set; }
     public string Frequency { get; set; } = "Monthly";
     public string DueDate { get; set; } = string.Empty;
+    public string PaymentMethod { get; set; } = "Cash/Check";
     public bool IsAutopay { get; set; }
-    public string PaidBy { get; set; } = string.Empty;
-    public string ResponsibilityOwner { get; set; } = string.Empty;
     public decimal PastDueAmount { get; set; }
+    public string PaidBy { get; set; } = "Self (Primary Person)";
+    public long PaidByHouseholdPersonId { get; set; }
+    public string ResponsibilityOwner { get; set; } = "Self (Primary Person)";
+    public long ResponsibilityOwnerHouseholdPersonId { get; set; }
     public string Priority { get; set; } = "Normal";
     public bool IsActive { get; set; } = true;
     public string Notes { get; set; } = string.Empty;
@@ -21,12 +25,10 @@ public sealed class Bill
     public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
 
     public decimal MonthlyEquivalent => CalculateMonthlyEquivalent(Amount, Frequency, IsActive);
-
+    public string AmountText => Amount.ToString("C2", CultureInfo.CurrentCulture);
     public string MonthlyEquivalentText => MonthlyEquivalent.ToString("C2", CultureInfo.CurrentCulture);
-
-    public string StatusText => IsActive ? "Active" : "Inactive";
-
-    public string AutopayText => IsAutopay ? "Autopay" : "Manual payment";
+    public string PastDueAmountText => PastDueAmount <= 0 ? "$0.00" : PastDueAmount.ToString("C2", CultureInfo.CurrentCulture);
+    public string AutopayText => IsAutopay ? $"Autopay - {PaymentMethod}" : PaymentMethod;
 
     public static decimal CalculateMonthlyEquivalent(decimal amount, string? frequency, bool isActive = true)
     {
