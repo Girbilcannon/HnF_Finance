@@ -1,8 +1,11 @@
-﻿namespace GrannyManager.Core.Models;
+﻿using System;
+using System.Globalization;
+
+namespace GrannyManager.Core.Models;
 
 public sealed class AllowanceSavingsItem
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public string ItemName { get; set; } = string.Empty;
     public string ItemType { get; set; } = "Allowance";
     public decimal Amount { get; set; }
@@ -16,28 +19,40 @@ public sealed class AllowanceSavingsItem
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
 
+    public bool IsSavings => string.Equals(ItemType, "Savings", StringComparison.OrdinalIgnoreCase);
+    public bool IsAllowance => string.Equals(ItemType, "Allowance", StringComparison.OrdinalIgnoreCase);
+
+    public decimal MonthlyEquivalent => CalculateMonthlyEquivalent(Amount, Frequency, IsActive);
+    public string AmountText => Amount.ToString("C2", CultureInfo.CurrentCulture);
+    public string MonthlyEquivalentText => MonthlyEquivalent.ToString("C2", CultureInfo.CurrentCulture);
+
     public decimal GetMonthlyEquivalent()
     {
-        return Frequency.Trim().ToLowerInvariant() switch
+        return MonthlyEquivalent;
+    }
+
+    public static decimal CalculateMonthlyEquivalent(decimal amount, string? frequency, bool isActive = true)
+    {
+        if (!isActive)
+            return 0m;
+
+        return (frequency ?? string.Empty).Trim().ToLowerInvariant() switch
         {
-            "weekly" => Amount * 52m / 12m,
-            "every 2 weeks" => Amount * 26m / 12m,
-            "every two weeks" => Amount * 26m / 12m,
-            "biweekly" => Amount * 26m / 12m,
-            "twice monthly" => Amount * 2m,
-            "monthly" => Amount,
-            "quarterly" => Amount / 3m,
-            "yearly" => Amount / 12m,
-            "annually" => Amount / 12m,
-            "annual" => Amount / 12m,
+            "weekly" => amount * 52m / 12m,
+            "every 2 weeks" => amount * 26m / 12m,
+            "every two weeks" => amount * 26m / 12m,
+            "biweekly" => amount * 26m / 12m,
+            "twice monthly" => amount * 2m,
+            "monthly" => amount,
+            "quarterly" => amount / 3m,
+            "yearly" => amount / 12m,
+            "annually" => amount / 12m,
+            "annual" => amount / 12m,
             "one-time / irregular" => 0m,
             "one-time" => 0m,
             "one time" => 0m,
             "irregular" => 0m,
-            _ => Amount
+            _ => amount
         };
     }
-
-    public bool IsSavings => string.Equals(ItemType, "Savings", StringComparison.OrdinalIgnoreCase);
-    public bool IsAllowance => string.Equals(ItemType, "Allowance", StringComparison.OrdinalIgnoreCase);
 }
