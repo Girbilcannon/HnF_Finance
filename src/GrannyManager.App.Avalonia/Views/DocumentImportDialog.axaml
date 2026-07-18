@@ -42,14 +42,14 @@
                             <TextBlock Text="Import Mode" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
                             <ComboBox Name="ImportModeComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
                                 <ComboBoxItem Content="Import Individually"/>
-                                <ComboBoxItem Content="Merge into Single PDF" IsEnabled="False"/>
+                                <ComboBoxItem Content="Merge into Single PDF"/>
                             </ComboBox>
-                            <TextBlock Text="PDF merge is reserved for the PDF processing patch." Foreground="#8FA3BA" FontSize="11" TextWrapping="Wrap"/>
+                            <TextBlock Text="Merge selected PDFs into a single protected or unprotected PDF." Foreground="#8FA3BA" FontSize="11" TextWrapping="Wrap"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Spacing="5">
                             <TextBlock Text="Merged PDF Name" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
-                            <TextBox Name="MergedFileNameTextBox" IsEnabled="False" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                            <TextBox Name="MergedFileNameTextBox" Watermark="Merged file name" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
                         </StackPanel>
                     </Grid>
 
@@ -94,16 +94,15 @@
                     <Border Background="#0F1B2A" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6" Padding="12">
                         <StackPanel Spacing="8">
                             <CheckBox Name="PasswordProtectCheckBox"
-                                      Content="Password protect imported PDF(s) when PDF protection is enabled"
-                                      Foreground="#DDE7F3"
-                                      IsEnabled="False"/>
-                            <TextBlock Text="Real PDF password protection will be added with the PDF processing library patch. This first pass does not alter PDF encryption."
+                                      Content="Password protect imported PDF(s)"
+                                      Foreground="#DDE7F3"/>
+                            <TextBlock Text="Password protection uses PDFsharp and applies to imported PDFs or merged PDF output."
                                        Foreground="#8FA3BA"
                                        FontSize="11"
                                        TextWrapping="Wrap"/>
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                                <TextBox Name="PasswordTextBox" Watermark="Password" IsEnabled="False" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
-                                <TextBox Name="ConfirmPasswordTextBox" Grid.Column="1" Watermark="Confirm password" IsEnabled="False" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                                <TextBox Name="PasswordTextBox" Watermark="Password" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                                <TextBox Name="ConfirmPasswordTextBox" Grid.Column="1" Watermark="Confirm password" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
                             </Grid>
                         </StackPanel>
                     </Border>

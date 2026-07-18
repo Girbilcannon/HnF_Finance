@@ -177,15 +177,30 @@ public sealed class DocumentsService
             return false;
         }
 
+        if (request.PasswordProtectRequested && string.IsNullOrWhiteSpace(request.Password))
+        {
+            statusMessage = "Enter a document password before importing protected PDFs.";
+            return false;
+        }
+
         if (request.PasswordProtectRequested && !string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
         {
             statusMessage = "Document password and confirmation do not match.";
             return false;
         }
 
-        if (string.Equals(request.ImportMode, "Merge into Single PDF", StringComparison.OrdinalIgnoreCase))
+        var isMerge = string.Equals(request.ImportMode, "Merge into Single PDF", StringComparison.OrdinalIgnoreCase);
+        var requiresPdfProcessing = isMerge || request.PasswordProtectRequested;
+
+        if (requiresPdfProcessing && request.SourceFilePaths.Any(path => !DocumentsPdfProcessor.IsPdf(path)))
         {
-            statusMessage = "PDF merge will be enabled in the PDF processing patch. For now, import individually.";
+            statusMessage = "PDF merge and password protection only work with PDF files. Remove non-PDF files or turn off PDF processing.";
+            return false;
+        }
+
+        if (isMerge && string.IsNullOrWhiteSpace(request.MergedFileName))
+        {
+            statusMessage = "Enter a merged PDF file name before importing.";
             return false;
         }
 
@@ -194,6 +209,43 @@ public sealed class DocumentsService
             var batchId = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
             var repository = CreateRepository(activeCase.CaseFolderPath);
             var customFolder = ResolveCustomFolder(activeCase.CaseFolderPath, request);
+            var targetFolder = BuildTargetFolder(activeCase.CaseFolderPath, request.PersonName, request.Category, customFolder);
+            Directory.CreateDirectory(targetFolder);
+
+            if (isMerge)
+            {
+                var mergedFileName = EnsurePdfExtension(SafeFileName(request.MergedFileName));
+                var storedFileName = GetUniqueFileName(targetFolder, mergedFileName);
+                var targetPath = Path.Combine(targetFolder, storedFileName);
+
+                DocumentsPdfProcessor.MergePdfs(request.SourceFilePaths, targetPath, request.PasswordProtectRequested ? request.Password : null);
+
+                var record = new DocumentRecord
+                {
+                    DisplayName = Path.GetFileNameWithoutExtension(storedFileName),
+                    OriginalFileName = string.Join(", ", request.SourceFilePaths.Select(Path.GetFileName)),
+                    StoredFileName = storedFileName,
+                    FullPath = targetPath,
+                    RelativePath = Path.GetRelativePath(GetDocumentsRoot(activeCase.CaseFolderPath), targetPath),
+                    PersonName = CleanFolderSegment(request.PersonName, "General"),
+                    Category = CleanFolderSegment(request.Category, "Other"),
+                    LinkedSection = string.IsNullOrWhiteSpace(request.LinkedSection) ? request.Category : request.LinkedSection,
+                    LinkedRecordId = request.LinkedRecordId,
+                    LinkedRecordName = request.LinkedRecordName,
+                    CustomFolder = customFolder,
+                    Tags = NormalizeTags(request.Tags),
+                    Notes = request.Notes.Trim(),
+                    IsMergedFile = true,
+                    PasswordProtectedRequested = request.PasswordProtectRequested,
+                    ImportBatchId = batchId,
+                    IsActive = true
+                };
+
+                repository.Upsert(record);
+                AppDataChangeNotifier.NotifyDocumentsChanged();
+                statusMessage = "PDF merge import complete.";
+                return true;
+            }
 
             foreach (var sourceFilePath in request.SourceFilePaths)
             {
@@ -201,12 +253,13 @@ public sealed class DocumentsService
                     continue;
 
                 var sourceFile = new FileInfo(sourceFilePath);
-                var targetFolder = BuildTargetFolder(activeCase.CaseFolderPath, request.PersonName, request.Category, customFolder);
-                Directory.CreateDirectory(targetFolder);
-
                 var storedFileName = GetUniqueFileName(targetFolder, sourceFile.Name);
                 var targetPath = Path.Combine(targetFolder, storedFileName);
-                File.Copy(sourceFile.FullName, targetPath, overwrite: false);
+
+                if (request.PasswordProtectRequested && DocumentsPdfProcessor.IsPdf(sourceFile.FullName))
+                    DocumentsPdfProcessor.CopyPdfWithOptionalPassword(sourceFile.FullName, targetPath, request.Password);
+                else
+                    File.Copy(sourceFile.FullName, targetPath, overwrite: false);
 
                 var record = new DocumentRecord
                 {
@@ -224,7 +277,7 @@ public sealed class DocumentsService
                     Tags = NormalizeTags(request.Tags),
                     Notes = request.Notes.Trim(),
                     IsMergedFile = false,
-                    PasswordProtectedRequested = request.PasswordProtectRequested,
+                    PasswordProtectedRequested = request.PasswordProtectRequested && DocumentsPdfProcessor.IsPdf(sourceFile.FullName),
                     ImportBatchId = batchId,
                     IsActive = true
                 };
@@ -459,6 +512,23 @@ public sealed class DocumentsService
         }
 
         return path;
+    }
+
+    private static string EnsurePdfExtension(string fileName)
+    {
+        return string.Equals(Path.GetExtension(fileName), ".pdf", StringComparison.OrdinalIgnoreCase)
+            ? fileName
+            : $"{Path.GetFileNameWithoutExtension(fileName)}.pdf";
+    }
+
+    private static string SafeFileName(string fileName)
+    {
+        var cleaned = string.IsNullOrWhiteSpace(fileName) ? $"Merged PDF - {DateTime.Now:yyyy-MM-dd}" : fileName.Trim();
+
+        foreach (var invalid in Path.GetInvalidFileNameChars())
+            cleaned = cleaned.Replace(invalid, '-');
+
+        return cleaned;
     }
 
     private static string CleanFolderSegment(string value, string fallback)

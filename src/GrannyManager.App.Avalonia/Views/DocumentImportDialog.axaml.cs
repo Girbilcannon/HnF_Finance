@@ -49,6 +49,12 @@ namespace GrannyManager.App.Avalonia.Views
             if (_categoryComboBox is not null)
                 _categoryComboBox.SelectionChanged += (_, _) => RefreshLinkedRecords();
 
+            if (_importModeComboBox is not null)
+                _importModeComboBox.SelectionChanged += (_, _) => RefreshImportModeVisibility();
+
+            if (_passwordProtectCheckBox is not null)
+                _passwordProtectCheckBox.IsCheckedChanged += (_, _) => RefreshPasswordVisibility();
+
             var chooseButton = this.FindControl<Button>("ChooseFilesButton");
             if (chooseButton is not null)
                 chooseButton.Click += async (_, _) => await ChooseFilesAsync();
@@ -63,6 +69,8 @@ namespace GrannyManager.App.Avalonia.Views
 
             SelectComboValue(_importModeComboBox, "Import Individually");
             SelectComboValue(_categoryComboBox, "Other");
+            RefreshImportModeVisibility();
+            RefreshPasswordVisibility();
         }
 
         public DocumentImportRequest Request { get; private set; } = new();
@@ -89,6 +97,25 @@ namespace GrannyManager.App.Avalonia.Views
             }
 
             RefreshLinkedRecords();
+        }
+
+        private void RefreshImportModeVisibility()
+        {
+            var mergeSelected = GetComboValue(_importModeComboBox, "Import Individually") == "Merge into Single PDF";
+
+            if (_mergedFileNameTextBox is not null)
+                _mergedFileNameTextBox.IsEnabled = mergeSelected;
+        }
+
+        private void RefreshPasswordVisibility()
+        {
+            var enabled = _passwordProtectCheckBox?.IsChecked == true;
+
+            if (_passwordTextBox is not null)
+                _passwordTextBox.IsEnabled = enabled;
+
+            if (_confirmPasswordTextBox is not null)
+                _confirmPasswordTextBox.IsEnabled = enabled;
         }
 
         private async System.Threading.Tasks.Task ChooseFilesAsync()
@@ -158,6 +185,35 @@ namespace GrannyManager.App.Avalonia.Views
             }
 
             var request = BuildRequest(useExistingFolderWhenConflict: true);
+
+            var needsPdfProcessing = request.ImportMode == "Merge into Single PDF" || request.PasswordProtectRequested;
+            if (needsPdfProcessing && request.SourceFilePaths.Any(path => !string.Equals(Path.GetExtension(path), ".pdf", StringComparison.OrdinalIgnoreCase)))
+            {
+                if (_validationTextBlock is not null)
+                    _validationTextBlock.Text = "PDF merge and password protection only work with PDF files. Remove non-PDF files or turn off PDF processing.";
+                return;
+            }
+
+            if (request.ImportMode == "Merge into Single PDF" && string.IsNullOrWhiteSpace(request.MergedFileName))
+            {
+                if (_validationTextBlock is not null)
+                    _validationTextBlock.Text = "Enter a merged PDF file name.";
+                return;
+            }
+
+            if (request.PasswordProtectRequested && string.IsNullOrWhiteSpace(request.Password))
+            {
+                if (_validationTextBlock is not null)
+                    _validationTextBlock.Text = "Enter a password for protected PDFs.";
+                return;
+            }
+
+            if (request.PasswordProtectRequested && !string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
+            {
+                if (_validationTextBlock is not null)
+                    _validationTextBlock.Text = "Document password and confirmation do not match.";
+                return;
+            }
 
             if (_folderExists is not null && _folderExists(request))
             {
