@@ -1,0 +1,96 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.TransferHouseholdResponsibilityDialog"
+        Title="Transfer Payment Responsibility"
+        Width="560"
+        Height="520"
+        MinWidth="520"
+        MinHeight="460"
+        WindowStartupLocation="CenterOwner"
+        Background="#101C2C">
+
+    <Border Background="#122238"
+            BorderBrush="#2A405A"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="22">
+        <Grid RowDefinitions="Auto,*,Auto"
+              RowSpacing="18">
+
+            <StackPanel Grid.Row="0" Spacing="6">
+                <TextBlock Text="Transfer Payment Responsibility"
+                           Foreground="White"
+                           FontSize="22"
+                           FontWeight="SemiBold"/>
+                <TextBlock Text="This household member is being marked inactive. Linked income will be deactivated. Any bills or debts paid by or assigned to this person need a new responsible person."
+                           Foreground="#C8D4E2"
+                           FontSize="13"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="14">
+                    <Border Background="#0F1B2A"
+                            BorderBrush="#26384F"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="14">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Affected records"
+                                       Foreground="White"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"/>
+                            <TextBlock Name="AffectedRecordsTextBlock"
+                                       Foreground="#DDE7F3"
+                                       FontSize="13"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Transfer payment responsibility to"
+                                   Foreground="#9EB4CC"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"/>
+                        <ComboBox Name="TransferTargetComboBox"
+                                  Background="#0F1B2A"
+                                  Foreground="White"
+                                  BorderBrush="#30445F"
+                                  MinHeight="36"/>
+                    </StackPanel>
+
+                    <TextBlock Name="ValidationTextBlock"
+                               Foreground="#FFB0B0"
+                               FontSize="12"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="10">
+                <Button Name="CancelButton"
+                        Content="Cancel"
+                        Height="38"
+                        Padding="18,0"
+                        Background="#17263A"
+                        Foreground="#DDE7F3"
+                        BorderBrush="#30445F"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"/>
+                <Button Name="TransferButton"
+                        Content="Transfer and Save"
+                        Height="38"
+                        Padding="18,0"
+                        Background="#2E8B57"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

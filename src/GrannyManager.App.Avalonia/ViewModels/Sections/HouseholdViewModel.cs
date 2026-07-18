@@ -166,6 +166,16 @@ public sealed partial class HouseholdViewModel : ViewModelBase
         return _householdService.LoadPeople().People;
     }
 
+    public IReadOnlyList<HouseholdPerson> GetTransferTargets(long deactivatedPersonId)
+    {
+        return _householdService.LoadTransferTargets(deactivatedPersonId);
+    }
+
+    public HouseholdInactiveImpactPreview GetInactiveImpactPreview(HouseholdPerson person)
+    {
+        return _householdService.GetInactiveImpactPreview(person);
+    }
+
     public IncomeSource CreateBlankIncomeSource()
     {
         return new IncomeSource
@@ -189,10 +199,14 @@ public sealed partial class HouseholdViewModel : ViewModelBase
         return true;
     }
 
-
     public bool SavePerson(HouseholdPerson person)
     {
-        if (!_householdService.SavePerson(person, out var message))
+        return SavePerson(person, null);
+    }
+
+    public bool SavePerson(HouseholdPerson person, HouseholdPerson? transferTarget)
+    {
+        if (!_householdService.SavePerson(person, transferTarget, out var message))
         {
             StatusMessage = message;
             return false;
@@ -243,23 +257,9 @@ public sealed partial class HouseholdViewModel : ViewModelBase
         SelectedPerson = People.FirstOrDefault(item => item.Person.Id == selectedId) ?? People.FirstOrDefault();
     }
 
-    private static string Clean(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? "None" : value.Trim();
-    }
-
-    private static string YesNo(bool? value)
-    {
-        return value == true ? "Yes" : "No";
-    }
-
-    private static string FormatDate(DateTime? value)
-    {
-        if (value is null || value.Value == default)
-            return "Not saved";
-
-        return value.Value.ToLocalTime().ToString("MMM d, yyyy h:mm tt");
-    }
+    private static string Clean(string? value) => string.IsNullOrWhiteSpace(value) ? "None" : value.Trim();
+    private static string YesNo(bool? value) => value == true ? "Yes" : "No";
+    private static string FormatDate(DateTime? value) => value is null || value.Value == default ? "Not saved" : value.Value.ToLocalTime().ToString("MMM d, yyyy h:mm tt");
 }
 
 public sealed partial class HouseholdRowViewModel : ObservableObject
@@ -271,7 +271,6 @@ public sealed partial class HouseholdRowViewModel : ObservableObject
     }
 
     public HouseholdPerson Person { get; }
-
     public int Index { get; }
 
     [ObservableProperty]
@@ -280,9 +279,7 @@ public sealed partial class HouseholdRowViewModel : ObservableObject
     public string FullName => string.IsNullOrWhiteSpace(Person.FullName) ? "Unnamed Person" : Person.FullName.Trim();
     public string Relationship => string.IsNullOrWhiteSpace(Person.Relationship) ? "None" : Person.Relationship.Trim();
     public string Role => string.IsNullOrWhiteSpace(Person.Role) ? "None" : Person.Role.Trim();
-
     public bool IsInactive => !Person.IsActive;
-
     public string NameForeground => IsInactive ? "#7D8795" : "White";
     public string DetailForeground => IsInactive ? "#707A88" : "#C8D4E2";
 }

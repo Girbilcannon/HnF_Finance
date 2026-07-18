@@ -112,8 +112,15 @@ public sealed class DebtsService
         try
         {
             CreateRepository(activeCase.CaseFolderPath).Upsert(debt);
+
+            if (!debt.IsActive)
+                DeactivateBillsLinkedToDebt(activeCase.CaseFolderPath, debt);
+
             AppDataChangeNotifier.NotifyDebtsChanged();
-            statusMessage = "Debt saved.";
+            AppDataChangeNotifier.NotifyBillsChanged();
+            statusMessage = debt.IsActive
+                ? "Debt saved."
+                : "Debt saved. Linked bill/payment records were deactivated.";
             return true;
         }
         catch (Exception ex)
@@ -152,6 +159,40 @@ public sealed class DebtsService
             statusMessage = $"Could not remove debt: {ex.Message}";
             return false;
         }
+    }
+
+    private static void DeactivateBillsLinkedToDebt(string caseFolderPath, Debt debt)
+    {
+        var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(caseFolderPath);
+        var billsRepository = new BillsRepository(databasePath);
+
+        foreach (var bill in billsRepository.GetAll())
+        {
+            var linkedById = debt.Id > 0 && bill.LinkedDebtId == debt.Id;
+            var linkedByName = !string.IsNullOrWhiteSpace(debt.DebtName) &&
+                string.Equals(bill.LinkedDebtName, debt.DebtName, StringComparison.OrdinalIgnoreCase);
+
+            if (!linkedById && !linkedByName)
+                continue;
+
+            if (!bill.IsActive)
+                continue;
+
+            bill.IsActive = false;
+            bill.Notes = AppendSystemNote(bill.Notes, $"Deactivated because linked debt '{debt.DebtName}' was marked inactive.");
+            billsRepository.Upsert(bill);
+        }
+    }
+
+    private static string AppendSystemNote(string existingNotes, string note)
+    {
+        if (string.IsNullOrWhiteSpace(existingNotes))
+            return note;
+
+        if (existingNotes.Contains(note, StringComparison.OrdinalIgnoreCase))
+            return existingNotes;
+
+        return $"{existingNotes.Trim()}{Environment.NewLine}{note}";
     }
 
     private static DebtsRepository CreateRepository(string caseFolderPath)

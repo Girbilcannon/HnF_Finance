@@ -92,6 +92,58 @@ public sealed class HouseholdService
         }
     }
 
+    public HouseholdInactiveImpactPreview GetInactiveImpactPreview(HouseholdPerson person)
+    {
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid || person is null || person.Id <= 0 || person.IsActive)
+            return HouseholdInactiveImpactPreview.Empty;
+
+        var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+
+        var incomes = new IncomeSourcesRepository(databasePath)
+            .GetAll()
+            .Where(source => source.IsActive)
+            .Where(source =>
+                source.LinkedHouseholdPersonId == person.Id ||
+                (!string.IsNullOrWhiteSpace(person.FullName) &&
+                 string.Equals(source.LinkedHouseholdPersonName, person.FullName, StringComparison.OrdinalIgnoreCase)))
+            .Select(source => source.SourceName)
+            .ToList();
+
+        var bills = new BillsRepository(databasePath)
+            .GetAll()
+            .Where(bill => bill.IsActive)
+            .Where(bill =>
+                bill.PaidByHouseholdPersonId == person.Id ||
+                bill.ResponsibilityOwnerHouseholdPersonId == person.Id ||
+                (!string.IsNullOrWhiteSpace(person.FullName) &&
+                 (string.Equals(bill.PaidBy, person.FullName, StringComparison.OrdinalIgnoreCase) ||
+                  string.Equals(bill.ResponsibilityOwner, person.FullName, StringComparison.OrdinalIgnoreCase))))
+            .Select(bill => bill.BillName)
+            .ToList();
+
+        var debts = new DebtsRepository(databasePath)
+            .GetAll()
+            .Where(debt => debt.IsActive)
+            .Where(debt =>
+                !string.IsNullOrWhiteSpace(person.FullName) &&
+                (string.Equals(debt.PaidBy, person.FullName, StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(debt.ResponsibilityOwner, person.FullName, StringComparison.OrdinalIgnoreCase)))
+            .Select(debt => debt.DebtName)
+            .ToList();
+
+        return new HouseholdInactiveImpactPreview(incomes, bills, debts);
+    }
+
+    public IReadOnlyList<HouseholdPerson> LoadTransferTargets(long personBeingDeactivatedId)
+    {
+        var result = LoadPeople();
+        return result.People
+            .Where(person => person.IsActive)
+            .Where(person => person.Id != personBeingDeactivatedId)
+            .ToList();
+    }
+
     public bool SaveIncomeSource(IncomeSource source, out string statusMessage)
     {
         statusMessage = string.Empty;
@@ -133,6 +185,11 @@ public sealed class HouseholdService
 
     public bool SavePerson(HouseholdPerson person, out string statusMessage)
     {
+        return SavePerson(person, null, out statusMessage);
+    }
+
+    public bool SavePerson(HouseholdPerson person, HouseholdPerson? transferTarget, out string statusMessage)
+    {
         statusMessage = string.Empty;
 
         var activeCase = _activeCaseState.ActiveCase;
@@ -158,8 +215,18 @@ public sealed class HouseholdService
         {
             var repository = CreateHouseholdRepository(activeCase.CaseFolderPath);
             repository.Upsert(person);
+
+            if (!person.IsActive)
+                ApplyInactivePersonDependencies(activeCase.CaseFolderPath, person, transferTarget);
+
             AppDataChangeNotifier.NotifyHouseholdChanged();
-            statusMessage = "Household member saved.";
+            AppDataChangeNotifier.NotifyIncomeSourcesChanged();
+            AppDataChangeNotifier.NotifyBillsChanged();
+            AppDataChangeNotifier.NotifyDebtsChanged();
+
+            statusMessage = person.IsActive
+                ? "Household member saved."
+                : "Household member saved. Linked income was deactivated and payment responsibility was transferred where needed.";
             return true;
         }
         catch (Exception ex)
@@ -201,6 +268,74 @@ public sealed class HouseholdService
         }
     }
 
+    private static void ApplyInactivePersonDependencies(string caseFolderPath, HouseholdPerson inactivePerson, HouseholdPerson? transferTarget)
+    {
+        var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(caseFolderPath);
+
+        var incomeRepository = new IncomeSourcesRepository(databasePath);
+        foreach (var source in incomeRepository.GetAll())
+        {
+            var linked = source.LinkedHouseholdPersonId == inactivePerson.Id ||
+                string.Equals(source.LinkedHouseholdPersonName, inactivePerson.FullName, StringComparison.OrdinalIgnoreCase);
+
+            if (!linked || !source.IsActive)
+                continue;
+
+            source.IsActive = false;
+            incomeRepository.Upsert(source);
+        }
+
+        if (transferTarget is null)
+            return;
+
+        var billsRepository = new BillsRepository(databasePath);
+        foreach (var bill in billsRepository.GetAll())
+        {
+            var changed = false;
+
+            if (bill.PaidByHouseholdPersonId == inactivePerson.Id ||
+                string.Equals(bill.PaidBy, inactivePerson.FullName, StringComparison.OrdinalIgnoreCase))
+            {
+                bill.PaidByHouseholdPersonId = transferTarget.Id;
+                bill.PaidBy = transferTarget.Id > 0 ? transferTarget.FullName : "Self (Primary Person)";
+                changed = true;
+            }
+
+            if (bill.ResponsibilityOwnerHouseholdPersonId == inactivePerson.Id ||
+                string.Equals(bill.ResponsibilityOwner, inactivePerson.FullName, StringComparison.OrdinalIgnoreCase))
+            {
+                bill.ResponsibilityOwnerHouseholdPersonId = transferTarget.Id;
+                bill.ResponsibilityOwner = transferTarget.Id > 0 ? transferTarget.FullName : "Self (Primary Person)";
+                changed = true;
+            }
+
+            if (changed)
+                billsRepository.Upsert(bill);
+        }
+
+        var debtsRepository = new DebtsRepository(databasePath);
+        foreach (var debt in debtsRepository.GetAll())
+        {
+            var changed = false;
+            var transferName = transferTarget.Id > 0 ? transferTarget.FullName : "Self (Primary Person)";
+
+            if (string.Equals(debt.PaidBy, inactivePerson.FullName, StringComparison.OrdinalIgnoreCase))
+            {
+                debt.PaidBy = transferName;
+                changed = true;
+            }
+
+            if (string.Equals(debt.ResponsibilityOwner, inactivePerson.FullName, StringComparison.OrdinalIgnoreCase))
+            {
+                debt.ResponsibilityOwner = transferName;
+                changed = true;
+            }
+
+            if (changed)
+                debtsRepository.Upsert(debt);
+        }
+    }
+
     private static HouseholdPeopleRepository CreateHouseholdRepository(string caseFolderPath)
     {
         var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(caseFolderPath);
@@ -231,4 +366,17 @@ public sealed class HouseholdService
         return person.Relationship.Equals("Self", StringComparison.OrdinalIgnoreCase)
             || person.Role.Contains("Primary", StringComparison.OrdinalIgnoreCase);
     }
+}
+
+public sealed record HouseholdInactiveImpactPreview(
+    IReadOnlyList<string> IncomeSources,
+    IReadOnlyList<string> Bills,
+    IReadOnlyList<string> Debts)
+{
+    public bool HasAnyImpact => IncomeSources.Count > 0 || Bills.Count > 0 || Debts.Count > 0;
+
+    public static HouseholdInactiveImpactPreview Empty { get; } = new(
+        Array.Empty<string>(),
+        Array.Empty<string>(),
+        Array.Empty<string>());
 }

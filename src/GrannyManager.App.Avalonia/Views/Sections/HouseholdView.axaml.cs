@@ -73,8 +73,29 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                 viewModel.GetIncomeSources);
 
             var result = await dialog.ShowDialog<bool>(owner);
-            if (result)
-                viewModel.SavePerson(dialog.Person);
+            if (!result)
+                return;
+
+            var updatedPerson = dialog.Person;
+            if (!updatedPerson.IsActive && updatedPerson.Id > 0)
+            {
+                var preview = viewModel.GetInactiveImpactPreview(updatedPerson);
+
+                if (preview.HasAnyImpact)
+                {
+                    var transferDialog = new TransferHouseholdResponsibilityDialog();
+                    transferDialog.SetMode(preview, viewModel.GetTransferTargets(updatedPerson.Id));
+
+                    var transferResult = await transferDialog.ShowDialog<bool>(owner);
+                    if (!transferResult)
+                        return;
+
+                    viewModel.SavePerson(updatedPerson, transferDialog.SelectedTransferTarget);
+                    return;
+                }
+            }
+
+            viewModel.SavePerson(updatedPerson);
         }
 
         private async void RemoveButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)

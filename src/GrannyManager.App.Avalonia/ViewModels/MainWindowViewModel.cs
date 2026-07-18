@@ -10,6 +10,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
     public partial class MainWindowViewModel : ViewModelBase
     {
         private readonly ActiveCaseState _activeCaseState;
+        private readonly FinanceTotalsService _financeTotalsService;
 
         public MainWindowViewModel()
         {
@@ -17,7 +18,6 @@ namespace GrannyManager.App.Avalonia.ViewModels
 
             var caseFolderService = new CaseFolderService();
             var recentCasesService = new RecentCasesService();
-
             var householdService = new HouseholdService(_activeCaseState);
             var incomeService = new IncomeService(_activeCaseState);
             var billsService = new BillsService(_activeCaseState);
@@ -27,8 +27,9 @@ namespace GrannyManager.App.Avalonia.ViewModels
             var documentsService = new DocumentsService(_activeCaseState);
             var passwordVaultService = new PasswordVaultService(_activeCaseState, caseFolderService);
 
-            Dashboard = new DashboardViewModel(_activeCaseState, caseFolderService, recentCasesService);
+            _financeTotalsService = new FinanceTotalsService(_activeCaseState);
 
+            Dashboard = new DashboardViewModel(_activeCaseState, caseFolderService, recentCasesService);
             Household = new HouseholdViewModel(_activeCaseState, householdService);
             Income = new IncomeViewModel(_activeCaseState, incomeService);
             Bills = new BillsViewModel(_activeCaseState, billsService);
@@ -37,25 +38,43 @@ namespace GrannyManager.App.Avalonia.ViewModels
             Debts = new DebtsViewModel(_activeCaseState, debtsService);
             Documents = new DocumentsViewModel(_activeCaseState, documentsService);
             PasswordVault = new PasswordVaultViewModel(_activeCaseState, passwordVaultService);
+
+            _activeCaseState.ActiveCaseChanged += (_, _) => RefreshTotals();
+
+            AppDataChangeNotifier.IncomeSourcesChanged += (_, _) => RefreshTotals();
+            AppDataChangeNotifier.BillsChanged += (_, _) => RefreshTotals();
+            AppDataChangeNotifier.AllowanceSavingsChanged += (_, _) => RefreshTotals();
+            AppDataChangeNotifier.AssetsChanged += (_, _) => RefreshTotals();
+            AppDataChangeNotifier.DebtsChanged += (_, _) => RefreshTotals();
+            AppDataChangeNotifier.HouseholdChanged += (_, _) => RefreshTotals();
+
+            RefreshTotals();
         }
 
         public DashboardViewModel Dashboard { get; }
-
         public HouseholdViewModel Household { get; }
-
         public IncomeViewModel Income { get; }
-
         public BillsViewModel Bills { get; }
-
         public AllowanceSavingsViewModel AllowanceSavings { get; }
-
         public AssetsViewModel Assets { get; }
-
         public DebtsViewModel Debts { get; }
-
         public DocumentsViewModel Documents { get; }
-
         public PasswordVaultViewModel PasswordVault { get; }
+
+        [ObservableProperty]
+        private string _monthlyIncomeText = "$0.00";
+
+        [ObservableProperty]
+        private string _monthlyBillsText = "$0.00";
+
+        [ObservableProperty]
+        private string _monthlyAllowanceSavingsText = "$0.00 / $0.00";
+
+        [ObservableProperty]
+        private string _remainingDeficitText = "$0.00";
+
+        [ObservableProperty]
+        private string _remainingDeficitBrush = "#D9534F";
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(CurrentPageTitle))]
@@ -103,7 +122,6 @@ namespace GrannyManager.App.Avalonia.ViewModels
 
         public string CurrentPageCardTitle => CurrentSection switch
         {
-            "Assets" => "Assets Placeholder",
             "Documents" => "Documents Placeholder",
             "PasswordVault" => "Password Vault Placeholder",
             _ => "Dashboard"
@@ -111,7 +129,6 @@ namespace GrannyManager.App.Avalonia.ViewModels
 
         public string CurrentPageBody => CurrentSection switch
         {
-            "Assets" => "This section will host the new Assets workflow for vehicles, property, accounts, investments, and valuables.",
             "Documents" => "This section will manage imported documents, categories, and search integration.",
             "PasswordVault" => "This section will later connect to the secure credential vault.",
             _ => "Create or open a case to begin."
@@ -128,7 +145,16 @@ namespace GrannyManager.App.Avalonia.ViewModels
         public bool IsDocumentsSelected => CurrentSection == "Documents";
         public bool IsPasswordVaultSelected => CurrentSection == "PasswordVault";
 
-        public bool IsGenericPlaceholderVisible => CurrentSection != "Dashboard" && CurrentSection != "Household" && CurrentSection != "Income" && CurrentSection != "Bills" && CurrentSection != "AllowanceSavings" && CurrentSection != "Assets" && CurrentSection != "Debts" && CurrentSection != "Documents" && CurrentSection != "PasswordVault";
+        public bool IsGenericPlaceholderVisible =>
+            CurrentSection != "Dashboard" &&
+            CurrentSection != "Household" &&
+            CurrentSection != "Income" &&
+            CurrentSection != "Bills" &&
+            CurrentSection != "AllowanceSavings" &&
+            CurrentSection != "Assets" &&
+            CurrentSection != "Debts" &&
+            CurrentSection != "Documents" &&
+            CurrentSection != "PasswordVault";
 
         public void SecureLockActiveCase(string reason)
         {
@@ -140,6 +166,8 @@ namespace GrannyManager.App.Avalonia.ViewModels
             Dashboard.StatusMessage = string.IsNullOrWhiteSpace(reason)
                 ? "Case locked for security. Reopen it from Recent Cases and enter the case PIN."
                 : reason;
+
+            RefreshTotals();
         }
 
         [RelayCommand]
@@ -153,9 +181,19 @@ namespace GrannyManager.App.Avalonia.ViewModels
         private void Navigate(string section)
         {
             if (!string.IsNullOrWhiteSpace(section))
-            {
                 CurrentSection = section;
-            }
+
+            RefreshTotals();
+        }
+
+        private void RefreshTotals()
+        {
+            var totals = _financeTotalsService.LoadTotals();
+            MonthlyIncomeText = totals.MonthlyIncomeText;
+            MonthlyBillsText = totals.MonthlyBillsText;
+            MonthlyAllowanceSavingsText = totals.MonthlyAllowanceSavingsText;
+            RemainingDeficitText = totals.RemainingDeficitText;
+            RemainingDeficitBrush = totals.RemainingDeficitBrush;
         }
     }
 }

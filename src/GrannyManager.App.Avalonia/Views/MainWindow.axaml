@@ -129,7 +129,7 @@
                 <StackPanel Grid.Row="2"
                             Spacing="4"
                             Margin="2,18,0,0">
-                    <TextBlock Text="Build: 0.10.83"
+                    <TextBlock Text="Build: 0.10.84"
                                Foreground="#6F8299"
                                FontSize="12"/>
 
@@ -195,7 +195,7 @@
                             <TextBlock Text="Monthly Income"
                                        Foreground="#9EB4CC"
                                        FontSize="13"/>
-                            <TextBlock Text="$0.00"
+                            <TextBlock Text="{Binding MonthlyIncomeText}"
                                        Foreground="White"
                                        FontSize="24"
                                        FontWeight="SemiBold"/>
@@ -207,7 +207,7 @@
                             <TextBlock Text="Monthly Bills"
                                        Foreground="#9EB4CC"
                                        FontSize="13"/>
-                            <TextBlock Text="$0.00"
+                            <TextBlock Text="{Binding MonthlyBillsText}"
                                        Foreground="White"
                                        FontSize="24"
                                        FontWeight="SemiBold"/>
@@ -219,7 +219,7 @@
                             <TextBlock Text="Allowance / Savings"
                                        Foreground="#9EB4CC"
                                        FontSize="13"/>
-                            <TextBlock Text="$0.00 / $0.00"
+                            <TextBlock Text="{Binding MonthlyAllowanceSavingsText}"
                                        Foreground="White"
                                        FontSize="23"
                                        FontWeight="SemiBold"/>
@@ -231,8 +231,8 @@
                             <TextBlock Text="Remaining / Deficit"
                                        Foreground="#9EB4CC"
                                        FontSize="13"/>
-                            <TextBlock Text="$0.00"
-                                       Foreground="#D9534F"
+                            <TextBlock Text="{Binding RemainingDeficitText}"
+                                       Foreground="{Binding RemainingDeficitBrush}"
                                        FontSize="24"
                                        FontWeight="SemiBold"/>
                         </StackPanel>
