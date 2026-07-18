@@ -1,4 +1,6 @@
-﻿using GrannyManager.Core.Models;
+﻿using System;
+using System.Collections.Generic;
+using GrannyManager.Core.Models;
 using GrannyManager.Data.Database;
 using Microsoft.Data.Sqlite;
 
@@ -12,24 +14,43 @@ public sealed class DocumentsRepository
     {
         _databasePath = databasePath ?? throw new ArgumentNullException(nameof(databasePath));
         DatabaseInitializer.EnsureCreated(_databasePath);
-        EnsureDocumentRecordsTable();
+        EnsureTable();
     }
 
     public IReadOnlyList<DocumentRecord> GetAll()
     {
         var items = new List<DocumentRecord>();
+
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = @"
-SELECT Id, Title, Category, Tags, OriginalFileName, StoredFilePath, SourceFilePath,
-       LinkedRecordType, LinkedRecordId, LinkedRecordName, IsActive, IsImportant, Notes, CreatedUtc, UpdatedUtc
-FROM DocumentRecords
-ORDER BY IsActive DESC, IsImportant DESC, Category COLLATE NOCASE, Title COLLATE NOCASE;";
+SELECT Id, DisplayName, OriginalFileName, StoredFileName, RelativePath, FullPath, PersonName, Category,
+       LinkedSection, LinkedRecordId, LinkedRecordName, CustomFolder, Tags, Notes, IsMergedFile,
+       PasswordProtectedRequested, ImportBatchId, IsActive, ImportedUtc, UpdatedUtc
+FROM Documents
+ORDER BY IsActive DESC, ImportedUtc DESC, DisplayName COLLATE NOCASE;";
 
         using var reader = command.ExecuteReader();
         while (reader.Read())
             items.Add(ReadDocument(reader));
+
         return items;
+    }
+
+    public DocumentRecord? GetById(long id)
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+SELECT Id, DisplayName, OriginalFileName, StoredFileName, RelativePath, FullPath, PersonName, Category,
+       LinkedSection, LinkedRecordId, LinkedRecordName, CustomFolder, Tags, Notes, IsMergedFile,
+       PasswordProtectedRequested, ImportBatchId, IsActive, ImportedUtc, UpdatedUtc
+FROM Documents
+WHERE Id = $Id;";
+        command.Parameters.AddWithValue("$Id", id);
+
+        using var reader = command.ExecuteReader();
+        return reader.Read() ? ReadDocument(reader) : null;
     }
 
     public long Upsert(DocumentRecord item)
@@ -38,37 +59,45 @@ ORDER BY IsActive DESC, IsImportant DESC, Category COLLATE NOCASE, Title COLLATE
             throw new ArgumentNullException(nameof(item));
 
         item.UpdatedUtc = DateTime.UtcNow;
+
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
 
         if (item.Id <= 0)
         {
-            item.CreatedUtc = DateTime.UtcNow;
+            item.ImportedUtc = DateTime.UtcNow;
             command.CommandText = @"
-INSERT INTO DocumentRecords
-(Title, Category, Tags, OriginalFileName, StoredFilePath, SourceFilePath,
- LinkedRecordType, LinkedRecordId, LinkedRecordName, IsActive, IsImportant, Notes, CreatedUtc, UpdatedUtc)
+INSERT INTO Documents
+(DisplayName, OriginalFileName, StoredFileName, RelativePath, FullPath, PersonName, Category,
+ LinkedSection, LinkedRecordId, LinkedRecordName, CustomFolder, Tags, Notes, IsMergedFile,
+ PasswordProtectedRequested, ImportBatchId, IsActive, ImportedUtc, UpdatedUtc)
 VALUES
-($Title, $Category, $Tags, $OriginalFileName, $StoredFilePath, $SourceFilePath,
- $LinkedRecordType, $LinkedRecordId, $LinkedRecordName, $IsActive, $IsImportant, $Notes, $CreatedUtc, $UpdatedUtc);
+($DisplayName, $OriginalFileName, $StoredFileName, $RelativePath, $FullPath, $PersonName, $Category,
+ $LinkedSection, $LinkedRecordId, $LinkedRecordName, $CustomFolder, $Tags, $Notes, $IsMergedFile,
+ $PasswordProtectedRequested, $ImportBatchId, $IsActive, $ImportedUtc, $UpdatedUtc);
 SELECT last_insert_rowid();";
         }
         else
         {
             command.CommandText = @"
-UPDATE DocumentRecords
-SET Title = $Title,
-    Category = $Category,
-    Tags = $Tags,
+UPDATE Documents
+SET DisplayName = $DisplayName,
     OriginalFileName = $OriginalFileName,
-    StoredFilePath = $StoredFilePath,
-    SourceFilePath = $SourceFilePath,
-    LinkedRecordType = $LinkedRecordType,
+    StoredFileName = $StoredFileName,
+    RelativePath = $RelativePath,
+    FullPath = $FullPath,
+    PersonName = $PersonName,
+    Category = $Category,
+    LinkedSection = $LinkedSection,
     LinkedRecordId = $LinkedRecordId,
     LinkedRecordName = $LinkedRecordName,
-    IsActive = $IsActive,
-    IsImportant = $IsImportant,
+    CustomFolder = $CustomFolder,
+    Tags = $Tags,
     Notes = $Notes,
+    IsMergedFile = $IsMergedFile,
+    PasswordProtectedRequested = $PasswordProtectedRequested,
+    ImportBatchId = $ImportBatchId,
+    IsActive = $IsActive,
     UpdatedUtc = $UpdatedUtc
 WHERE Id = $Id;
 SELECT $Id;";
@@ -85,44 +114,72 @@ SELECT $Id;";
     {
         if (id <= 0)
             return;
+
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText = "DELETE FROM DocumentRecords WHERE Id = $Id;";
+        command.CommandText = "DELETE FROM Documents WHERE Id = $Id;";
         command.Parameters.AddWithValue("$Id", id);
         command.ExecuteNonQuery();
     }
 
-    private void EnsureDocumentRecordsTable()
+    private void EnsureTable()
     {
         using var connection = OpenConnection();
-        using var createCommand = connection.CreateCommand();
-        createCommand.CommandText = @"
-CREATE TABLE IF NOT EXISTS DocumentRecords (
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = @"
+CREATE TABLE IF NOT EXISTS Documents (
     Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    Title TEXT NOT NULL DEFAULT '',
-    Category TEXT NOT NULL DEFAULT '',
-    Tags TEXT NOT NULL DEFAULT '',
+    DisplayName TEXT NOT NULL DEFAULT '',
     OriginalFileName TEXT NOT NULL DEFAULT '',
-    StoredFilePath TEXT NOT NULL DEFAULT '',
-    SourceFilePath TEXT NOT NULL DEFAULT '',
-    LinkedRecordType TEXT NOT NULL DEFAULT 'None',
+    StoredFileName TEXT NOT NULL DEFAULT '',
+    RelativePath TEXT NOT NULL DEFAULT '',
+    FullPath TEXT NOT NULL DEFAULT '',
+    PersonName TEXT NOT NULL DEFAULT 'General',
+    Category TEXT NOT NULL DEFAULT 'Other',
+    LinkedSection TEXT NOT NULL DEFAULT 'Other',
     LinkedRecordId INTEGER NOT NULL DEFAULT 0,
     LinkedRecordName TEXT NOT NULL DEFAULT '',
-    IsActive INTEGER NOT NULL DEFAULT 1,
-    IsImportant INTEGER NOT NULL DEFAULT 0,
+    CustomFolder TEXT NOT NULL DEFAULT '',
+    Tags TEXT NOT NULL DEFAULT '',
     Notes TEXT NOT NULL DEFAULT '',
-    CreatedUtc TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    IsMergedFile INTEGER NOT NULL DEFAULT 0,
+    PasswordProtectedRequested INTEGER NOT NULL DEFAULT 0,
+    ImportBatchId TEXT NOT NULL DEFAULT '',
+    IsActive INTEGER NOT NULL DEFAULT 1,
+    ImportedUtc TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UpdatedUtc TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );";
-        createCommand.ExecuteNonQuery();
+            command.ExecuteNonQuery();
+        }
 
-        EnsureColumn(connection, "DocumentRecords", "IsImportant", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumn(connection, "Documents", "DisplayName", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "Documents", "OriginalFileName", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "Documents", "StoredFileName", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "Documents", "RelativePath", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "Documents", "FullPath", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "Documents", "PersonName", "TEXT NOT NULL DEFAULT 'General'");
+        EnsureColumn(connection, "Documents", "Category", "TEXT NOT NULL DEFAULT 'Other'");
+        EnsureColumn(connection, "Documents", "LinkedSection", "TEXT NOT NULL DEFAULT 'Other'");
+        EnsureColumn(connection, "Documents", "LinkedRecordId", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumn(connection, "Documents", "LinkedRecordName", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "Documents", "CustomFolder", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "Documents", "Tags", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "Documents", "Notes", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "Documents", "IsMergedFile", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumn(connection, "Documents", "PasswordProtectedRequested", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumn(connection, "Documents", "ImportBatchId", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "Documents", "IsActive", "INTEGER NOT NULL DEFAULT 1");
+        EnsureColumn(connection, "Documents", "ImportedUtc", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP");
+        EnsureColumn(connection, "Documents", "UpdatedUtc", "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP");
 
         using var indexCommand = connection.CreateCommand();
         indexCommand.CommandText = @"
-CREATE INDEX IF NOT EXISTS IX_DocumentRecords_Title ON DocumentRecords(Title);
-CREATE INDEX IF NOT EXISTS IX_DocumentRecords_Category ON DocumentRecords(Category);
-CREATE INDEX IF NOT EXISTS IX_DocumentRecords_IsImportant ON DocumentRecords(IsImportant);";
+CREATE INDEX IF NOT EXISTS IX_Documents_DisplayName ON Documents(DisplayName);
+CREATE INDEX IF NOT EXISTS IX_Documents_PersonCategory ON Documents(PersonName, Category);
+CREATE INDEX IF NOT EXISTS IX_Documents_Tags ON Documents(Tags);
+CREATE INDEX IF NOT EXISTS IX_Documents_LinkedSection ON Documents(LinkedSection);";
         indexCommand.ExecuteNonQuery();
     }
 
@@ -161,20 +218,25 @@ CREATE INDEX IF NOT EXISTS IX_DocumentRecords_IsImportant ON DocumentRecords(IsI
 
     private static void AddParameters(SqliteCommand command, DocumentRecord item)
     {
-        command.Parameters.AddWithValue("$Title", item.Title.Trim());
-        command.Parameters.AddWithValue("$Category", item.Category.Trim());
-        command.Parameters.AddWithValue("$Tags", item.Tags.Trim());
+        command.Parameters.AddWithValue("$DisplayName", item.DisplayName.Trim());
         command.Parameters.AddWithValue("$OriginalFileName", item.OriginalFileName.Trim());
-        command.Parameters.AddWithValue("$StoredFilePath", item.StoredFilePath.Trim());
-        command.Parameters.AddWithValue("$SourceFilePath", item.SourceFilePath.Trim());
-        command.Parameters.AddWithValue("$LinkedRecordType", item.LinkedRecordType.Trim());
+        command.Parameters.AddWithValue("$StoredFileName", item.StoredFileName.Trim());
+        command.Parameters.AddWithValue("$RelativePath", item.RelativePath.Trim());
+        command.Parameters.AddWithValue("$FullPath", item.FullPath.Trim());
+        command.Parameters.AddWithValue("$PersonName", string.IsNullOrWhiteSpace(item.PersonName) ? "General" : item.PersonName.Trim());
+        command.Parameters.AddWithValue("$Category", string.IsNullOrWhiteSpace(item.Category) ? "Other" : item.Category.Trim());
+        command.Parameters.AddWithValue("$LinkedSection", string.IsNullOrWhiteSpace(item.LinkedSection) ? "Other" : item.LinkedSection.Trim());
         command.Parameters.AddWithValue("$LinkedRecordId", item.LinkedRecordId);
         command.Parameters.AddWithValue("$LinkedRecordName", item.LinkedRecordName.Trim());
-        command.Parameters.AddWithValue("$IsActive", item.IsActive ? 1 : 0);
-        command.Parameters.AddWithValue("$IsImportant", item.IsImportant ? 1 : 0);
+        command.Parameters.AddWithValue("$CustomFolder", item.CustomFolder.Trim());
+        command.Parameters.AddWithValue("$Tags", item.Tags.Trim());
         command.Parameters.AddWithValue("$Notes", item.Notes.Trim());
-        command.Parameters.AddWithValue("$CreatedUtc", item.CreatedUtc.ToString("O"));
-        command.Parameters.AddWithValue("$UpdatedUtc", item.UpdatedUtc.ToString("O"));
+        command.Parameters.AddWithValue("$IsMergedFile", item.IsMergedFile ? 1 : 0);
+        command.Parameters.AddWithValue("$PasswordProtectedRequested", item.PasswordProtectedRequested ? 1 : 0);
+        command.Parameters.AddWithValue("$ImportBatchId", item.ImportBatchId.Trim());
+        command.Parameters.AddWithValue("$IsActive", item.IsActive ? 1 : 0);
+        command.Parameters.AddWithValue("$ImportedUtc", item.ImportedUtc.ToUniversalTime().ToString("O"));
+        command.Parameters.AddWithValue("$UpdatedUtc", item.UpdatedUtc.ToUniversalTime().ToString("O"));
     }
 
     private static DocumentRecord ReadDocument(SqliteDataReader reader)
@@ -182,20 +244,30 @@ CREATE INDEX IF NOT EXISTS IX_DocumentRecords_IsImportant ON DocumentRecords(IsI
         return new DocumentRecord
         {
             Id = reader.GetInt64(0),
-            Title = reader.GetString(1),
-            Category = reader.GetString(2),
-            Tags = reader.GetString(3),
-            OriginalFileName = reader.GetString(4),
-            StoredFilePath = reader.GetString(5),
-            SourceFilePath = reader.GetString(6),
-            LinkedRecordType = reader.GetString(7),
-            LinkedRecordId = reader.GetInt64(8),
-            LinkedRecordName = reader.GetString(9),
-            IsActive = reader.GetInt32(10) == 1,
-            IsImportant = reader.GetInt32(11) == 1,
-            Notes = reader.GetString(12),
-            CreatedUtc = DateTime.TryParse(reader.GetString(13), out var created) ? created : DateTime.UtcNow,
-            UpdatedUtc = DateTime.TryParse(reader.GetString(14), out var updated) ? updated : DateTime.UtcNow
+            DisplayName = GetString(reader, 1),
+            OriginalFileName = GetString(reader, 2),
+            StoredFileName = GetString(reader, 3),
+            RelativePath = GetString(reader, 4),
+            FullPath = GetString(reader, 5),
+            PersonName = GetString(reader, 6),
+            Category = GetString(reader, 7),
+            LinkedSection = GetString(reader, 8),
+            LinkedRecordId = GetLong(reader, 9),
+            LinkedRecordName = GetString(reader, 10),
+            CustomFolder = GetString(reader, 11),
+            Tags = GetString(reader, 12),
+            Notes = GetString(reader, 13),
+            IsMergedFile = GetBool(reader, 14),
+            PasswordProtectedRequested = GetBool(reader, 15),
+            ImportBatchId = GetString(reader, 16),
+            IsActive = GetBool(reader, 17),
+            ImportedUtc = GetDateTime(reader, 18),
+            UpdatedUtc = GetDateTime(reader, 19)
         };
     }
+
+    private static string GetString(SqliteDataReader reader, int index) => reader.IsDBNull(index) ? string.Empty : reader.GetString(index);
+    private static bool GetBool(SqliteDataReader reader, int index) => !reader.IsDBNull(index) && reader.GetInt64(index) != 0;
+    private static long GetLong(SqliteDataReader reader, int index) => reader.IsDBNull(index) ? 0 : reader.GetInt64(index);
+    private static DateTime GetDateTime(SqliteDataReader reader, int index) => DateTime.TryParse(GetString(reader, index), out var parsed) ? parsed.ToUniversalTime() : DateTime.UtcNow;
 }

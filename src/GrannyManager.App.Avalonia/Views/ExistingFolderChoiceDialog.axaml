@@ -1,0 +1,57 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.ExistingFolderChoiceDialog"
+        Title="Folder Already Exists"
+        Width="520"
+        Height="260"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="#101C2C">
+    <Border Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="22">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="18">
+            <StackPanel Grid.Row="0" Spacing="6">
+                <TextBlock Text="Folder Already Exists" Foreground="White" FontSize="22" FontWeight="SemiBold"/>
+                <TextBlock Name="MessageTextBlock" Foreground="#C8D4E2" FontSize="13" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <TextBlock Grid.Row="1"
+                       Text="Choose whether to add the new documents to the existing folder or create a new folder with today's date added to the name."
+                       Foreground="#9EB4CC"
+                       FontSize="13"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center"/>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Name="CancelButton"
+                        Content="Cancel"
+                        Height="38"
+                        MinWidth="96"
+                        Padding="16,0"
+                        Background="#17263A"
+                        Foreground="#DDE7F3"
+                        BorderBrush="#30445F"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"/>
+                <Button Name="NewDatedFolderButton"
+                        Content="Create Dated Folder"
+                        Height="38"
+                        MinWidth="168"
+                        Padding="16,0"
+                        Background="#1A2B42"
+                        Foreground="White"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"/>
+                <Button Name="ExistingFolderButton"
+                        Content="Add to Existing"
+                        Height="38"
+                        MinWidth="138"
+                        Padding="16,0"
+                        Background="#2E8B57"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

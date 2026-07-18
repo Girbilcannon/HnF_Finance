@@ -47,6 +47,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
             AppDataChangeNotifier.AssetsChanged += (_, _) => RefreshTotals();
             AppDataChangeNotifier.DebtsChanged += (_, _) => RefreshTotals();
             AppDataChangeNotifier.HouseholdChanged += (_, _) => RefreshTotals();
+            AppDataChangeNotifier.DocumentsChanged += (_, _) => RefreshTotals();
 
             RefreshTotals();
         }
@@ -122,14 +123,14 @@ namespace GrannyManager.App.Avalonia.ViewModels
 
         public string CurrentPageCardTitle => CurrentSection switch
         {
-            "Documents" => "Documents Placeholder",
+            "Documents" => "Documents",
             "PasswordVault" => "Password Vault Placeholder",
             _ => "Dashboard"
         };
 
         public string CurrentPageBody => CurrentSection switch
         {
-            "Documents" => "This section will manage imported documents, categories, and search integration.",
+            "Documents" => "Import, link, tag, organize, and open case documents.",
             "PasswordVault" => "This section will later connect to the secure credential vault.",
             _ => "Create or open a case to begin."
         };

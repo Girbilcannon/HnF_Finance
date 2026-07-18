@@ -1,0 +1,74 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.DocumentEditDialog"
+        Title="Edit Document"
+        Width="620"
+        Height="760"
+        MinWidth="560"
+        MinHeight="680"
+        WindowStartupLocation="CenterOwner"
+        Background="#101C2C">
+    <Border Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="22">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="18">
+            <StackPanel Grid.Row="0" Spacing="6">
+                <TextBlock Text="Edit Document" Foreground="White" FontSize="24" FontWeight="SemiBold"/>
+                <TextBlock Text="Edit document metadata, folder organization, links, tags, and notes. Import-time PDF merge/password settings cannot be changed here."
+                           Foreground="#B8CBE0" FontSize="13" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="14">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Display Name" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="DisplayNameTextBox" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Person / Folder" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="PersonComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Category" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="CategoryComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                <ComboBoxItem Content="Income"/>
+                                <ComboBoxItem Content="Bills"/>
+                                <ComboBoxItem Content="Debts"/>
+                                <ComboBoxItem Content="Allowance and Savings"/>
+                                <ComboBoxItem Content="Other"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Linked Record" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <ComboBox Name="LinkedRecordComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Custom Folder" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="CustomFolderTextBox" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Tags" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="TagsTextBox" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Notes" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="NotesTextBox" MinHeight="110" AcceptsReturn="True" TextWrapping="Wrap" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <TextBlock Name="ValidationTextBlock" Foreground="#FFB0B0" FontSize="12" TextWrapping="Wrap"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Name="CancelButton" Content="Cancel" Height="38" Padding="18,0" Background="#17263A" Foreground="#DDE7F3" BorderBrush="#30445F" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                <Button Name="SaveButton" Content="Save" Height="38" Padding="18,0" Background="#2E8B57" Foreground="White" FontWeight="SemiBold" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

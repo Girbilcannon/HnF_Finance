@@ -1,0 +1,29 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.ConfirmRemoveDocumentDialog"
+        Title="Remove Document"
+        Width="480"
+        Height="260"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="#101C2C">
+    <Border Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="22">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="18">
+            <StackPanel Grid.Row="0" Spacing="6">
+                <TextBlock Text="Remove Document?" Foreground="White" FontSize="22" FontWeight="SemiBold"/>
+                <TextBlock Text="Remove this document from the case index?" Foreground="#C8D4E2" FontSize="13" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <CheckBox Name="DeleteFileCheckBox"
+                      Grid.Row="1"
+                      Content="Also delete the copied file from the case Documents folder"
+                      Foreground="#DDE7F3"
+                      VerticalAlignment="Center"/>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Name="CancelButton" Content="Cancel" Height="38" Padding="18,0" Background="#17263A" Foreground="#DDE7F3" BorderBrush="#30445F"/>
+                <Button Name="RemoveButton" Content="Remove" Height="38" Padding="18,0" Background="#8B2E2E" Foreground="White" BorderBrush="#B84A4A" FontWeight="SemiBold"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

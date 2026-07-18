@@ -1,17 +1,18 @@
-using System;
-using System.Collections.ObjectModel;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using GrannyManager.Application.Services;
 using GrannyManager.Application.State;
 using GrannyManager.Core.Models;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace GrannyManager.App.Avalonia.ViewModels.Sections;
 
 public sealed partial class DocumentsViewModel : ViewModelBase
 {
     private readonly DocumentsService _documentsService;
+    private readonly ObservableCollection<DocumentRowViewModel> _allDocuments = new();
 
     public DocumentsViewModel(ActiveCaseState activeCaseState, DocumentsService documentsService)
     {
@@ -20,51 +21,66 @@ public sealed partial class DocumentsViewModel : ViewModelBase
         if (activeCaseState is not null)
             activeCaseState.ActiveCaseChanged += (_, _) => LoadDocuments();
 
+        AppDataChangeNotifier.DocumentsChanged += (_, _) => LoadDocuments();
+
         LoadDocuments();
     }
 
-    public ObservableCollection<DocumentListItemViewModel> Documents { get; } = new();
+    public ObservableCollection<DocumentRowViewModel> Documents { get; } = new();
+    public ObservableCollection<string> People { get; } = new();
+    public ObservableCollection<string> Sections { get; } = new();
+    public ObservableCollection<string> Tags { get; } = new();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedDocument))]
-    [NotifyPropertyChangedFor(nameof(SelectedTitle))]
-    [NotifyPropertyChangedFor(nameof(SelectedCategory))]
-    [NotifyPropertyChangedFor(nameof(SelectedTags))]
-    [NotifyPropertyChangedFor(nameof(SelectedLinkedDisplay))]
-    [NotifyPropertyChangedFor(nameof(SelectedImportant))]
-    [NotifyPropertyChangedFor(nameof(SelectedActive))]
+    [NotifyPropertyChangedFor(nameof(CanEditDocument))]
+    [NotifyPropertyChangedFor(nameof(CanRemoveDocument))]
+    [NotifyPropertyChangedFor(nameof(CanOpenDocument))]
+    [NotifyPropertyChangedFor(nameof(SelectedDisplayName))]
     [NotifyPropertyChangedFor(nameof(SelectedOriginalFileName))]
-    [NotifyPropertyChangedFor(nameof(SelectedStoredFilePath))]
-    [NotifyPropertyChangedFor(nameof(SelectedSourceFilePath))]
+    [NotifyPropertyChangedFor(nameof(SelectedFolder))]
+    [NotifyPropertyChangedFor(nameof(SelectedLinkedDisplay))]
+    [NotifyPropertyChangedFor(nameof(SelectedTags))]
     [NotifyPropertyChangedFor(nameof(SelectedNotes))]
-    [NotifyPropertyChangedFor(nameof(SelectedCreatedUtc))]
-    [NotifyPropertyChangedFor(nameof(SelectedUpdatedUtc))]
-    private DocumentListItemViewModel? _selectedDocument;
+    [NotifyPropertyChangedFor(nameof(SelectedImportedUtc))]
+    [NotifyPropertyChangedFor(nameof(SelectedFullPath))]
+    private DocumentRowViewModel? _selectedDocument;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanImportDocuments))]
+    private bool _hasActiveCase;
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
     [ObservableProperty]
-    private bool _hasActiveCase;
+    private string _selectedPersonFilter = "All";
+
+    [ObservableProperty]
+    private string _selectedSectionFilter = "All";
+
+    [ObservableProperty]
+    private string _selectedTagFilter = "All";
+
+    [ObservableProperty]
+    private string _searchText = string.Empty;
 
     public bool HasSelectedDocument => SelectedDocument is not null;
+    public bool CanImportDocuments => HasActiveCase;
+    public bool CanEditDocument => HasActiveCase && HasSelectedDocument;
+    public bool CanRemoveDocument => HasActiveCase && HasSelectedDocument;
+    public bool CanOpenDocument => HasActiveCase && HasSelectedDocument;
 
-    private DocumentRecord? Document => SelectedDocument?.Document;
+    public string SelectedDisplayName => SelectedDocument?.Document.DisplayName ?? "No document selected";
+    public string SelectedOriginalFileName => Clean(SelectedDocument?.Document.OriginalFileName);
+    public string SelectedFolder => Clean(SelectedDocument?.Document.FolderDisplay);
+    public string SelectedLinkedDisplay => Clean(SelectedDocument?.Document.LinkedDisplay);
+    public string SelectedTags => Clean(SelectedDocument?.Document.TagDisplay);
+    public string SelectedNotes => Clean(SelectedDocument?.Document.Notes);
+    public string SelectedImportedUtc => FormatDate(SelectedDocument?.Document.ImportedUtc);
+    public string SelectedFullPath => Clean(SelectedDocument?.Document.FullPath);
 
-    public string SelectedTitle => Document?.Title ?? "No document selected";
-    public string SelectedCategory => Clean(Document?.Category);
-    public string SelectedTags => Clean(Document?.Tags);
-    public string SelectedLinkedDisplay => Document?.LinkedDisplay ?? "None";
-    public string SelectedImportant => YesNo(Document?.IsImportant);
-    public string SelectedActive => YesNo(Document?.IsActive);
-    public string SelectedOriginalFileName => Clean(Document?.OriginalFileName);
-    public string SelectedStoredFilePath => Clean(Document?.StoredFilePath);
-    public string SelectedSourceFilePath => Clean(Document?.SourceFilePath);
-    public string SelectedNotes => Clean(Document?.Notes);
-    public string SelectedCreatedUtc => FormatUtc(Document?.CreatedUtc);
-    public string SelectedUpdatedUtc => FormatUtc(Document?.UpdatedUtc);
-
-    partial void OnSelectedDocumentChanged(DocumentListItemViewModel? oldValue, DocumentListItemViewModel? newValue)
+    partial void OnSelectedDocumentChanged(DocumentRowViewModel? oldValue, DocumentRowViewModel? newValue)
     {
         if (oldValue is not null)
             oldValue.IsSelected = false;
@@ -73,115 +89,237 @@ public sealed partial class DocumentsViewModel : ViewModelBase
             newValue.IsSelected = true;
     }
 
-    [RelayCommand]
-    private void MarkImportant()
+    partial void OnSelectedPersonFilterChanged(string value) => ApplyFilters();
+    partial void OnSelectedSectionFilterChanged(string value) => ApplyFilters();
+    partial void OnSelectedTagFilterChanged(string value) => ApplyFilters();
+    partial void OnSearchTextChanged(string value) => ApplyFilters();
+
+    public void RefreshFromNavigation()
     {
-        StatusMessage = HasActiveCase
-            ? "Important toggle will be wired in the next Documents pass."
-            : "Open or create a case before marking documents important.";
+        LoadDocuments();
     }
 
-    [RelayCommand]
-    private void OpenFile()
+    public IReadOnlyList<string> GetPeopleForFolders()
     {
-        StatusMessage = HasSelectedDocument
-            ? "Open file will be wired in the next Documents pass."
-            : "Select a document first.";
+        return _documentsService.LoadPeopleForFolders();
+    }
+
+    public IReadOnlyList<DocumentConnectionOption> GetConnectionOptions(string section)
+    {
+        return _documentsService.LoadConnectionOptions(section);
+    }
+
+    public bool FolderExists(DocumentImportRequest request)
+    {
+        return _documentsService.FolderExists(request);
+    }
+
+    public bool ImportDocuments(DocumentImportRequest request)
+    {
+        if (!_documentsService.ImportDocuments(request, out var message))
+        {
+            StatusMessage = message;
+            return false;
+        }
+
+        LoadDocuments();
+        StatusMessage = message;
+        return true;
+    }
+
+    public DocumentRecord? CreateEditableCopyOfSelectedDocument()
+    {
+        var document = SelectedDocument?.Document;
+        if (document is null)
+            return null;
+
+        return new DocumentRecord
+        {
+            Id = document.Id,
+            DisplayName = document.DisplayName,
+            OriginalFileName = document.OriginalFileName,
+            StoredFileName = document.StoredFileName,
+            RelativePath = document.RelativePath,
+            FullPath = document.FullPath,
+            PersonName = document.PersonName,
+            Category = document.Category,
+            LinkedSection = document.LinkedSection,
+            LinkedRecordId = document.LinkedRecordId,
+            LinkedRecordName = document.LinkedRecordName,
+            CustomFolder = document.CustomFolder,
+            Tags = document.Tags,
+            Notes = document.Notes,
+            IsMergedFile = document.IsMergedFile,
+            PasswordProtectedRequested = document.PasswordProtectedRequested,
+            ImportBatchId = document.ImportBatchId,
+            IsActive = document.IsActive,
+            ImportedUtc = document.ImportedUtc,
+            UpdatedUtc = document.UpdatedUtc
+        };
+    }
+
+    public bool SaveDocumentMetadata(DocumentRecord document, DocumentEditRequest request)
+    {
+        if (!_documentsService.SaveDocumentMetadata(document, request, out var message))
+        {
+            StatusMessage = message;
+            return false;
+        }
+
+        LoadDocuments();
+        SelectedDocument = Documents.FirstOrDefault(row => row.Document.Id == document.Id) ?? Documents.FirstOrDefault();
+        StatusMessage = message;
+        return true;
+    }
+
+    public bool RemoveSelectedDocument(bool deleteFile)
+    {
+        var selectedId = SelectedDocument?.Document.Id ?? 0;
+        if (!_documentsService.RemoveDocument(selectedId, deleteFile, out var message))
+        {
+            StatusMessage = message;
+            return false;
+        }
+
+        LoadDocuments();
+        StatusMessage = message;
+        return true;
+    }
+
+    public void OpenSelectedDocument()
+    {
+        if (SelectedDocument is null)
+            return;
+
+        _documentsService.OpenDocument(SelectedDocument.Document, out var message);
+        StatusMessage = message;
+    }
+
+    public void ShowSelectedDocumentInFileBrowser()
+    {
+        if (SelectedDocument is null)
+            return;
+
+        _documentsService.ShowInFileBrowser(SelectedDocument.Document, out var message);
+        StatusMessage = message;
     }
 
     private void LoadDocuments()
     {
+        var selectedId = SelectedDocument?.Document.Id ?? 0;
         var result = _documentsService.LoadDocuments();
 
         HasActiveCase = result.HasActiveCase;
         StatusMessage = result.StatusMessage;
 
-        Documents.Clear();
-
+        _allDocuments.Clear();
         var index = 0;
         foreach (var document in result.Documents)
         {
-            Documents.Add(new DocumentListItemViewModel(document, index));
+            _allDocuments.Add(new DocumentRowViewModel(document, index));
             index++;
         }
 
-        SelectedDocument = Documents.FirstOrDefault();
+        RefreshFilterLists();
+        ApplyFilters();
+
+        SelectedDocument = Documents.FirstOrDefault(row => row.Document.Id == selectedId) ?? Documents.FirstOrDefault();
     }
 
-    private static string Clean(string? value)
+    private void RefreshFilterLists()
     {
-        return string.IsNullOrWhiteSpace(value) ? "None" : value.Trim();
+        var currentPerson = SelectedPersonFilter;
+        var currentSection = SelectedSectionFilter;
+        var currentTag = SelectedTagFilter;
+
+        People.Clear();
+        People.Add("All");
+        foreach (var person in _allDocuments.Select(row => row.Document.PersonName).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(s => s))
+            People.Add(person);
+
+        Sections.Clear();
+        Sections.Add("All");
+        foreach (var section in _allDocuments.Select(row => row.Document.LinkedSection).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(s => s))
+            Sections.Add(section);
+
+        Tags.Clear();
+        Tags.Add("All");
+        foreach (var tag in _allDocuments.SelectMany(row => SplitTags(row.Document.Tags)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(tag => tag))
+            Tags.Add(tag);
+
+        SelectedPersonFilter = People.Contains(currentPerson) ? currentPerson : "All";
+        SelectedSectionFilter = Sections.Contains(currentSection) ? currentSection : "All";
+        SelectedTagFilter = Tags.Contains(currentTag) ? currentTag : "All";
     }
 
-    private static string YesNo(bool? value)
+    private void ApplyFilters()
     {
-        return value == true ? "Yes" : "No";
+        var selectedId = SelectedDocument?.Document.Id ?? 0;
+        var query = SearchText?.Trim() ?? string.Empty;
+
+        var filtered = _allDocuments.AsEnumerable();
+
+        if (SelectedPersonFilter != "All")
+            filtered = filtered.Where(row => string.Equals(row.Document.PersonName, SelectedPersonFilter, StringComparison.OrdinalIgnoreCase));
+
+        if (SelectedSectionFilter != "All")
+            filtered = filtered.Where(row => string.Equals(row.Document.LinkedSection, SelectedSectionFilter, StringComparison.OrdinalIgnoreCase));
+
+        if (SelectedTagFilter != "All")
+            filtered = filtered.Where(row => SplitTags(row.Document.Tags).Any(tag => string.Equals(tag, SelectedTagFilter, StringComparison.OrdinalIgnoreCase)));
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            filtered = filtered.Where(row =>
+                Contains(row.Document.DisplayName, query) ||
+                Contains(row.Document.OriginalFileName, query) ||
+                Contains(row.Document.Tags, query) ||
+                Contains(row.Document.LinkedRecordName, query) ||
+                Contains(row.Document.PersonName, query) ||
+                Contains(row.Document.Category, query));
+        }
+
+        Documents.Clear();
+        foreach (var row in filtered)
+            Documents.Add(row);
+
+        SelectedDocument = Documents.FirstOrDefault(row => row.Document.Id == selectedId) ?? Documents.FirstOrDefault();
     }
 
-    private static string FormatUtc(DateTime? value)
+    private static bool Contains(string? value, string query)
     {
-        if (value is null || value.Value == default)
-            return "Not saved";
-
-        return value.Value.ToUniversalTime().ToString("yyyy-MM-dd HH:mm");
+        return (value ?? string.Empty).Contains(query, StringComparison.OrdinalIgnoreCase);
     }
+
+    private static IEnumerable<string> SplitTags(string tags)
+    {
+        return (tags ?? string.Empty)
+            .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(tag => !string.IsNullOrWhiteSpace(tag));
+    }
+
+    private static string Clean(string? value) => string.IsNullOrWhiteSpace(value) ? "None" : value.Trim();
+    private static string FormatDate(DateTime? value) => value is null || value.Value == default ? "Not saved" : value.Value.ToLocalTime().ToString("MMM d, yyyy h:mm tt");
 }
 
-public sealed partial class DocumentListItemViewModel : ObservableObject
+public sealed partial class DocumentRowViewModel : ObservableObject
 {
-    public DocumentListItemViewModel(DocumentRecord document, int index)
+    public DocumentRowViewModel(DocumentRecord document, int index)
     {
         Document = document ?? throw new ArgumentNullException(nameof(document));
         Index = index;
     }
 
     public DocumentRecord Document { get; }
-
     public int Index { get; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(RowBackground))]
-    [NotifyPropertyChangedFor(nameof(RowForeground))]
-    [NotifyPropertyChangedFor(nameof(MutedForeground))]
     private bool _isSelected;
 
-    public string Title => string.IsNullOrWhiteSpace(Document.Title) ? "Untitled Document" : Document.Title.Trim();
-    public string Category => string.IsNullOrWhiteSpace(Document.Category) ? "Other" : Document.Category.Trim();
-    public string Important => Document.ImportantText;
-    public string Tags => string.IsNullOrWhiteSpace(Document.Tags) ? "None" : Document.Tags.Trim();
+    public string DisplayName => string.IsNullOrWhiteSpace(Document.DisplayName) ? "Unnamed Document" : Document.DisplayName.Trim();
+    public string PersonCategory => Document.FolderDisplay;
     public string LinkedDisplay => Document.LinkedDisplay;
-    public string FileNameDisplay => Document.FileNameDisplay;
-    public string Status => Document.StatusText;
-
-    public bool IsInactive => !Document.IsActive;
-
-    public string RowBackground
-    {
-        get
-        {
-            if (IsSelected)
-                return "#2A6FA8";
-
-            if (Document.IsImportant && Document.IsActive)
-                return "#184E32";
-
-            if (IsInactive)
-                return "#1A1F29";
-
-            return Index % 2 == 0 ? "#122238" : "#0F1B2A";
-        }
-    }
-
-    public string RowForeground
-    {
-        get
-        {
-            if (IsSelected)
-                return "White";
-
-            return IsInactive ? "#7D8795" : "#DDE7F3";
-        }
-    }
-
-    public string MutedForeground => IsSelected ? "White" : IsInactive ? "#707A88" : "#C8D4E2";
+    public string Tags => Document.TagDisplay;
+    public string NameForeground => Document.IsActive ? "White" : "#7D8795";
+    public string DetailForeground => Document.IsActive ? "#C8D4E2" : "#707A88";
 }

@@ -10,6 +10,7 @@ public static class AppDataChangeNotifier
     public static event EventHandler? AllowanceSavingsChanged;
     public static event EventHandler? AssetsChanged;
     public static event EventHandler? DebtsChanged;
+    public static event EventHandler? DocumentsChanged;
 
     public static void NotifyIncomeSourcesChanged()
     {
@@ -39,5 +40,10 @@ public static class AppDataChangeNotifier
     public static void NotifyDebtsChanged()
     {
         DebtsChanged?.Invoke(null, EventArgs.Empty);
+    }
+
+    public static void NotifyDocumentsChanged()
+    {
+        DocumentsChanged?.Invoke(null, EventArgs.Empty);
     }
 }

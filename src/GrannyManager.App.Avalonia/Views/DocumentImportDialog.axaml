@@ -1,0 +1,121 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.DocumentImportDialog"
+        Title="Import Documents"
+        Width="720"
+        Height="850"
+        MinWidth="660"
+        MinHeight="760"
+        WindowStartupLocation="CenterOwner"
+        Background="#101C2C">
+    <Border Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="22">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="18">
+            <StackPanel Grid.Row="0" Spacing="6">
+                <TextBlock Text="Import Documents" Foreground="White" FontSize="24" FontWeight="SemiBold"/>
+                <TextBlock Text="Import PDFs or related files, organize them into person-first folders, link them to finance records, and tag them for search."
+                           Foreground="#B8CBE0" FontSize="13" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="14">
+                    <Button Name="ChooseFilesButton"
+                            Content="Choose PDFs / Files"
+                            Height="38"
+                            Padding="16,0"
+                            Background="#1A2B42"
+                            Foreground="White"
+                            HorizontalAlignment="Left"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"/>
+
+                    <Border Background="#0F1B2A" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6" Padding="10">
+                        <ListBox Name="SelectedFilesListBox"
+                                 Height="120"
+                                 Background="Transparent"
+                                 Foreground="White"
+                                 BorderThickness="0"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Import Mode" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="ImportModeComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                <ComboBoxItem Content="Import Individually"/>
+                                <ComboBoxItem Content="Merge into Single PDF" IsEnabled="False"/>
+                            </ComboBox>
+                            <TextBlock Text="PDF merge is reserved for the PDF processing patch." Foreground="#8FA3BA" FontSize="11" TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Merged PDF Name" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBox Name="MergedFileNameTextBox" IsEnabled="False" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Person / Folder" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="PersonComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Category" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="CategoryComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                <ComboBoxItem Content="Income"/>
+                                <ComboBoxItem Content="Bills"/>
+                                <ComboBoxItem Content="Debts"/>
+                                <ComboBoxItem Content="Allowance and Savings"/>
+                                <ComboBoxItem Content="Other"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Linked Record" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <ComboBox Name="LinkedRecordComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Custom Folder" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="CustomFolderTextBox" Watermark="Optional folder inside the selected category" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Tags" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="TagsTextBox" Watermark="Comma-separated tags, e.g. taxes, medical, receipt" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Notes" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="NotesTextBox" MinHeight="90" AcceptsReturn="True" TextWrapping="Wrap" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <Border Background="#0F1B2A" BorderBrush="#26384F" BorderThickness="1" CornerRadius="6" Padding="12">
+                        <StackPanel Spacing="8">
+                            <CheckBox Name="PasswordProtectCheckBox"
+                                      Content="Password protect imported PDF(s) when PDF protection is enabled"
+                                      Foreground="#DDE7F3"
+                                      IsEnabled="False"/>
+                            <TextBlock Text="Real PDF password protection will be added with the PDF processing library patch. This first pass does not alter PDF encryption."
+                                       Foreground="#8FA3BA"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"/>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <TextBox Name="PasswordTextBox" Watermark="Password" IsEnabled="False" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                                <TextBox Name="ConfirmPasswordTextBox" Grid.Column="1" Watermark="Confirm password" IsEnabled="False" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Name="ValidationTextBlock" Foreground="#FFB0B0" FontSize="12" TextWrapping="Wrap"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Name="CancelButton" Content="Cancel" Height="38" Padding="18,0" Background="#17263A" Foreground="#DDE7F3" BorderBrush="#30445F" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                <Button Name="ImportButton" Content="Import" Height="38" Padding="18,0" Background="#2E8B57" Foreground="White" FontWeight="SemiBold" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
