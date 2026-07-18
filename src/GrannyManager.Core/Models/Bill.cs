@@ -12,6 +12,10 @@ public sealed class Bill
     public string Frequency { get; set; } = "Monthly";
     public string DueDate { get; set; } = string.Empty;
     public string PaymentMethod { get; set; } = "Cash/Check";
+    public long LinkedBankAssetId { get; set; }
+    public string LinkedBankAssetName { get; set; } = string.Empty;
+    public long LinkedDebtId { get; set; }
+    public string LinkedDebtName { get; set; } = string.Empty;
     public bool IsAutopay { get; set; }
     public decimal PastDueAmount { get; set; }
     public string PaidBy { get; set; } = "Self (Primary Person)";
@@ -28,7 +32,23 @@ public sealed class Bill
     public string AmountText => Amount.ToString("C2", CultureInfo.CurrentCulture);
     public string MonthlyEquivalentText => MonthlyEquivalent.ToString("C2", CultureInfo.CurrentCulture);
     public string PastDueAmountText => PastDueAmount <= 0 ? "$0.00" : PastDueAmount.ToString("C2", CultureInfo.CurrentCulture);
-    public string AutopayText => IsAutopay ? $"Autopay - {PaymentMethod}" : PaymentMethod;
+    public string PaymentDisplayText
+    {
+        get
+        {
+            if (LinkedBankAssetId > 0 && LinkedDebtId > 0)
+                return $"{PaymentMethod} - {LinkedBankAssetName} + {LinkedDebtName}";
+
+            if (LinkedBankAssetId > 0 && !string.IsNullOrWhiteSpace(LinkedBankAssetName))
+                return $"{PaymentMethod} - {LinkedBankAssetName}";
+
+            if (LinkedDebtId > 0 && !string.IsNullOrWhiteSpace(LinkedDebtName))
+                return $"{PaymentMethod} - {LinkedDebtName}";
+
+            return PaymentMethod;
+        }
+    }
+    public string AutopayText => IsAutopay ? $"Autopay - {PaymentDisplayText}" : PaymentDisplayText;
 
     public static decimal CalculateMonthlyEquivalent(decimal amount, string? frequency, bool isActive = true)
     {

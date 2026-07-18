@@ -94,10 +94,19 @@
                                   Background="#0F1B2A"
                                   Foreground="White"
                                   BorderBrush="#30445F"
-                                  MinHeight="36"
-                                  IsEnabled="False">
+                                  MinHeight="36">
                             <ComboBoxItem Content="Choose account"/>
                         </ComboBox>
+
+                        <Button Name="CreateBankAccountButton"
+                                Content="+ Create Bank Account"
+                                Height="34"
+                                Padding="12,0"
+                                Background="#2E8B57"
+                                Foreground="White"
+                                HorizontalAlignment="Left"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"/>
                     </StackPanel>
 
                     <StackPanel Name="MultipleBankAccountsPanel"
@@ -152,7 +161,7 @@
                     </StackPanel>
 
                     <TextBlock Name="CreateBankAccountPlaceholderTextBlock"
-                               Text="Create Bank Account will be available after the Assets section is wired."
+                               Text="Create Bank Account is now available from this dialog."
                                Foreground="#9EB4CC"
                                FontSize="12"
                                TextWrapping="Wrap"

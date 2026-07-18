@@ -1,0 +1,166 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.DebtDialog"
+        Title="Debt"
+        Width="620"
+        Height="820"
+        MinWidth="560"
+        MinHeight="700"
+        WindowStartupLocation="CenterOwner"
+        Background="#101C2C">
+    <Border Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="22">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="18">
+            <StackPanel Grid.Row="0" Spacing="6">
+                <TextBlock Name="DialogTitleTextBlock" Text="Debt" Foreground="White" FontSize="24" FontWeight="SemiBold"/>
+                <TextBlock Text="Track credit cards, loans, collections, balances, minimum payments, and payment responsibility."
+                           Foreground="#B8CBE0" FontSize="13" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="14">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Debt Name" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="DebtNameTextBox" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Debt Type" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="DebtTypeComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                <ComboBoxItem Content="Credit Card"/>
+                                <ComboBoxItem Content="Loan"/>
+                                <ComboBoxItem Content="Medical Debt"/>
+                                <ComboBoxItem Content="Collection"/>
+                                <ComboBoxItem Content="Personal Loan"/>
+                                <ComboBoxItem Content="Auto Loan"/>
+                                <ComboBoxItem Content="Mortgage"/>
+                                <ComboBoxItem Content="Other"/>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Creditor / Collector" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBox Name="CreditorCollectorTextBox" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Current Balance" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBox Name="CurrentBalanceTextBox" Watermark="0.00" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Minimum Payment" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBox Name="MinimumPaymentTextBox" Watermark="0.00" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Payment Frequency" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="PaymentFrequencyComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                <ComboBoxItem Content="Weekly"/>
+                                <ComboBoxItem Content="Every 2 Weeks"/>
+                                <ComboBoxItem Content="Twice Monthly"/>
+                                <ComboBoxItem Content="Monthly"/>
+                                <ComboBoxItem Content="Quarterly"/>
+                                <ComboBoxItem Content="Yearly"/>
+                                <ComboBoxItem Content="One-Time / Irregular"/>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Due Date" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <CalendarDatePicker Name="DueDatePicker"
+                                                Watermark="MM/DD/YYYY"
+                                                Background="#0F1B2A"
+                                                Foreground="White"
+                                                BorderBrush="#30445F"
+                                                MinHeight="36"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Status" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="StatusComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                <ComboBoxItem Content="Current"/>
+                                <ComboBoxItem Content="Past Due"/>
+                                <ComboBoxItem Content="In Collections"/>
+                                <ComboBoxItem Content="Paid Off"/>
+                                <ComboBoxItem Content="Disputed"/>
+                                <ComboBoxItem Content="Other"/>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Priority" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="PriorityComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                <ComboBoxItem Content="High"/>
+                                <ComboBoxItem Content="Normal"/>
+                                <ComboBoxItem Content="Low"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Responsibility / Owner" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="ResponsibilityOwnerComboBox"
+                                      Background="#0F1B2A"
+                                      Foreground="White"
+                                      BorderBrush="#30445F"
+                                      MinHeight="36"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Paid By" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="PaidByComboBox"
+                                      Background="#0F1B2A"
+                                      Foreground="White"
+                                      BorderBrush="#30445F"
+                                      MinHeight="36"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Name="OutsideOwnerPanel" Grid.Column="0" Spacing="5" IsVisible="False">
+                            <TextBlock Text="Outside Responsible Owner" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBox Name="OutsideOwnerTextBox" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                        </StackPanel>
+                        <StackPanel Name="OutsidePayerPanel" Grid.Column="1" Spacing="5" IsVisible="False">
+                            <TextBlock Text="Outside Payer" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBox Name="OutsidePayerTextBox" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <CheckBox Name="IsActiveCheckBox" Content="Active debt" Foreground="#DDE7F3"/>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Notes" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="NotesTextBox" MinHeight="120" AcceptsReturn="True" TextWrapping="Wrap" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <TextBlock Name="ValidationTextBlock" Text="" Foreground="#FFB0B0" FontSize="12" TextWrapping="Wrap"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Name="CancelButton"
+                        Content="Cancel"
+                        Height="38"
+                        Padding="18,0"
+                        Background="#17263A"
+                        Foreground="#DDE7F3"
+                        BorderBrush="#30445F"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"/>
+                <Button Name="SaveButton"
+                        Content="Save"
+                        Height="38"
+                        Padding="18,0"
+                        Background="#2E8B57"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

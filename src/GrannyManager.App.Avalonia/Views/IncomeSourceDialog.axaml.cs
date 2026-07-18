@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Avalonia.Controls;
 using GrannyManager.Core.Models;
 
@@ -21,10 +20,17 @@ namespace GrannyManager.App.Avalonia.Views
         private readonly StackPanel? _bankAccountPanel;
         private readonly StackPanel? _multipleBankAccountsPanel;
         private readonly TextBlock? _createBankAccountPlaceholderTextBlock;
+        private readonly ComboBox? _bankAccountComboBox;
+        private readonly Button? _createBankAccountButton;
         private readonly ComboBox? _householdPersonComboBox;
         private readonly CheckBox? _isActiveCheckBox;
         private readonly TextBox? _notesTextBox;
+
         private readonly List<HouseholdPerson> _householdPeople = new();
+        private readonly List<AssetItem> _bankAccounts = new();
+        private Func<AssetItem>? _createBlankBankAccount;
+        private Func<AssetItem, bool>? _saveBankAccount;
+        private Func<IReadOnlyList<AssetItem>>? _reloadBankAccounts;
         private IncomeSource _source = new();
 
         public IncomeSourceDialog()
@@ -44,6 +50,8 @@ namespace GrannyManager.App.Avalonia.Views
             _bankAccountPanel = this.FindControl<StackPanel>("BankAccountPanel");
             _multipleBankAccountsPanel = this.FindControl<StackPanel>("MultipleBankAccountsPanel");
             _createBankAccountPlaceholderTextBlock = this.FindControl<TextBlock>("CreateBankAccountPlaceholderTextBlock");
+            _bankAccountComboBox = this.FindControl<ComboBox>("BankAccountComboBox");
+            _createBankAccountButton = this.FindControl<Button>("CreateBankAccountButton");
             _householdPersonComboBox = this.FindControl<ComboBox>("HouseholdPersonComboBox");
             _isActiveCheckBox = this.FindControl<CheckBox>("IsActiveCheckBox");
             _notesTextBox = this.FindControl<TextBox>("NotesTextBox");
@@ -53,6 +61,9 @@ namespace GrannyManager.App.Avalonia.Views
 
             if (_depositDestinationComboBox is not null)
                 _depositDestinationComboBox.SelectionChanged += (_, _) => RefreshDepositDestinationVisibility();
+
+            if (_createBankAccountButton is not null)
+                _createBankAccountButton.Click += async (_, _) => await CreateBankAccountAsync();
 
             var cancelButton = this.FindControl<Button>("CancelButton");
             if (cancelButton is not null)
@@ -65,12 +76,28 @@ namespace GrannyManager.App.Avalonia.Views
 
         public IncomeSource Source => _source;
 
-        public void SetMode(string title, IncomeSource source, IReadOnlyList<HouseholdPerson> householdPeople)
+        public void SetMode(
+            string title,
+            IncomeSource source,
+            IReadOnlyList<HouseholdPerson> householdPeople,
+            IReadOnlyList<AssetItem>? bankAccounts = null,
+            Func<AssetItem>? createBlankBankAccount = null,
+            Func<AssetItem, bool>? saveBankAccount = null,
+            Func<IReadOnlyList<AssetItem>>? reloadBankAccounts = null)
         {
             _source = source ?? new IncomeSource();
+
             _householdPeople.Clear();
             if (householdPeople is not null)
                 _householdPeople.AddRange(householdPeople);
+
+            _bankAccounts.Clear();
+            if (bankAccounts is not null)
+                _bankAccounts.AddRange(bankAccounts);
+
+            _createBlankBankAccount = createBlankBankAccount;
+            _saveBankAccount = saveBankAccount;
+            _reloadBankAccounts = reloadBankAccounts;
 
             if (_dialogTitleTextBlock is not null)
                 _dialogTitleTextBlock.Text = title;
@@ -92,6 +119,7 @@ namespace GrannyManager.App.Avalonia.Views
 
             SelectComboValue(_depositDestinationComboBox, string.IsNullOrWhiteSpace(_source.DepositDestination) ? "Cash/Check" : _source.DepositDestination);
 
+            PopulateBankAccounts(_source.LinkedBankAssetId);
             PopulateHouseholdPeople(_source.LinkedHouseholdPersonId);
 
             if (_isActiveCheckBox is not null)
@@ -104,38 +132,74 @@ namespace GrannyManager.App.Avalonia.Views
             RefreshDepositDestinationVisibility();
         }
 
+        private async System.Threading.Tasks.Task CreateBankAccountAsync()
+        {
+            if (_createBlankBankAccount is null || _saveBankAccount is null)
+                return;
+
+            var owner = this.Owner as Window;
+            if (owner is null)
+                return;
+
+            var asset = _createBlankBankAccount();
+            var dialog = new AssetItemDialog();
+            dialog.SetMode("Create Bank Account", asset);
+
+            var result = await dialog.ShowDialog<bool>(owner);
+            if (!result)
+                return;
+
+            if (!_saveBankAccount(dialog.Asset))
+                return;
+
+            _bankAccounts.Clear();
+            if (_reloadBankAccounts is not null)
+                _bankAccounts.AddRange(_reloadBankAccounts());
+
+            PopulateBankAccounts(dialog.Asset.Id);
+            SelectComboValue(_depositDestinationComboBox, "Select Bank Account");
+            RefreshDepositDestinationVisibility();
+        }
+
+        private void PopulateBankAccounts(long selectedId)
+        {
+            if (_bankAccountComboBox is null)
+                return;
+
+            _bankAccountComboBox.Items.Clear();
+            _bankAccountComboBox.Items.Add(new ComboBoxItem { Content = "Choose account", Tag = 0L });
+
+            foreach (var account in _bankAccounts)
+                _bankAccountComboBox.Items.Add(new ComboBoxItem { Content = account.DisplayName, Tag = account.Id });
+
+            _bankAccountComboBox.SelectedIndex = 0;
+            for (var index = 1; index < _bankAccountComboBox.ItemCount; index++)
+            {
+                if (_bankAccountComboBox.Items[index] is ComboBoxItem item && item.Tag is long id && id == selectedId)
+                {
+                    _bankAccountComboBox.SelectedIndex = index;
+                    break;
+                }
+            }
+        }
+
         private void PopulateHouseholdPeople(long selectedId)
         {
             if (_householdPersonComboBox is null)
                 return;
 
             _householdPersonComboBox.Items.Clear();
-            _householdPersonComboBox.Items.Add(new ComboBoxItem { Content = "None", Tag = 0L });
-
-            var primaryPerson = _householdPeople.FirstOrDefault(person =>
-                string.Equals(person.Relationship, "Self", StringComparison.OrdinalIgnoreCase) ||
-                person.Role.Contains("Primary", StringComparison.OrdinalIgnoreCase));
-
-            if (primaryPerson is not null)
-                _householdPersonComboBox.Items.Add(new ComboBoxItem { Content = $"Self ({primaryPerson.FullName})", Tag = primaryPerson.Id });
-            else
-                _householdPersonComboBox.Items.Add(new ComboBoxItem { Content = "Self (Primary Person)", Tag = 0L });
+            _householdPersonComboBox.Items.Add(new ComboBoxItem { Content = "None" });
+            _householdPersonComboBox.Items.Add(new ComboBoxItem { Content = "Self (Primary Person)", Tag = 0L });
 
             foreach (var person in _householdPeople)
-            {
-                if (primaryPerson is not null && person.Id == primaryPerson.Id)
-                    continue;
-
                 _householdPersonComboBox.Items.Add(new ComboBoxItem { Content = person.FullName, Tag = person.Id });
-            }
 
             _householdPersonComboBox.SelectedIndex = selectedId == 0 && !string.IsNullOrWhiteSpace(_source.LinkedHouseholdPersonName) ? 1 : 0;
 
-            for (var index = 1; index < _householdPersonComboBox.ItemCount; index++)
+            for (var index = 2; index < _householdPersonComboBox.ItemCount; index++)
             {
-                if (_householdPersonComboBox.Items[index] is ComboBoxItem item &&
-                    item.Tag is long id &&
-                    id == selectedId)
+                if (_householdPersonComboBox.Items[index] is ComboBoxItem item && item.Tag is long id && id == selectedId)
                 {
                     _householdPersonComboBox.SelectedIndex = index;
                     break;
@@ -151,42 +215,19 @@ namespace GrannyManager.App.Avalonia.Views
 
         private void RefreshDepositDestinationVisibility()
         {
-            var value = GetComboValue(_depositDestinationComboBox, "Cash/Check");
+            var destination = GetComboValue(_depositDestinationComboBox, "Cash/Check");
 
             if (_bankAccountPanel is not null)
-                _bankAccountPanel.IsVisible = value == "Select Bank Account";
+                _bankAccountPanel.IsVisible = destination == "Select Bank Account";
 
             if (_multipleBankAccountsPanel is not null)
-                _multipleBankAccountsPanel.IsVisible = value == "Select Multiple Bank Accounts";
+                _multipleBankAccountsPanel.IsVisible = destination == "Select Multiple Bank Accounts";
 
             if (_createBankAccountPlaceholderTextBlock is not null)
-                _createBankAccountPlaceholderTextBlock.IsVisible = value == "Create Bank Account";
-        }
+                _createBankAccountPlaceholderTextBlock.IsVisible = destination == "Create Bank Account";
 
-        private static void SelectComboValue(ComboBox? comboBox, string value)
-        {
-            if (comboBox is null)
-                return;
-
-            for (var index = 0; index < comboBox.ItemCount; index++)
-            {
-                if (comboBox.Items[index] is ComboBoxItem item &&
-                    string.Equals(item.Content?.ToString(), value, StringComparison.OrdinalIgnoreCase))
-                {
-                    comboBox.SelectedIndex = index;
-                    return;
-                }
-            }
-
-            comboBox.SelectedIndex = 0;
-        }
-
-        private static string GetComboValue(ComboBox? comboBox, string fallback)
-        {
-            if (comboBox?.SelectedItem is ComboBoxItem item)
-                return item.Content?.ToString() ?? fallback;
-
-            return fallback;
+            if (destination == "Create Bank Account")
+                _ = CreateBankAccountAsync();
         }
 
         private void SaveAndClose()
@@ -219,6 +260,18 @@ namespace GrannyManager.App.Avalonia.Views
             _source.ExpectedDayOrDate = _expectedDayTextBox?.Text?.Trim() ?? string.Empty;
             _source.DepositDestination = GetComboValue(_depositDestinationComboBox, "Cash/Check");
 
+            _source.LinkedBankAssetId = 0;
+            _source.LinkedBankAssetName = string.Empty;
+            if (_source.DepositDestination == "Select Bank Account" && _bankAccountComboBox?.SelectedItem is ComboBoxItem selectedAccount)
+            {
+                if (selectedAccount.Tag is long bankId)
+                    _source.LinkedBankAssetId = bankId;
+
+                var selectedName = selectedAccount.Content?.ToString() ?? string.Empty;
+                if (_source.LinkedBankAssetId > 0)
+                    _source.LinkedBankAssetName = selectedName;
+            }
+
             _source.LinkedHouseholdPersonId = 0;
             _source.LinkedHouseholdPersonName = string.Empty;
             if (_householdPersonComboBox?.SelectedItem is ComboBoxItem selectedPerson)
@@ -235,6 +288,32 @@ namespace GrannyManager.App.Avalonia.Views
             _source.Notes = _notesTextBox?.Text?.Trim() ?? string.Empty;
 
             Close(true);
+        }
+
+        private static void SelectComboValue(ComboBox? comboBox, string value)
+        {
+            if (comboBox is null)
+                return;
+
+            for (var index = 0; index < comboBox.ItemCount; index++)
+            {
+                if (comboBox.Items[index] is ComboBoxItem item &&
+                    string.Equals(item.Content?.ToString(), value, StringComparison.OrdinalIgnoreCase))
+                {
+                    comboBox.SelectedIndex = index;
+                    return;
+                }
+            }
+
+            comboBox.SelectedIndex = 0;
+        }
+
+        private static string GetComboValue(ComboBox? comboBox, string fallback)
+        {
+            if (comboBox?.SelectedItem is ComboBoxItem item)
+                return item.Content?.ToString() ?? fallback;
+
+            return fallback;
         }
     }
 }

@@ -140,11 +140,19 @@
                                   Background="#0F1B2A"
                                   Foreground="White"
                                   BorderBrush="#30445F"
-                                  MinHeight="36"
-                                  IsEnabled="False">
+                                  MinHeight="36">
                             <ComboBoxItem Content="Choose account"/>
-                            <ComboBoxItem Content="Add bank account"/>
                         </ComboBox>
+
+                        <Button Name="CreateBankAccountButton"
+                                Content="+ Create Bank Account"
+                                Height="34"
+                                Padding="12,0"
+                                Background="#2E8B57"
+                                Foreground="White"
+                                HorizontalAlignment="Left"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"/>
                     </StackPanel>
 
                     <StackPanel Name="MultipleBankAccountsPanel"

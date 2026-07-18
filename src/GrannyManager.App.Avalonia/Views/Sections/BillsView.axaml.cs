@@ -1,6 +1,4 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.VisualTree;
 using GrannyManager.App.Avalonia.ViewModels.Sections;
 using GrannyManager.App.Avalonia.Views;
 
@@ -57,7 +55,18 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                 return;
 
             var dialog = new BillDialog();
-            dialog.SetMode("Add Bill / Spending", viewModel.CreateBlankBill(), viewModel.GetHouseholdPeople());
+            dialog.SetMode(
+                "Add Bill / Spending",
+                viewModel.CreateBlankBill(),
+                viewModel.GetHouseholdPeople(),
+                viewModel.GetBankAccounts(),
+                viewModel.GetCreditCardDebts(),
+                viewModel.CreateBlankBankAccount,
+                viewModel.SaveBankAccount,
+                viewModel.GetBankAccounts,
+                viewModel.CreateBlankCreditCardDebt,
+                viewModel.SaveCreditCardDebt,
+                viewModel.GetCreditCardDebts);
 
             var result = await dialog.ShowDialog<bool>(owner);
             if (result)
@@ -78,7 +87,18 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                 return;
 
             var dialog = new BillDialog();
-            dialog.SetMode("Edit Bill / Spending", bill, viewModel.GetHouseholdPeople());
+            dialog.SetMode(
+                "Edit Bill / Spending",
+                bill,
+                viewModel.GetHouseholdPeople(),
+                viewModel.GetBankAccounts(),
+                viewModel.GetCreditCardDebts(),
+                viewModel.CreateBlankBankAccount,
+                viewModel.SaveBankAccount,
+                viewModel.GetBankAccounts,
+                viewModel.CreateBlankCreditCardDebt,
+                viewModel.SaveCreditCardDebt,
+                viewModel.GetCreditCardDebts);
 
             var result = await dialog.ShowDialog<bool>(owner);
             if (result)
@@ -99,26 +119,6 @@ namespace GrannyManager.App.Avalonia.Views.Sections
             var result = await dialog.ShowDialog<bool>(owner);
             if (result)
                 viewModel.RemoveSelectedBill();
-        }
-
-        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
-        {
-            base.OnAttachedToVisualTree(e);
-            RefreshWhenVisible();
-        }
-
-        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
-        {
-            base.OnPropertyChanged(change);
-
-            if (change.Property == IsVisibleProperty)
-                RefreshWhenVisible();
-        }
-
-        private void RefreshWhenVisible()
-        {
-            if (IsVisible && DataContext is BillsViewModel viewModel)
-                viewModel.RefreshFromNavigation();
         }
     }
 }

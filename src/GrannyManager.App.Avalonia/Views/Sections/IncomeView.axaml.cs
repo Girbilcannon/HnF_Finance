@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.VisualTree;
 using GrannyManager.App.Avalonia.ViewModels.Sections;
+using GrannyManager.App.Avalonia.ViewModels.Sections;
 using GrannyManager.App.Avalonia.Views;
 
 namespace GrannyManager.App.Avalonia.Views.Sections
@@ -35,7 +36,14 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                 return;
 
             var dialog = new IncomeSourceDialog();
-            dialog.SetMode("Add Income Source", viewModel.CreateBlankSource(), viewModel.GetHouseholdPeople());
+            dialog.SetMode(
+                "Add Income Source",
+                viewModel.CreateBlankSource(),
+                viewModel.GetHouseholdPeople(),
+                viewModel.LoadBankAccounts(),
+                viewModel.CreateBlankBankAccount,
+                viewModel.SaveBankAccount,
+                viewModel.LoadBankAccounts);
 
             var result = await dialog.ShowDialog<bool>(owner);
             if (result)
@@ -56,7 +64,14 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                 return;
 
             var dialog = new IncomeSourceDialog();
-            dialog.SetMode("Edit Income Source", source, viewModel.GetHouseholdPeople());
+            dialog.SetMode(
+                "Edit Income Source",
+                source,
+                viewModel.GetHouseholdPeople(),
+                viewModel.LoadBankAccounts(),
+                viewModel.CreateBlankBankAccount,
+                viewModel.SaveBankAccount,
+                viewModel.LoadBankAccounts);
 
             var result = await dialog.ShowDialog<bool>(owner);
             if (result)
@@ -82,21 +97,10 @@ namespace GrannyManager.App.Avalonia.Views.Sections
         protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
         {
             base.OnAttachedToVisualTree(e);
-            RefreshWhenVisible();
-        }
 
-        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
-        {
-            base.OnPropertyChanged(change);
-
-            if (change.Property == IsVisibleProperty)
-                RefreshWhenVisible();
-        }
-
-        private void RefreshWhenVisible()
-        {
-            if (IsVisible && DataContext is IncomeViewModel viewModel)
+            if (DataContext is IncomeViewModel viewModel)
                 viewModel.RefreshFromNavigation();
         }
     }
 }
+

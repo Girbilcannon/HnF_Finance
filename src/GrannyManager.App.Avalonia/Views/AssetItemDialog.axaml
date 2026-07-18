@@ -1,0 +1,89 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.AssetItemDialog"
+        Title="Asset"
+        Width="620"
+        Height="780"
+        MinWidth="560"
+        MinHeight="660"
+        WindowStartupLocation="CenterOwner"
+        Background="#101C2C">
+    <Border Background="#122238" BorderBrush="#2A405A" BorderThickness="1" CornerRadius="8" Padding="22">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="18">
+            <StackPanel Grid.Row="0" Spacing="6">
+                <TextBlock Name="DialogTitleTextBlock" Text="Asset" Foreground="White" FontSize="24" FontWeight="SemiBold"/>
+                <TextBlock Text="Track bank accounts, vehicles, property, investments, crypto, businesses, valuables, and other assets."
+                           Foreground="#B8CBE0" FontSize="13" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="14">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Asset Name" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="AssetNameTextBox" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="Asset Type" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <ComboBox Name="AssetTypeComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                <ComboBoxItem Content="Bank Account"/>
+                                <ComboBoxItem Content="Vehicle"/>
+                                <ComboBoxItem Content="Property"/>
+                                <ComboBoxItem Content="Investment"/>
+                                <ComboBoxItem Content="Crypto"/>
+                                <ComboBoxItem Content="Business"/>
+                                <ComboBoxItem Content="Valuable Item"/>
+                                <ComboBoxItem Content="Settlement / Lump Sum"/>
+                                <ComboBoxItem Content="Other"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="Estimated Value / Balance" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBox Name="EstimatedValueTextBox" Watermark="0.00" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Name="BankFieldsPanel" Spacing="14">
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="Bank / Institution" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBox Name="InstitutionNameTextBox" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <StackPanel Grid.Column="0" Spacing="5">
+                                <TextBlock Text="Account Type" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                                <ComboBox Name="AccountTypeComboBox" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F" MinHeight="36">
+                                    <ComboBoxItem Content="Checking"/>
+                                    <ComboBoxItem Content="Savings"/>
+                                    <ComboBoxItem Content="Money Market"/>
+                                    <ComboBoxItem Content="Other"/>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Spacing="5">
+                                <TextBlock Text="Last 4 Digits" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                                <TextBox Name="AccountLastFourTextBox" MaxLength="4" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
+                    <CheckBox Name="IsActiveCheckBox" Content="Active asset" Foreground="#DDE7F3"/>
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Notes" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBox Name="NotesTextBox" MinHeight="120" AcceptsReturn="True" TextWrapping="Wrap" Padding="12" Background="#0F1B2A" Foreground="White" BorderBrush="#30445F"/>
+                    </StackPanel>
+
+                    <TextBlock Name="ValidationTextBlock" Text="" Foreground="#FFB0B0" FontSize="12" TextWrapping="Wrap"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Name="CancelButton" Content="Cancel" Height="38" Padding="18,0" Background="#17263A" Foreground="#DDE7F3" BorderBrush="#30445F" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                <Button Name="SaveButton" Content="Save" Height="38" Padding="18,0" Background="#2E8B57" Foreground="White" FontWeight="SemiBold" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

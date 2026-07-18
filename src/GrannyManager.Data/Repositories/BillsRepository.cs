@@ -24,7 +24,8 @@ public sealed class BillsRepository
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = @"
-SELECT Id, BillName, Category, Amount, Frequency, DueDate, PaymentMethod, IsAutopay, PastDueAmount,
+SELECT Id, BillName, Category, Amount, Frequency, DueDate, PaymentMethod,
+       LinkedBankAssetId, LinkedBankAssetName, LinkedDebtId, LinkedDebtName, IsAutopay, PastDueAmount,
        PaidBy, PaidByHouseholdPersonId, ResponsibilityOwner, ResponsibilityOwnerHouseholdPersonId,
        Priority, IsActive, Notes, CreatedUtc, UpdatedUtc
 FROM Bills
@@ -35,6 +36,23 @@ ORDER BY IsActive DESC, Priority COLLATE NOCASE, BillName COLLATE NOCASE;";
             items.Add(ReadBill(reader));
 
         return items;
+    }
+
+    public Bill? GetById(long id)
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+SELECT Id, BillName, Category, Amount, Frequency, DueDate, PaymentMethod,
+       LinkedBankAssetId, LinkedBankAssetName, LinkedDebtId, LinkedDebtName, IsAutopay, PastDueAmount,
+       PaidBy, PaidByHouseholdPersonId, ResponsibilityOwner, ResponsibilityOwnerHouseholdPersonId,
+       Priority, IsActive, Notes, CreatedUtc, UpdatedUtc
+FROM Bills
+WHERE Id = $Id;";
+        command.Parameters.AddWithValue("$Id", id);
+
+        using var reader = command.ExecuteReader();
+        return reader.Read() ? ReadBill(reader) : null;
     }
 
     public long Upsert(Bill item)
@@ -52,11 +70,11 @@ ORDER BY IsActive DESC, Priority COLLATE NOCASE, BillName COLLATE NOCASE;";
             item.CreatedUtc = DateTime.UtcNow;
             command.CommandText = @"
 INSERT INTO Bills
-(BillName, Category, Amount, Frequency, DueDate, PaymentMethod, IsAutopay, PastDueAmount,
+(BillName, Category, Amount, Frequency, DueDate, PaymentMethod, LinkedBankAssetId, LinkedBankAssetName, LinkedDebtId, LinkedDebtName, IsAutopay, PastDueAmount,
  PaidBy, PaidByHouseholdPersonId, ResponsibilityOwner, ResponsibilityOwnerHouseholdPersonId,
  Priority, IsActive, Notes, CreatedUtc, UpdatedUtc)
 VALUES
-($BillName, $Category, $Amount, $Frequency, $DueDate, $PaymentMethod, $IsAutopay, $PastDueAmount,
+($BillName, $Category, $Amount, $Frequency, $DueDate, $PaymentMethod, $LinkedBankAssetId, $LinkedBankAssetName, $LinkedDebtId, $LinkedDebtName, $IsAutopay, $PastDueAmount,
  $PaidBy, $PaidByHouseholdPersonId, $ResponsibilityOwner, $ResponsibilityOwnerHouseholdPersonId,
  $Priority, $IsActive, $Notes, $CreatedUtc, $UpdatedUtc);
 SELECT last_insert_rowid();";
@@ -71,6 +89,10 @@ SET BillName = $BillName,
     Frequency = $Frequency,
     DueDate = $DueDate,
     PaymentMethod = $PaymentMethod,
+    LinkedBankAssetId = $LinkedBankAssetId,
+    LinkedBankAssetName = $LinkedBankAssetName,
+    LinkedDebtId = $LinkedDebtId,
+    LinkedDebtName = $LinkedDebtName,
     IsAutopay = $IsAutopay,
     PastDueAmount = $PastDueAmount,
     PaidBy = $PaidBy,
@@ -119,6 +141,10 @@ CREATE TABLE IF NOT EXISTS Bills (
     Frequency TEXT NOT NULL DEFAULT 'Monthly',
     DueDate TEXT NOT NULL DEFAULT '',
     PaymentMethod TEXT NOT NULL DEFAULT '',
+    LinkedBankAssetId INTEGER NOT NULL DEFAULT 0,
+    LinkedBankAssetName TEXT NOT NULL DEFAULT '',
+    LinkedDebtId INTEGER NOT NULL DEFAULT 0,
+    LinkedDebtName TEXT NOT NULL DEFAULT '',
     IsAutopay INTEGER NOT NULL DEFAULT 0,
     PastDueAmount REAL NOT NULL DEFAULT 0,
     PaidBy TEXT NOT NULL DEFAULT 'Self (Primary Person)',
@@ -140,6 +166,10 @@ CREATE TABLE IF NOT EXISTS Bills (
         EnsureColumn(connection, "Bills", "Frequency", "TEXT NOT NULL DEFAULT 'Monthly'");
         EnsureColumn(connection, "Bills", "DueDate", "TEXT NOT NULL DEFAULT ''");
         EnsureColumn(connection, "Bills", "PaymentMethod", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "Bills", "LinkedBankAssetId", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumn(connection, "Bills", "LinkedBankAssetName", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "Bills", "LinkedDebtId", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumn(connection, "Bills", "LinkedDebtName", "TEXT NOT NULL DEFAULT ''");
         EnsureColumn(connection, "Bills", "IsAutopay", "INTEGER NOT NULL DEFAULT 0");
         EnsureColumn(connection, "Bills", "PastDueAmount", "REAL NOT NULL DEFAULT 0");
         EnsureColumn(connection, "Bills", "PaidBy", "TEXT NOT NULL DEFAULT 'Self (Primary Person)'");
@@ -198,6 +228,10 @@ CREATE TABLE IF NOT EXISTS Bills (
         command.Parameters.AddWithValue("$Frequency", item.Frequency.Trim());
         command.Parameters.AddWithValue("$DueDate", item.DueDate.Trim());
         command.Parameters.AddWithValue("$PaymentMethod", item.PaymentMethod.Trim());
+        command.Parameters.AddWithValue("$LinkedBankAssetId", item.LinkedBankAssetId);
+        command.Parameters.AddWithValue("$LinkedBankAssetName", item.LinkedBankAssetName.Trim());
+        command.Parameters.AddWithValue("$LinkedDebtId", item.LinkedDebtId);
+        command.Parameters.AddWithValue("$LinkedDebtName", item.LinkedDebtName.Trim());
         command.Parameters.AddWithValue("$IsAutopay", item.IsAutopay ? 1 : 0);
         command.Parameters.AddWithValue("$PastDueAmount", item.PastDueAmount);
         command.Parameters.AddWithValue("$PaidBy", item.PaidBy.Trim());
@@ -222,17 +256,21 @@ CREATE TABLE IF NOT EXISTS Bills (
             Frequency = GetString(reader, 4),
             DueDate = GetString(reader, 5),
             PaymentMethod = GetString(reader, 6),
-            IsAutopay = GetBool(reader, 7),
-            PastDueAmount = GetDecimal(reader, 8),
-            PaidBy = GetString(reader, 9),
-            PaidByHouseholdPersonId = GetLong(reader, 10),
-            ResponsibilityOwner = GetString(reader, 11),
-            ResponsibilityOwnerHouseholdPersonId = GetLong(reader, 12),
-            Priority = GetString(reader, 13),
-            IsActive = GetBool(reader, 14),
-            Notes = GetString(reader, 15),
-            CreatedUtc = GetDateTime(reader, 16),
-            UpdatedUtc = GetDateTime(reader, 17)
+            LinkedBankAssetId = GetLong(reader, 7),
+            LinkedBankAssetName = GetString(reader, 8),
+            LinkedDebtId = GetLong(reader, 9),
+            LinkedDebtName = GetString(reader, 10),
+            IsAutopay = GetBool(reader, 11),
+            PastDueAmount = GetDecimal(reader, 12),
+            PaidBy = GetString(reader, 13),
+            PaidByHouseholdPersonId = GetLong(reader, 14),
+            ResponsibilityOwner = GetString(reader, 15),
+            ResponsibilityOwnerHouseholdPersonId = GetLong(reader, 16),
+            Priority = GetString(reader, 17),
+            IsActive = GetBool(reader, 18),
+            Notes = GetString(reader, 19),
+            CreatedUtc = GetDateTime(reader, 20),
+            UpdatedUtc = GetDateTime(reader, 21)
         };
     }
 

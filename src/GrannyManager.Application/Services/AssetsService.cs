@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using GrannyManager.Application.State;
 using GrannyManager.Core.Models;
 using GrannyManager.Data.Database;
@@ -28,15 +31,16 @@ public sealed class AssetsService
 
         try
         {
-            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
-            var repository = new AssetsRepository(databasePath);
-            var assets = repository.GetAll();
+            var repository = CreateRepository(activeCase.CaseFolderPath);
+            var assets = repository.GetAll()
+                .OrderBy(asset => asset.IsActive ? 0 : 1)
+                .ThenBy(asset => asset.AssetType, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(asset => asset.AssetName, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
 
             return new AssetsLoadResult(
                 HasActiveCase: true,
-                StatusMessage: assets.Count == 0
-                    ? "No assets have been added to this case yet."
-                    : $"{assets.Count} asset record(s) loaded.",
+                StatusMessage: assets.Count == 0 ? "No assets have been added to this case yet." : $"{assets.Count} asset(s) loaded.",
                 Assets: assets);
         }
         catch (Exception ex)
@@ -46,5 +50,95 @@ public sealed class AssetsService
                 StatusMessage: $"Could not load assets: {ex.Message}",
                 Assets: Array.Empty<AssetItem>());
         }
+    }
+
+    public IReadOnlyList<AssetItem> LoadBankAccounts()
+    {
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+            return Array.Empty<AssetItem>();
+
+        try
+        {
+            return CreateRepository(activeCase.CaseFolderPath).GetBankAccounts();
+        }
+        catch
+        {
+            return Array.Empty<AssetItem>();
+        }
+    }
+
+    public bool SaveAsset(AssetItem asset, out string statusMessage)
+    {
+        statusMessage = string.Empty;
+
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+        {
+            statusMessage = "Open a case before saving assets.";
+            return false;
+        }
+
+        if (asset is null)
+        {
+            statusMessage = "No asset was provided.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(asset.AssetName))
+        {
+            statusMessage = "Enter an asset name before saving.";
+            return false;
+        }
+
+        try
+        {
+            CreateRepository(activeCase.CaseFolderPath).Upsert(asset);
+            AppDataChangeNotifier.NotifyAssetsChanged();
+            statusMessage = "Asset saved.";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Could not save asset: {ex.Message}";
+            return false;
+        }
+    }
+
+    public bool DeleteAsset(long id, out string statusMessage)
+    {
+        statusMessage = string.Empty;
+
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+        {
+            statusMessage = "Open a case before removing assets.";
+            return false;
+        }
+
+        if (id <= 0)
+        {
+            statusMessage = "Select an asset before removing.";
+            return false;
+        }
+
+        try
+        {
+            CreateRepository(activeCase.CaseFolderPath).Delete(id);
+            AppDataChangeNotifier.NotifyAssetsChanged();
+            statusMessage = "Asset removed.";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Could not remove asset: {ex.Message}";
+            return false;
+        }
+    }
+
+    private static AssetsRepository CreateRepository(string caseFolderPath)
+    {
+        var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(caseFolderPath);
+        return new AssetsRepository(databasePath);
     }
 }

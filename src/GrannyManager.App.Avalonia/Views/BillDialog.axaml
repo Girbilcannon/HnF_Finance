@@ -36,7 +36,8 @@
                                 <ComboBoxItem Content="Fuel"/>
                                 <ComboBoxItem Content="Debt Payment"/>
                                 <ComboBoxItem Content="Subscription"/>
-                                <ComboBoxItem Content="Other"/>
+                                <ComboBoxItem Content="Multiple"/>
+                            <ComboBoxItem Content="Other"/>
                             </ComboBox>
                         </StackPanel>
 
@@ -94,12 +95,13 @@
                             <ComboBoxItem Content="Bank/Debit"/>
                             <ComboBoxItem Content="Credit Card"/>
                             <ComboBoxItem Content="Cash/Check"/>
+                            <ComboBoxItem Content="Multiple"/>
                             <ComboBoxItem Content="Other"/>
                         </ComboBox>
                     </StackPanel>
 
                     <StackPanel Name="PaymentBankPanel"
-                                Spacing="5"
+                                Spacing="8"
                                 IsVisible="False">
                         <TextBlock Text="Linked Bank Account"
                                    Foreground="#9EB4CC"
@@ -109,14 +111,21 @@
                                   Background="#0F1B2A"
                                   Foreground="White"
                                   BorderBrush="#30445F"
-                                  MinHeight="36">
-                            <ComboBoxItem Content="Select bank account"/>
-                            <ComboBoxItem Content="Add bank account"/>
-                        </ComboBox>
+                                  MinHeight="36"/>
+                        <Button Name="CreatePaymentBankAccountButton"
+                                Content="+ Create Bank Account"
+                                Height="34"
+                                Padding="14,0"
+                                Background="#2E8B57"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                HorizontalAlignment="Left"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"/>
                     </StackPanel>
 
                     <StackPanel Name="PaymentDebtPanel"
-                                Spacing="5"
+                                Spacing="8"
                                 IsVisible="False">
                         <TextBlock Text="Linked Credit Card Debt"
                                    Foreground="#9EB4CC"
@@ -126,10 +135,17 @@
                                   Background="#0F1B2A"
                                   Foreground="White"
                                   BorderBrush="#30445F"
-                                  MinHeight="36">
-                            <ComboBoxItem Content="Select debt"/>
-                            <ComboBoxItem Content="Add debt"/>
-                        </ComboBox>
+                                  MinHeight="36"/>
+                        <Button Name="CreatePaymentDebtButton"
+                                Content="+ Create Credit Card Debt"
+                                Height="34"
+                                Padding="14,0"
+                                Background="#2E8B57"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                HorizontalAlignment="Left"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"/>
                     </StackPanel>
 
                     <StackPanel Name="PaymentOtherPanel"

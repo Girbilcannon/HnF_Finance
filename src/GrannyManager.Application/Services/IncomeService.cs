@@ -68,6 +68,66 @@ public sealed class IncomeService
         }
     }
 
+
+    public IReadOnlyList<AssetItem> LoadBankAccounts()
+    {
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+            return Array.Empty<AssetItem>();
+
+        try
+        {
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            var repository = new AssetsRepository(databasePath);
+            return repository.GetBankAccounts();
+        }
+        catch
+        {
+            return Array.Empty<AssetItem>();
+        }
+    }
+
+    public bool SaveBankAccount(AssetItem asset, out string statusMessage)
+    {
+        statusMessage = string.Empty;
+
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+        {
+            statusMessage = "Open a case before saving bank accounts.";
+            return false;
+        }
+
+        if (asset is null)
+        {
+            statusMessage = "No bank account was provided.";
+            return false;
+        }
+
+        asset.AssetType = "Bank Account";
+
+        if (string.IsNullOrWhiteSpace(asset.AssetName))
+        {
+            statusMessage = "Enter a bank account name before saving.";
+            return false;
+        }
+
+        try
+        {
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            var repository = new AssetsRepository(databasePath);
+            repository.Upsert(asset);
+            AppDataChangeNotifier.NotifyAssetsChanged();
+            statusMessage = "Bank account saved.";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Could not save bank account: {ex.Message}";
+            return false;
+        }
+    }
+
     public bool SaveSource(IncomeSource source, out string statusMessage)
     {
         statusMessage = string.Empty;

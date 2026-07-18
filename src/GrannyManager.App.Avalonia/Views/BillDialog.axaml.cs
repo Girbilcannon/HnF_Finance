@@ -23,6 +23,18 @@ namespace GrannyManager.App.Avalonia.Views
         private readonly StackPanel? _paymentDebtPanel;
         private readonly StackPanel? _paymentOtherPanel;
         private readonly TextBox? _paymentOtherTextBox;
+        private readonly ComboBox? _paymentBankAccountComboBox;
+        private readonly Button? _createPaymentBankAccountButton;
+        private readonly ComboBox? _paymentDebtComboBox;
+        private readonly Button? _createPaymentDebtButton;
+        private readonly List<AssetItem> _bankAccounts = new();
+        private readonly List<Debt> _creditCardDebts = new();
+        private Func<AssetItem>? _createBlankBankAccount;
+        private Func<AssetItem, bool>? _saveBankAccount;
+        private Func<IReadOnlyList<AssetItem>>? _reloadBankAccounts;
+        private Func<Debt>? _createBlankCreditCardDebt;
+        private Func<Debt, bool>? _saveCreditCardDebt;
+        private Func<IReadOnlyList<Debt>>? _reloadCreditCardDebts;
         private readonly ComboBox? _paidByComboBox;
         private readonly StackPanel? _outsidePayerPanel;
         private readonly TextBox? _outsidePayerTextBox;
@@ -50,7 +62,11 @@ namespace GrannyManager.App.Avalonia.Views
             _autopayCheckBox = this.FindControl<CheckBox>("AutopayCheckBox");
             _paymentMethodComboBox = this.FindControl<ComboBox>("PaymentMethodComboBox");
             _paymentBankPanel = this.FindControl<StackPanel>("PaymentBankPanel");
+            _paymentBankAccountComboBox = this.FindControl<ComboBox>("PaymentBankAccountComboBox");
+            _createPaymentBankAccountButton = this.FindControl<Button>("CreatePaymentBankAccountButton");
             _paymentDebtPanel = this.FindControl<StackPanel>("PaymentDebtPanel");
+            _paymentDebtComboBox = this.FindControl<ComboBox>("PaymentDebtComboBox");
+            _createPaymentDebtButton = this.FindControl<Button>("CreatePaymentDebtButton");
             _paymentOtherPanel = this.FindControl<StackPanel>("PaymentOtherPanel");
             _paymentOtherTextBox = this.FindControl<TextBox>("PaymentOtherTextBox");
             _paidByComboBox = this.FindControl<ComboBox>("PaidByComboBox");
@@ -64,6 +80,12 @@ namespace GrannyManager.App.Avalonia.Views
 
             if (_paymentMethodComboBox is not null)
                 _paymentMethodComboBox.SelectionChanged += (_, _) => RefreshPaymentMethodVisibility();
+
+            if (_createPaymentBankAccountButton is not null)
+                _createPaymentBankAccountButton.Click += async (_, _) => await CreatePaymentBankAccountAsync();
+
+            if (_createPaymentDebtButton is not null)
+                _createPaymentDebtButton.Click += async (_, _) => await CreatePaymentDebtAsync();
 
             if (_paidByComboBox is not null)
                 _paidByComboBox.SelectionChanged += (_, _) => RefreshOtherVisibility();
@@ -82,12 +104,38 @@ namespace GrannyManager.App.Avalonia.Views
 
         public Bill Bill => _bill;
 
-        public void SetMode(string title, Bill bill, IReadOnlyList<HouseholdPerson> householdPeople)
+        public void SetMode(
+            string title,
+            Bill bill,
+            IReadOnlyList<HouseholdPerson> householdPeople,
+            IReadOnlyList<AssetItem>? bankAccounts = null,
+            IReadOnlyList<Debt>? creditCardDebts = null,
+            Func<AssetItem>? createBlankBankAccount = null,
+            Func<AssetItem, bool>? saveBankAccount = null,
+            Func<IReadOnlyList<AssetItem>>? reloadBankAccounts = null,
+            Func<Debt>? createBlankCreditCardDebt = null,
+            Func<Debt, bool>? saveCreditCardDebt = null,
+            Func<IReadOnlyList<Debt>>? reloadCreditCardDebts = null)
         {
             _bill = bill ?? new Bill();
             _householdPeople.Clear();
             if (householdPeople is not null)
                 _householdPeople.AddRange(householdPeople);
+
+            _bankAccounts.Clear();
+            if (bankAccounts is not null)
+                _bankAccounts.AddRange(bankAccounts);
+
+            _creditCardDebts.Clear();
+            if (creditCardDebts is not null)
+                _creditCardDebts.AddRange(creditCardDebts);
+
+            _createBlankBankAccount = createBlankBankAccount;
+            _saveBankAccount = saveBankAccount;
+            _reloadBankAccounts = reloadBankAccounts;
+            _createBlankCreditCardDebt = createBlankCreditCardDebt;
+            _saveCreditCardDebt = saveCreditCardDebt;
+            _reloadCreditCardDebts = reloadCreditCardDebts;
 
             if (_dialogTitleTextBlock is not null)
                 _dialogTitleTextBlock.Text = title;
@@ -125,6 +173,9 @@ namespace GrannyManager.App.Avalonia.Views
                 SelectComboValue(_paymentMethodComboBox, paymentMethod);
             }
 
+            PopulateBankAccountCombo();
+            PopulateDebtCombo();
+
             PopulatePersonCombo(_paidByComboBox, _bill.PaidByHouseholdPersonId, _bill.PaidBy);
             PopulatePersonCombo(_responsibilityOwnerComboBox, _bill.ResponsibilityOwnerHouseholdPersonId, _bill.ResponsibilityOwner);
 
@@ -136,6 +187,140 @@ namespace GrannyManager.App.Avalonia.Views
 
             RefreshOtherVisibility();
             RefreshPaymentMethodVisibility();
+        }
+
+        private void PopulateBankAccountCombo()
+        {
+            if (_paymentBankAccountComboBox is null)
+                return;
+
+            _paymentBankAccountComboBox.Items.Clear();
+            _paymentBankAccountComboBox.Items.Add(new ComboBoxItem { Content = "Choose account", Tag = 0L });
+
+            foreach (var account in _bankAccounts)
+            {
+                _paymentBankAccountComboBox.Items.Add(new ComboBoxItem
+                {
+                    Content = account.DisplayName,
+                    Tag = account.Id
+                });
+            }
+
+            _paymentBankAccountComboBox.SelectedIndex = 0;
+
+            if (_bill.LinkedBankAssetId > 0)
+            {
+                for (var index = 1; index < _paymentBankAccountComboBox.ItemCount; index++)
+                {
+                    if (_paymentBankAccountComboBox.Items[index] is ComboBoxItem item &&
+                        item.Tag is long id &&
+                        id == _bill.LinkedBankAssetId)
+                    {
+                        _paymentBankAccountComboBox.SelectedIndex = index;
+                        return;
+                    }
+                }
+            }
+        }
+
+        private async System.Threading.Tasks.Task CreatePaymentBankAccountAsync()
+        {
+            if (_createBlankBankAccount is null || _saveBankAccount is null)
+                return;
+
+            var owner = this.Owner as Window;
+            if (owner is null)
+                return;
+
+            var bankAccount = _createBlankBankAccount();
+            bankAccount.AssetType = "Bank Account";
+            bankAccount.LinkedBillName = _billNameTextBox?.Text?.Trim() ?? _bill.BillName;
+
+            var dialog = new AssetItemDialog();
+            dialog.SetMode("Add Bank Account", bankAccount);
+
+            var result = await dialog.ShowDialog<bool>(owner);
+            if (!result)
+                return;
+
+            if (!_saveBankAccount(dialog.Asset))
+                return;
+
+            _bankAccounts.Clear();
+            if (_reloadBankAccounts is not null)
+                _bankAccounts.AddRange(_reloadBankAccounts());
+
+            _bill.LinkedBankAssetId = dialog.Asset.Id;
+            _bill.LinkedBankAssetName = dialog.Asset.DisplayName;
+
+            PopulateBankAccountCombo();
+        }
+
+        private void PopulateDebtCombo()
+        {
+            if (_paymentDebtComboBox is null)
+                return;
+
+            _paymentDebtComboBox.Items.Clear();
+            _paymentDebtComboBox.Items.Add(new ComboBoxItem { Content = "Choose credit card", Tag = 0L });
+
+            foreach (var debt in _creditCardDebts)
+            {
+                _paymentDebtComboBox.Items.Add(new ComboBoxItem
+                {
+                    Content = debt.DisplayName,
+                    Tag = debt.Id
+                });
+            }
+
+            _paymentDebtComboBox.SelectedIndex = 0;
+
+            if (_bill.LinkedDebtId > 0)
+            {
+                for (var index = 1; index < _paymentDebtComboBox.ItemCount; index++)
+                {
+                    if (_paymentDebtComboBox.Items[index] is ComboBoxItem item &&
+                        item.Tag is long id &&
+                        id == _bill.LinkedDebtId)
+                    {
+                        _paymentDebtComboBox.SelectedIndex = index;
+                        return;
+                    }
+                }
+            }
+        }
+
+        private async System.Threading.Tasks.Task CreatePaymentDebtAsync()
+        {
+            if (_createBlankCreditCardDebt is null || _saveCreditCardDebt is null)
+                return;
+
+            var owner = this.Owner as Window;
+            if (owner is null)
+                return;
+
+            var debt = _createBlankCreditCardDebt();
+            debt.DebtType = "Credit Card";
+            debt.LinkedBillName = _billNameTextBox?.Text?.Trim() ?? _bill.BillName;
+
+            var dialog = new DebtDialog();
+            dialog.SetMode("Add Credit Card Debt", debt);
+
+            var result = await dialog.ShowDialog<bool>(owner);
+            if (!result)
+                return;
+
+            if (!_saveCreditCardDebt(dialog.Debt))
+                return;
+
+            _creditCardDebts.Clear();
+            if (_reloadCreditCardDebts is not null)
+                _creditCardDebts.AddRange(_reloadCreditCardDebts());
+
+            _bill.LinkedDebtId = dialog.Debt.Id;
+            _bill.LinkedDebtName = dialog.Debt.DisplayName;
+
+            PopulateDebtCombo();
         }
 
         private void PopulatePersonCombo(ComboBox? comboBox, long selectedId, string selectedText)
@@ -195,10 +380,10 @@ namespace GrannyManager.App.Avalonia.Views
             var value = GetComboValue(_paymentMethodComboBox, "Cash/Check");
 
             if (_paymentBankPanel is not null)
-                _paymentBankPanel.IsVisible = value == "Bank/Debit";
+                _paymentBankPanel.IsVisible = value == "Bank/Debit" || value == "Multiple";
 
             if (_paymentDebtPanel is not null)
-                _paymentDebtPanel.IsVisible = value == "Credit Card";
+                _paymentDebtPanel.IsVisible = value == "Credit Card" || value == "Multiple";
 
             if (_paymentOtherPanel is not null)
                 _paymentOtherPanel.IsVisible = value == "Other";
@@ -247,6 +432,22 @@ namespace GrannyManager.App.Avalonia.Views
             return 0;
         }
 
+        private static long GetComboLongTag(ComboBox? comboBox)
+        {
+            if (comboBox?.SelectedItem is ComboBoxItem item && item.Tag is long id && id > 0)
+                return id;
+
+            return 0;
+        }
+
+        private static string GetComboContent(ComboBox? comboBox)
+        {
+            if (comboBox?.SelectedItem is ComboBoxItem item)
+                return item.Content?.ToString() ?? string.Empty;
+
+            return string.Empty;
+        }
+
         private void SaveAndClose()
         {
             if (_validationTextBlock is not null)
@@ -290,6 +491,28 @@ namespace GrannyManager.App.Avalonia.Views
             _bill.PaymentMethod = paymentMethod == "Other"
                 ? $"Other: {_paymentOtherTextBox?.Text?.Trim() ?? string.Empty}".Trim()
                 : paymentMethod;
+
+            if (paymentMethod == "Bank/Debit" || paymentMethod == "Multiple")
+            {
+                _bill.LinkedBankAssetId = GetComboLongTag(_paymentBankAccountComboBox);
+                _bill.LinkedBankAssetName = _bill.LinkedBankAssetId > 0 ? GetComboContent(_paymentBankAccountComboBox) : string.Empty;
+            }
+            else
+            {
+                _bill.LinkedBankAssetId = 0;
+                _bill.LinkedBankAssetName = string.Empty;
+            }
+
+            if (paymentMethod == "Credit Card" || paymentMethod == "Multiple")
+            {
+                _bill.LinkedDebtId = GetComboLongTag(_paymentDebtComboBox);
+                _bill.LinkedDebtName = _bill.LinkedDebtId > 0 ? GetComboContent(_paymentDebtComboBox) : string.Empty;
+            }
+            else
+            {
+                _bill.LinkedDebtId = 0;
+                _bill.LinkedDebtName = string.Empty;
+            }
 
             _bill.PaidByHouseholdPersonId = GetComboPersonId(_paidByComboBox);
             _bill.PaidBy = GetComboValue(_paidByComboBox, "Self (Primary Person)") == "Other"

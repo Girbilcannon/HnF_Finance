@@ -83,6 +83,26 @@ public sealed partial class IncomeViewModel : ViewModelBase
             newValue.IsSelected = true;
     }
 
+    public IReadOnlyList<AssetItem> LoadBankAccounts()
+    {
+        return _incomeService.LoadBankAccounts();
+    }
+
+    public AssetItem CreateBlankBankAccount()
+    {
+        return new AssetItem
+        {
+            AssetType = "Bank Account",
+            AccountType = "Checking",
+            IsActive = true
+        };
+    }
+
+    public bool SaveBankAccount(AssetItem asset)
+    {
+        return _incomeService.SaveBankAccount(asset, out _);
+    }
+
     public IncomeSource CreateBlankSource()
     {
         return new IncomeSource
@@ -109,6 +129,8 @@ public sealed partial class IncomeViewModel : ViewModelBase
             TaxesWithheld = source.TaxesWithheld,
             ExpectedDayOrDate = source.ExpectedDayOrDate,
             DepositDestination = source.DepositDestination,
+            LinkedBankAssetId = source.LinkedBankAssetId,
+            LinkedBankAssetName = source.LinkedBankAssetName,
             LinkedHouseholdPersonId = source.LinkedHouseholdPersonId,
             LinkedHouseholdPersonName = source.LinkedHouseholdPersonName,
             IsActive = source.IsActive,

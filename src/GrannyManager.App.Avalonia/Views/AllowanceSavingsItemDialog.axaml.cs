@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
 using GrannyManager.Core.Models;
 
@@ -17,10 +18,16 @@ namespace GrannyManager.App.Avalonia.Views
         private readonly StackPanel? _bankAccountPanel;
         private readonly StackPanel? _multipleBankAccountsPanel;
         private readonly StackPanel? _otherStoragePanel;
+        private readonly ComboBox? _bankAccountComboBox;
+        private readonly Button? _createBankAccountButton;
         private readonly TextBox? _otherStorageMethodTextBox;
         private readonly CheckBox? _isActiveCheckBox;
         private readonly TextBox? _notesTextBox;
 
+        private readonly List<AssetItem> _bankAccounts = new();
+        private Func<AssetItem>? _createBlankBankAccount;
+        private Func<AssetItem, bool>? _saveBankAccount;
+        private Func<IReadOnlyList<AssetItem>>? _reloadBankAccounts;
         private AllowanceSavingsItem _item = new();
 
         public AllowanceSavingsItemDialog()
@@ -38,12 +45,17 @@ namespace GrannyManager.App.Avalonia.Views
             _bankAccountPanel = this.FindControl<StackPanel>("BankAccountPanel");
             _multipleBankAccountsPanel = this.FindControl<StackPanel>("MultipleBankAccountsPanel");
             _otherStoragePanel = this.FindControl<StackPanel>("OtherStoragePanel");
+            _bankAccountComboBox = this.FindControl<ComboBox>("BankAccountComboBox");
+            _createBankAccountButton = this.FindControl<Button>("CreateBankAccountButton");
             _otherStorageMethodTextBox = this.FindControl<TextBox>("OtherStorageMethodTextBox");
             _isActiveCheckBox = this.FindControl<CheckBox>("IsActiveCheckBox");
             _notesTextBox = this.FindControl<TextBox>("NotesTextBox");
 
             if (_storageMethodComboBox is not null)
                 _storageMethodComboBox.SelectionChanged += (_, _) => RefreshStorageVisibility();
+
+            if (_createBankAccountButton is not null)
+                _createBankAccountButton.Click += async (_, _) => await CreateBankAccountAsync();
 
             var cancelButton = this.FindControl<Button>("CancelButton");
             if (cancelButton is not null)
@@ -56,9 +68,23 @@ namespace GrannyManager.App.Avalonia.Views
 
         public AllowanceSavingsItem Item => _item;
 
-        public void SetMode(string title, AllowanceSavingsItem item)
+        public void SetMode(
+            string title,
+            AllowanceSavingsItem item,
+            IReadOnlyList<AssetItem>? bankAccounts = null,
+            Func<AssetItem>? createBlankBankAccount = null,
+            Func<AssetItem, bool>? saveBankAccount = null,
+            Func<IReadOnlyList<AssetItem>>? reloadBankAccounts = null)
         {
             _item = item ?? new AllowanceSavingsItem();
+
+            _bankAccounts.Clear();
+            if (bankAccounts is not null)
+                _bankAccounts.AddRange(bankAccounts);
+
+            _createBlankBankAccount = createBlankBankAccount;
+            _saveBankAccount = saveBankAccount;
+            _reloadBankAccounts = reloadBankAccounts;
 
             if (_dialogTitleTextBlock is not null)
                 _dialogTitleTextBlock.Text = title;
@@ -79,7 +105,6 @@ namespace GrannyManager.App.Avalonia.Views
             if (storageMethod.StartsWith("Other:", StringComparison.OrdinalIgnoreCase))
             {
                 SelectComboValue(_storageMethodComboBox, "Other");
-
                 if (_otherStorageMethodTextBox is not null)
                     _otherStorageMethodTextBox.Text = storageMethod.Substring("Other:".Length).Trim();
             }
@@ -88,6 +113,8 @@ namespace GrannyManager.App.Avalonia.Views
                 SelectComboValue(_storageMethodComboBox, storageMethod);
             }
 
+            PopulateBankAccounts(_item.LinkedBankAssetId);
+
             if (_isActiveCheckBox is not null)
                 _isActiveCheckBox.IsChecked = _item.IsActive;
 
@@ -95,6 +122,57 @@ namespace GrannyManager.App.Avalonia.Views
                 _notesTextBox.Text = _item.Notes;
 
             RefreshStorageVisibility();
+        }
+
+        private async System.Threading.Tasks.Task CreateBankAccountAsync()
+        {
+            if (_createBlankBankAccount is null || _saveBankAccount is null)
+                return;
+
+            var owner = this.Owner as Window;
+            if (owner is null)
+                return;
+
+            var asset = _createBlankBankAccount();
+            var dialog = new AssetItemDialog();
+            dialog.SetMode("Create Bank Account", asset);
+
+            var result = await dialog.ShowDialog<bool>(owner);
+            if (!result)
+                return;
+
+            if (!_saveBankAccount(dialog.Asset))
+                return;
+
+            _bankAccounts.Clear();
+            if (_reloadBankAccounts is not null)
+                _bankAccounts.AddRange(_reloadBankAccounts());
+
+            PopulateBankAccounts(dialog.Asset.Id);
+            SelectComboValue(_storageMethodComboBox, "Bank Account");
+            RefreshStorageVisibility();
+        }
+
+        private void PopulateBankAccounts(long selectedId)
+        {
+            if (_bankAccountComboBox is null)
+                return;
+
+            _bankAccountComboBox.Items.Clear();
+            _bankAccountComboBox.Items.Add(new ComboBoxItem { Content = "Choose account", Tag = 0L });
+
+            foreach (var account in _bankAccounts)
+                _bankAccountComboBox.Items.Add(new ComboBoxItem { Content = account.DisplayName, Tag = account.Id });
+
+            _bankAccountComboBox.SelectedIndex = 0;
+            for (var index = 1; index < _bankAccountComboBox.ItemCount; index++)
+            {
+                if (_bankAccountComboBox.Items[index] is ComboBoxItem item && item.Tag is long id && id == selectedId)
+                {
+                    _bankAccountComboBox.SelectedIndex = index;
+                    break;
+                }
+            }
         }
 
         private void RefreshStorageVisibility()
@@ -109,32 +187,6 @@ namespace GrannyManager.App.Avalonia.Views
 
             if (_otherStoragePanel is not null)
                 _otherStoragePanel.IsVisible = method == "Other";
-        }
-
-        private static void SelectComboValue(ComboBox? comboBox, string value)
-        {
-            if (comboBox is null)
-                return;
-
-            for (var index = 0; index < comboBox.ItemCount; index++)
-            {
-                if (comboBox.Items[index] is ComboBoxItem item &&
-                    string.Equals(item.Content?.ToString(), value, StringComparison.OrdinalIgnoreCase))
-                {
-                    comboBox.SelectedIndex = index;
-                    return;
-                }
-            }
-
-            comboBox.SelectedIndex = 0;
-        }
-
-        private static string GetComboValue(ComboBox? comboBox, string fallback)
-        {
-            if (comboBox?.SelectedItem is ComboBoxItem item)
-                return item.Content?.ToString() ?? fallback;
-
-            return fallback;
         }
 
         private void SaveAndClose()
@@ -173,16 +225,48 @@ namespace GrannyManager.App.Avalonia.Views
             _item.WhereStored = _whereStoredTextBox?.Text?.Trim() ?? string.Empty;
             _item.StorageMethod = storageMethod;
 
-            if (storageMethod != "Bank Account")
+            _item.LinkedBankAssetId = 0;
+            _item.LinkedBankAssetName = string.Empty;
+            if (storageMethod == "Bank Account" && _bankAccountComboBox?.SelectedItem is ComboBoxItem selectedAccount)
             {
-                _item.LinkedBankAssetId = 0;
-                _item.LinkedBankAssetName = string.Empty;
+                if (selectedAccount.Tag is long bankId)
+                    _item.LinkedBankAssetId = bankId;
+
+                var selectedName = selectedAccount.Content?.ToString() ?? string.Empty;
+                if (_item.LinkedBankAssetId > 0)
+                    _item.LinkedBankAssetName = selectedName;
             }
 
             _item.IsActive = _isActiveCheckBox?.IsChecked == true;
             _item.Notes = _notesTextBox?.Text?.Trim() ?? string.Empty;
 
             Close(true);
+        }
+
+        private static void SelectComboValue(ComboBox? comboBox, string value)
+        {
+            if (comboBox is null)
+                return;
+
+            for (var index = 0; index < comboBox.ItemCount; index++)
+            {
+                if (comboBox.Items[index] is ComboBoxItem item &&
+                    string.Equals(item.Content?.ToString(), value, StringComparison.OrdinalIgnoreCase))
+                {
+                    comboBox.SelectedIndex = index;
+                    return;
+                }
+            }
+
+            comboBox.SelectedIndex = 0;
+        }
+
+        private static string GetComboValue(ComboBox? comboBox, string fallback)
+        {
+            if (comboBox?.SelectedItem is ComboBoxItem item)
+                return item.Content?.ToString() ?? fallback;
+
+            return fallback;
         }
     }
 }

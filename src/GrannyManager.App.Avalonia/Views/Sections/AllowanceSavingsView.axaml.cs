@@ -33,7 +33,13 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                 return;
 
             var dialog = new AllowanceSavingsItemDialog();
-            dialog.SetMode("Add Allowance / Savings Item", viewModel.CreateBlankItem());
+            dialog.SetMode(
+                "Add Allowance / Savings Item",
+                viewModel.CreateBlankItem(),
+                viewModel.LoadBankAccounts(),
+                viewModel.CreateBlankBankAccount,
+                viewModel.SaveBankAccount,
+                viewModel.LoadBankAccounts);
 
             var result = await dialog.ShowDialog<bool>(owner);
             if (result)
@@ -54,7 +60,13 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                 return;
 
             var dialog = new AllowanceSavingsItemDialog();
-            dialog.SetMode("Edit Allowance / Savings Item", item);
+            dialog.SetMode(
+                "Edit Allowance / Savings Item",
+                item,
+                viewModel.LoadBankAccounts(),
+                viewModel.CreateBlankBankAccount,
+                viewModel.SaveBankAccount,
+                viewModel.LoadBankAccounts);
 
             var result = await dialog.ShowDialog<bool>(owner);
             if (result)

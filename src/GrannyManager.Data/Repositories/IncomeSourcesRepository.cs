@@ -24,7 +24,7 @@ public sealed class IncomeSourcesRepository
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = @"
-SELECT Id, SourceName, IncomeType, Amount, Frequency, TaxesWithheld, ExpectedDayOrDate, DepositDestination,
+SELECT Id, SourceName, IncomeType, Amount, Frequency, TaxesWithheld, ExpectedDayOrDate, DepositDestination, LinkedBankAssetId, LinkedBankAssetName,
        LinkedHouseholdPersonId, LinkedHouseholdPersonName, IsActive, Notes, CreatedUtc, UpdatedUtc
 FROM IncomeSources
 ORDER BY IsActive DESC, SourceName COLLATE NOCASE;";
@@ -51,10 +51,10 @@ ORDER BY IsActive DESC, SourceName COLLATE NOCASE;";
             item.CreatedUtc = DateTime.UtcNow;
             command.CommandText = @"
 INSERT INTO IncomeSources
-(SourceName, IncomeType, Amount, Frequency, TaxesWithheld, ExpectedDayOrDate, DepositDestination,
+(SourceName, IncomeType, Amount, Frequency, TaxesWithheld, ExpectedDayOrDate, DepositDestination, LinkedBankAssetId, LinkedBankAssetName,
  LinkedHouseholdPersonId, LinkedHouseholdPersonName, IsActive, Notes, CreatedUtc, UpdatedUtc)
 VALUES
-($SourceName, $IncomeType, $Amount, $Frequency, $TaxesWithheld, $ExpectedDayOrDate, $DepositDestination,
+($SourceName, $IncomeType, $Amount, $Frequency, $TaxesWithheld, $ExpectedDayOrDate, $DepositDestination, $LinkedBankAssetId, $LinkedBankAssetName,
  $LinkedHouseholdPersonId, $LinkedHouseholdPersonName, $IsActive, $Notes, $CreatedUtc, $UpdatedUtc);
 SELECT last_insert_rowid();";
         }
@@ -69,6 +69,8 @@ SET SourceName = $SourceName,
     TaxesWithheld = $TaxesWithheld,
     ExpectedDayOrDate = $ExpectedDayOrDate,
     DepositDestination = $DepositDestination,
+    LinkedBankAssetId = $LinkedBankAssetId,
+    LinkedBankAssetName = $LinkedBankAssetName,
     LinkedHouseholdPersonId = $LinkedHouseholdPersonId,
     LinkedHouseholdPersonName = $LinkedHouseholdPersonName,
     IsActive = $IsActive,
@@ -130,6 +132,8 @@ CREATE TABLE IF NOT EXISTS IncomeSources (
         EnsureColumn(connection, "IncomeSources", "TaxesWithheld", "INTEGER NOT NULL DEFAULT 0");
         EnsureColumn(connection, "IncomeSources", "ExpectedDayOrDate", "TEXT NOT NULL DEFAULT ''");
         EnsureColumn(connection, "IncomeSources", "DepositDestination", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumn(connection, "IncomeSources", "LinkedBankAssetId", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumn(connection, "IncomeSources", "LinkedBankAssetName", "TEXT NOT NULL DEFAULT ''");
         EnsureColumn(connection, "IncomeSources", "LinkedHouseholdPersonId", "INTEGER NOT NULL DEFAULT 0");
         EnsureColumn(connection, "IncomeSources", "LinkedHouseholdPersonName", "TEXT NOT NULL DEFAULT ''");
         EnsureColumn(connection, "IncomeSources", "IsActive", "INTEGER NOT NULL DEFAULT 1");
@@ -184,6 +188,8 @@ CREATE TABLE IF NOT EXISTS IncomeSources (
         command.Parameters.AddWithValue("$TaxesWithheld", item.TaxesWithheld ? 1 : 0);
         command.Parameters.AddWithValue("$ExpectedDayOrDate", item.ExpectedDayOrDate.Trim());
         command.Parameters.AddWithValue("$DepositDestination", item.DepositDestination.Trim());
+        command.Parameters.AddWithValue("$LinkedBankAssetId", item.LinkedBankAssetId);
+        command.Parameters.AddWithValue("$LinkedBankAssetName", item.LinkedBankAssetName.Trim());
         command.Parameters.AddWithValue("$LinkedHouseholdPersonId", item.LinkedHouseholdPersonId);
         command.Parameters.AddWithValue("$LinkedHouseholdPersonName", item.LinkedHouseholdPersonName.Trim());
         command.Parameters.AddWithValue("$IsActive", item.IsActive ? 1 : 0);
@@ -204,12 +210,14 @@ CREATE TABLE IF NOT EXISTS IncomeSources (
             TaxesWithheld = GetBool(reader, 5),
             ExpectedDayOrDate = GetString(reader, 6),
             DepositDestination = GetString(reader, 7),
-            LinkedHouseholdPersonId = GetLong(reader, 8),
-            LinkedHouseholdPersonName = GetString(reader, 9),
-            IsActive = GetBool(reader, 10),
-            Notes = GetString(reader, 11),
-            CreatedUtc = GetDateTime(reader, 12),
-            UpdatedUtc = GetDateTime(reader, 13)
+            LinkedBankAssetId = GetLong(reader, 8),
+            LinkedBankAssetName = GetString(reader, 9),
+            LinkedHouseholdPersonId = GetLong(reader, 10),
+            LinkedHouseholdPersonName = GetString(reader, 11),
+            IsActive = GetBool(reader, 12),
+            Notes = GetString(reader, 13),
+            CreatedUtc = GetDateTime(reader, 14),
+            UpdatedUtc = GetDateTime(reader, 15)
         };
     }
 

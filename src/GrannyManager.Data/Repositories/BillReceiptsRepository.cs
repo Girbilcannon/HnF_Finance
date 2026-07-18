@@ -91,6 +91,15 @@ CREATE INDEX IF NOT EXISTS IX_BillReceipts_TypeDate ON BillReceipts(ReceiptType,
         command.ExecuteNonQuery();
     }
 
+    public void DeleteByType(string receiptType)
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM BillReceipts WHERE ReceiptType = $ReceiptType;";
+        command.Parameters.AddWithValue("$ReceiptType", receiptType);
+        command.ExecuteNonQuery();
+    }
+
     private SqliteConnection OpenConnection()
     {
         var connection = new SqliteConnection($"Data Source={_databasePath}");

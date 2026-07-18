@@ -1,10 +1,11 @@
-using System;
-using System.Collections.ObjectModel;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GrannyManager.Application.Services;
 using GrannyManager.Application.State;
 using GrannyManager.Core.Models;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace GrannyManager.App.Avalonia.ViewModels.Sections;
 
@@ -94,6 +95,26 @@ public sealed partial class AllowanceSavingsViewModel : ViewModelBase
     public void RefreshFromNavigation()
     {
         LoadItems();
+    }
+
+    public IReadOnlyList<AssetItem> LoadBankAccounts()
+    {
+        return _allowanceSavingsService.LoadBankAccounts();
+    }
+
+    public AssetItem CreateBlankBankAccount()
+    {
+        return new AssetItem
+        {
+            AssetType = "Bank Account",
+            AccountType = "Savings",
+            IsActive = true
+        };
+    }
+
+    public bool SaveBankAccount(AssetItem asset)
+    {
+        return _allowanceSavingsService.SaveBankAccount(asset, out _);
     }
 
     public AllowanceSavingsItem CreateBlankItem()

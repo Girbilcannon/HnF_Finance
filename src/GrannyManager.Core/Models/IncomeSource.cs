@@ -13,6 +13,8 @@ public sealed class IncomeSource
     public bool TaxesWithheld { get; set; }
     public string ExpectedDayOrDate { get; set; } = string.Empty;
     public string DepositDestination { get; set; } = string.Empty;
+    public long LinkedBankAssetId { get; set; }
+    public string LinkedBankAssetName { get; set; } = string.Empty;
     public long LinkedHouseholdPersonId { get; set; }
     public string LinkedHouseholdPersonName { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
@@ -22,7 +24,16 @@ public sealed class IncomeSource
 
     public string TaxHandlingText => TaxesWithheld ? "Taxes withheld" : "No taxes withheld";
     public string AmountLabel => TaxesWithheld ? "After Taxes" : "Gross Pay";
-    public string DepositDisplayText => string.IsNullOrWhiteSpace(DepositDestination) ? "Not specified" : DepositDestination.Trim();
+    public string DepositDisplayText
+    {
+        get
+        {
+            if (LinkedBankAssetId > 0 && !string.IsNullOrWhiteSpace(LinkedBankAssetName))
+                return LinkedBankAssetName.Trim();
+
+            return string.IsNullOrWhiteSpace(DepositDestination) ? "Not specified" : DepositDestination.Trim();
+        }
+    }
     public decimal MonthlyEquivalent => CalculateMonthlyEquivalent(Amount, Frequency, IsActive);
     public string MonthlyEquivalentText => MonthlyEquivalent.ToString("C2", CultureInfo.CurrentCulture);
 

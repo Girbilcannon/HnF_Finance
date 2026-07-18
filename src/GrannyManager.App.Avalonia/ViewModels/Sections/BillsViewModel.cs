@@ -20,8 +20,6 @@ public sealed partial class BillsViewModel : ViewModelBase
         if (activeCaseState is not null)
             activeCaseState.ActiveCaseChanged += (_, _) => LoadBills();
 
-        AppDataChangeNotifier.BillsChanged += (_, _) => LoadBills();
-
         LoadBills();
     }
 
@@ -57,7 +55,7 @@ public sealed partial class BillsViewModel : ViewModelBase
 
     public bool HasSelectedBill => SelectedBill is not null;
     public bool CanAddBill => HasActiveCase;
-    public bool CanEditBill => HasActiveCase && HasSelectedBill;
+    public bool CanEditBill => HasActiveCase && HasSelectedBill && (SelectedBill?.Bill.Id ?? 0) > 0;
     public bool CanRemoveBill => HasActiveCase && HasSelectedBill && (SelectedBill?.Bill.Id ?? 0) > 0;
 
     public string SelectedBillName => SelectedBill?.Bill.BillName ?? "No bill selected";
@@ -114,6 +112,10 @@ public sealed partial class BillsViewModel : ViewModelBase
             Frequency = bill.Frequency,
             DueDate = bill.DueDate,
             PaymentMethod = bill.PaymentMethod,
+            LinkedBankAssetId = bill.LinkedBankAssetId,
+            LinkedBankAssetName = bill.LinkedBankAssetName,
+            LinkedDebtId = bill.LinkedDebtId,
+            LinkedDebtName = bill.LinkedDebtName,
             IsAutopay = bill.IsAutopay,
             PastDueAmount = bill.PastDueAmount,
             PaidBy = bill.PaidBy,
@@ -131,6 +133,48 @@ public sealed partial class BillsViewModel : ViewModelBase
     public IReadOnlyList<HouseholdPerson> GetHouseholdPeople()
     {
         return _billsService.LoadHouseholdPeople();
+    }
+
+    public IReadOnlyList<AssetItem> GetBankAccounts()
+    {
+        return _billsService.LoadBankAccounts();
+    }
+
+    public IReadOnlyList<Debt> GetCreditCardDebts()
+    {
+        return _billsService.LoadCreditCardDebts();
+    }
+
+    public Debt CreateBlankCreditCardDebt()
+    {
+        return new Debt
+        {
+            DebtType = "Credit Card",
+            PaymentFrequency = "Monthly",
+            Status = "Current",
+            Priority = "Normal",
+            IsActive = true
+        };
+    }
+
+    public bool SaveCreditCardDebt(Debt debt)
+    {
+        return _billsService.SaveCreditCardDebt(debt, out _);
+    }
+
+    public AssetItem CreateBlankBankAccount()
+    {
+        return new AssetItem
+        {
+            AssetType = "Bank Account",
+            AccountType = "Checking",
+            IsActive = true
+        };
+    }
+
+    public bool SaveBankAccount(AssetItem bankAccount)
+    {
+        return _billsService.SaveBankAccount(bankAccount, out _);
     }
 
     public IReadOnlyList<BillReceipt> LoadReceipts(string receiptType)
@@ -192,11 +236,6 @@ public sealed partial class BillsViewModel : ViewModelBase
         LoadBills();
         StatusMessage = message;
         return true;
-    }
-
-    public void RefreshFromNavigation()
-    {
-        LoadBills();
     }
 
     private void LoadBills()

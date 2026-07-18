@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 
 namespace GrannyManager.Core.Models;
 
@@ -6,7 +7,7 @@ public sealed class Debt
 {
     public long Id { get; set; }
     public string DebtName { get; set; } = string.Empty;
-    public string DebtType { get; set; } = string.Empty;
+    public string DebtType { get; set; } = "Credit Card";
     public string CreditorCollector { get; set; } = string.Empty;
     public decimal CurrentBalance { get; set; }
     public decimal MinimumPayment { get; set; }
@@ -24,11 +25,13 @@ public sealed class Debt
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
 
+    public bool IsCreditCard => string.Equals(DebtType, "Credit Card", StringComparison.OrdinalIgnoreCase);
     public decimal MonthlyEquivalent => CalculateMonthlyEquivalent(MinimumPayment, PaymentFrequency, IsActive);
-
     public string BalanceText => CurrentBalance <= 0m ? "Unknown" : CurrentBalance.ToString("C2", CultureInfo.CurrentCulture);
+    public string MinimumPaymentText => MinimumPayment.ToString("C2", CultureInfo.CurrentCulture);
     public string MonthlyEquivalentText => MonthlyEquivalent.ToString("C2", CultureInfo.CurrentCulture);
     public string StatusText => IsActive ? "Active" : "Inactive";
+    public string DisplayName => string.IsNullOrWhiteSpace(DebtName) ? "Unnamed Debt" : DebtName.Trim();
 
     public static decimal CalculateMonthlyEquivalent(decimal amount, string? frequency, bool isActive = true)
     {

@@ -71,6 +71,128 @@ public sealed class BillsService
         }
     }
 
+    public IReadOnlyList<AssetItem> LoadBankAccounts()
+    {
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+            return Array.Empty<AssetItem>();
+
+        try
+        {
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            var repository = new AssetsRepository(databasePath);
+            return repository.GetBankAccounts();
+        }
+        catch
+        {
+            return Array.Empty<AssetItem>();
+        }
+    }
+
+    public bool SaveBankAccount(AssetItem bankAccount, out string statusMessage)
+    {
+        statusMessage = string.Empty;
+
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+        {
+            statusMessage = "Open a case before saving bank accounts.";
+            return false;
+        }
+
+        if (bankAccount is null)
+        {
+            statusMessage = "No bank account was provided.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(bankAccount.AssetName))
+        {
+            statusMessage = "Enter a bank account name before saving.";
+            return false;
+        }
+
+        try
+        {
+            bankAccount.AssetType = "Bank Account";
+            bankAccount.IsActive = true;
+
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            var repository = new AssetsRepository(databasePath);
+            repository.Upsert(bankAccount);
+
+            AppDataChangeNotifier.NotifyAssetsChanged();
+            statusMessage = "Bank account saved.";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Could not save bank account: {ex.Message}";
+            return false;
+        }
+    }
+
+    public IReadOnlyList<Debt> LoadCreditCardDebts()
+    {
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+            return Array.Empty<Debt>();
+
+        try
+        {
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            var repository = new DebtsRepository(databasePath);
+            return repository.GetCreditCards();
+        }
+        catch
+        {
+            return Array.Empty<Debt>();
+        }
+    }
+
+    public bool SaveCreditCardDebt(Debt debt, out string statusMessage)
+    {
+        statusMessage = string.Empty;
+
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+        {
+            statusMessage = "Open a case before saving credit card debts.";
+            return false;
+        }
+
+        if (debt is null)
+        {
+            statusMessage = "No credit card debt was provided.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(debt.DebtName))
+        {
+            statusMessage = "Enter a credit card name before saving.";
+            return false;
+        }
+
+        try
+        {
+            debt.DebtType = "Credit Card";
+            debt.IsActive = true;
+
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            var repository = new DebtsRepository(databasePath);
+            repository.Upsert(debt);
+
+            AppDataChangeNotifier.NotifyDebtsChanged();
+            statusMessage = "Credit card debt saved.";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Could not save credit card debt: {ex.Message}";
+            return false;
+        }
+    }
+
     public bool SaveBill(Bill bill, out string statusMessage)
     {
         statusMessage = string.Empty;
@@ -129,7 +251,12 @@ public sealed class BillsService
         try
         {
             var repository = CreateRepository(activeCase.CaseFolderPath);
+            var bill = repository.GetById(id);
             repository.Delete(id);
+
+            if (bill is not null)
+                DeleteReceiptsByTypeIfAverageBill(activeCase.CaseFolderPath, bill);
+
             AppDataChangeNotifier.NotifyBillsChanged();
             statusMessage = "Bill removed.";
             return true;
@@ -180,7 +307,6 @@ public sealed class BillsService
                 Amount = amount
             });
 
-            AppDataChangeNotifier.NotifyBillsChanged();
             statusMessage = "Receipt added.";
             return true;
         }
@@ -207,7 +333,6 @@ public sealed class BillsService
             var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
             var repository = new BillReceiptsRepository(databasePath);
             repository.Delete(receiptId);
-            AppDataChangeNotifier.NotifyBillsChanged();
             statusMessage = "Receipt deleted.";
             return true;
         }
@@ -248,13 +373,18 @@ public sealed class BillsService
     private void AddReceiptAverageBillIfNeeded(List<Bill> bills, string receiptType)
     {
         var summary = LoadReceiptAverage(receiptType);
-        if (summary.RoundedMonthlyEstimate <= 0m)
-            return;
-
         var existing = bills.FirstOrDefault(bill =>
             string.Equals(bill.BillName, $"{receiptType} Average", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(bill.Category, receiptType, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(bill.PaymentMethod, "Receipt Average", StringComparison.OrdinalIgnoreCase));
+            (string.Equals(bill.Category, receiptType, StringComparison.OrdinalIgnoreCase) &&
+             string.Equals(bill.Notes, "Receipt Average Profile", StringComparison.OrdinalIgnoreCase)));
+
+        if (summary.RoundedMonthlyEstimate <= 0m)
+        {
+            if (existing is not null)
+                existing.Amount = 0m;
+
+            return;
+        }
 
         if (existing is not null)
         {
@@ -262,24 +392,71 @@ public sealed class BillsService
             existing.Frequency = "Monthly";
             existing.DueDate = "Calculated from receipts";
             existing.Category = receiptType;
-            existing.PaymentMethod = string.IsNullOrWhiteSpace(existing.PaymentMethod) ? "Receipt Average" : existing.PaymentMethod;
             return;
         }
 
-        bills.Add(new Bill
+        var activeCase = _activeCaseState.ActiveCase;
+        if (activeCase is null || !activeCase.IsValid)
+        {
+            bills.Add(CreateReceiptAverageBill(receiptType, summary.RoundedMonthlyEstimate));
+            return;
+        }
+
+        var repository = CreateRepository(activeCase.CaseFolderPath);
+        var bill = CreateReceiptAverageBill(receiptType, summary.RoundedMonthlyEstimate);
+        repository.Upsert(bill);
+        bills.Add(bill);
+    }
+
+    private static Bill CreateReceiptAverageBill(string receiptType, decimal amount)
+    {
+        return new Bill
         {
             BillName = $"{receiptType} Average",
             Category = receiptType,
-            Amount = summary.RoundedMonthlyEstimate,
+            Amount = amount,
             Frequency = "Monthly",
             DueDate = "Calculated from receipts",
-            PaymentMethod = "Receipt Average",
+            PaymentMethod = "Bank/Debit",
             PaidBy = "Self (Primary Person)",
             ResponsibilityOwner = "Self (Primary Person)",
             Priority = "Normal",
             IsActive = true,
-            Notes = "This row is calculated from receipt entries. Amount is controlled by the average calculator; payer and responsibility can be edited here."
-        });
+            Notes = "Receipt Average Profile"
+        };
+    }
+
+    private static bool IsReceiptAverageBill(Bill bill, out string receiptType)
+    {
+        receiptType = string.Empty;
+
+        if (string.Equals(bill.BillName, "Fuel Average", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(bill.Category, "Fuel", StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(bill.Notes, "Receipt Average Profile", StringComparison.OrdinalIgnoreCase))
+        {
+            receiptType = "Fuel";
+            return true;
+        }
+
+        if (string.Equals(bill.BillName, "Grocery Average", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(bill.Category, "Grocery", StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(bill.Notes, "Receipt Average Profile", StringComparison.OrdinalIgnoreCase))
+        {
+            receiptType = "Grocery";
+            return true;
+        }
+
+        return false;
+    }
+
+    private static void DeleteReceiptsByTypeIfAverageBill(string caseFolderPath, Bill bill)
+    {
+        if (!IsReceiptAverageBill(bill, out var receiptType))
+            return;
+
+        var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(caseFolderPath);
+        var receiptRepository = new BillReceiptsRepository(databasePath);
+        receiptRepository.DeleteByType(receiptType);
     }
 
     private static BillsRepository CreateRepository(string caseFolderPath)
