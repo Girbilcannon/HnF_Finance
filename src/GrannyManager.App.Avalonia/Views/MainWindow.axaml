@@ -129,7 +129,7 @@
                 <StackPanel Grid.Row="2"
                             Spacing="4"
                             Margin="2,18,0,0">
-                    <TextBlock Text="Build: 0.10.91"
+                    <TextBlock Text="Build: 0.10.95"
                                Foreground="#6F8299"
                                FontSize="12"/>
 
@@ -150,15 +150,68 @@
 
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
 
-                <TextBox Grid.Column="0"
-                         Watermark="Search for documents, names, keywords, etc."
-                         FontSize="15"
-                         Height="42"
-                         Padding="14,8"
-                         Background="#17263A"
-                         Foreground="White"
-                         BorderBrush="#30445F"
-                         BorderThickness="1"/>
+                <Grid Grid.Column="0"
+                      RowDefinitions="Auto,Auto">
+                    <TextBox Name="GlobalSearchTextBox"
+                             Grid.Row="0"
+                             Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Watermark="Search for documents, names, keywords, etc."
+                             FontSize="15"
+                             Height="42"
+                             Padding="14,8"
+                             Background="#17263A"
+                             Foreground="White"
+                             BorderBrush="#30445F"
+                             BorderThickness="1"/>
+
+                    <Popup Grid.Row="1"
+                           PlacementTarget="{Binding #GlobalSearchTextBox}"
+                           Placement="Bottom"
+                           IsOpen="{Binding IsSearchResultsVisible}"
+                           HorizontalOffset="0"
+                           VerticalOffset="4">
+                        <Border Width="{Binding #GlobalSearchTextBox.Bounds.Width}"
+                                MaxHeight="360"
+                                Background="#101D2D"
+                                BorderBrush="#30445F"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="8">
+                            <ListBox ItemsSource="{Binding SearchResults}"
+                                     SelectedItem="{Binding SelectedSearchResult}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="Transparent" Padding="10">
+                                            <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding Section}"
+                                                           Foreground="#8FBCE8"
+                                                           FontSize="12"
+                                                           FontWeight="SemiBold"
+                                                           VerticalAlignment="Top"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <StackPanel Grid.Column="1" Spacing="2">
+                                                    <TextBlock Text="{Binding Title}"
+                                                               Foreground="White"
+                                                               FontSize="13"
+                                                               FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Detail}"
+                                                               Foreground="#AFC0D3"
+                                                               FontSize="12"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+                    </Popup>
+                </Grid>
 
                 <Button Grid.Column="1"
                         Content="Help"

@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Linq;
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GrannyManager.Application.Services;
 using GrannyManager.Application.State;
@@ -11,6 +13,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
     {
         private readonly ActiveCaseState _activeCaseState;
         private readonly FinanceTotalsService _financeTotalsService;
+        private readonly LiveSearchService _liveSearchService;
 
         public MainWindowViewModel()
         {
@@ -28,6 +31,7 @@ namespace GrannyManager.App.Avalonia.ViewModels
             var passwordVaultService = new PasswordVaultService(_activeCaseState, caseFolderService);
 
             _financeTotalsService = new FinanceTotalsService(_activeCaseState);
+            _liveSearchService = new LiveSearchService(_activeCaseState);
 
             Dashboard = new DashboardViewModel(_activeCaseState, caseFolderService, recentCasesService);
             Household = new HouseholdViewModel(_activeCaseState, householdService);
@@ -39,15 +43,15 @@ namespace GrannyManager.App.Avalonia.ViewModels
             Documents = new DocumentsViewModel(_activeCaseState, documentsService);
             PasswordVault = new PasswordVaultViewModel(_activeCaseState, passwordVaultService);
 
-            _activeCaseState.ActiveCaseChanged += (_, _) => RefreshTotals();
+            _activeCaseState.ActiveCaseChanged += (_, _) => { RefreshTotals(); RefreshSearchResults(); };
 
-            AppDataChangeNotifier.IncomeSourcesChanged += (_, _) => RefreshTotals();
-            AppDataChangeNotifier.BillsChanged += (_, _) => RefreshTotals();
-            AppDataChangeNotifier.AllowanceSavingsChanged += (_, _) => RefreshTotals();
-            AppDataChangeNotifier.AssetsChanged += (_, _) => RefreshTotals();
-            AppDataChangeNotifier.DebtsChanged += (_, _) => RefreshTotals();
-            AppDataChangeNotifier.HouseholdChanged += (_, _) => RefreshTotals();
-            AppDataChangeNotifier.DocumentsChanged += (_, _) => RefreshTotals();
+            AppDataChangeNotifier.IncomeSourcesChanged += (_, _) => { RefreshTotals(); RefreshSearchResults(); };
+            AppDataChangeNotifier.BillsChanged += (_, _) => { RefreshTotals(); RefreshSearchResults(); };
+            AppDataChangeNotifier.AllowanceSavingsChanged += (_, _) => { RefreshTotals(); RefreshSearchResults(); };
+            AppDataChangeNotifier.AssetsChanged += (_, _) => { RefreshTotals(); RefreshSearchResults(); };
+            AppDataChangeNotifier.DebtsChanged += (_, _) => { RefreshTotals(); RefreshSearchResults(); };
+            AppDataChangeNotifier.HouseholdChanged += (_, _) => { RefreshTotals(); RefreshSearchResults(); };
+            AppDataChangeNotifier.DocumentsChanged += (_, _) => { RefreshTotals(); RefreshSearchResults(); };
 
             RefreshTotals();
         }
@@ -61,6 +65,52 @@ namespace GrannyManager.App.Avalonia.ViewModels
         public DebtsViewModel Debts { get; }
         public DocumentsViewModel Documents { get; }
         public PasswordVaultViewModel PasswordVault { get; }
+
+        public ObservableCollection<LiveSearchResult> SearchResults { get; } = new();
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasSearchText))]
+        [NotifyPropertyChangedFor(nameof(HasSearchResults))]
+        [NotifyPropertyChangedFor(nameof(IsSearchResultsVisible))]
+        private string _searchText = string.Empty;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasSearchResults))]
+        [NotifyPropertyChangedFor(nameof(IsSearchResultsVisible))]
+        private bool _isSearchBoxFocused;
+
+        [ObservableProperty]
+        private LiveSearchResult? _selectedSearchResult;
+
+        public bool HasSearchText => !string.IsNullOrWhiteSpace(SearchText);
+        public bool HasSearchResults => SearchResults.Count > 0;
+        public bool IsSearchResultsVisible => IsSearchBoxFocused && HasSearchText && HasSearchResults;
+
+        partial void OnSearchTextChanged(string value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+                IsSearchBoxFocused = true;
+
+            RefreshSearchResults();
+        }
+
+
+        partial void OnSelectedSearchResultChanged(LiveSearchResult? value)
+        {
+            if (value is null)
+                return;
+
+            SearchText = string.Empty;
+            SearchResults.Clear();
+            if (!string.IsNullOrWhiteSpace(value.NavigateSection))
+            {
+                CurrentSection = value.NavigateSection;
+                SelectSearchTarget(value);
+            }
+
+            SelectedSearchResult = null;
+        }
+
 
         [ObservableProperty]
         private string _monthlyIncomeText = "$0.00";
@@ -171,6 +221,57 @@ namespace GrannyManager.App.Avalonia.ViewModels
             RefreshTotals();
         }
 
+
+        [RelayCommand]
+        private void SelectSearchResult(LiveSearchResult? result)
+        {
+            if (result is null)
+                return;
+
+            SearchText = string.Empty;
+            SearchResults.Clear();
+            if (!string.IsNullOrWhiteSpace(result.NavigateSection))
+            {
+                CurrentSection = result.NavigateSection;
+                SelectSearchTarget(result);
+            }
+        }
+
+
+        private void SelectSearchTarget(LiveSearchResult result)
+        {
+            switch (result.NavigateSection)
+            {
+                case "Household":
+                    Household.SelectedPerson = Household.People.FirstOrDefault(row => row.Person.Id == result.TargetId);
+                    break;
+
+                case "Income":
+                    Income.SelectedSource = Income.Sources.FirstOrDefault(row => row.Source.Id == result.TargetId);
+                    break;
+
+                case "Bills":
+                    Bills.SelectedBill = Bills.Bills.FirstOrDefault(row => row.Bill.Id == result.TargetId);
+                    break;
+
+                case "AllowanceSavings":
+                    AllowanceSavings.SelectedItem = AllowanceSavings.Items.FirstOrDefault(row => row.Item.Id == result.TargetId);
+                    break;
+
+                case "Assets":
+                    Assets.SelectedAsset = Assets.Assets.FirstOrDefault(row => row.Asset.Id == result.TargetId);
+                    break;
+
+                case "Debts":
+                    Debts.SelectedDebt = Debts.Debts.FirstOrDefault(row => row.Debt.Id == result.TargetId);
+                    break;
+
+                case "Documents":
+                    Documents.SelectedDocument = Documents.Documents.FirstOrDefault(row => row.Document.Id == result.TargetId);
+                    break;
+            }
+        }
+
         [RelayCommand]
         private void Help()
         {
@@ -184,7 +285,21 @@ namespace GrannyManager.App.Avalonia.ViewModels
             if (!string.IsNullOrWhiteSpace(section))
                 CurrentSection = section;
 
+            SearchText = string.Empty;
+            SearchResults.Clear();
             RefreshTotals();
+        }
+
+
+        private void RefreshSearchResults()
+        {
+            SearchResults.Clear();
+
+            foreach (var result in _liveSearchService.Search(SearchText))
+                SearchResults.Add(result);
+
+            OnPropertyChanged(nameof(HasSearchResults));
+            OnPropertyChanged(nameof(IsSearchResultsVisible));
         }
 
         private void RefreshTotals()

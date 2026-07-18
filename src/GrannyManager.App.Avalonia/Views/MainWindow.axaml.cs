@@ -17,6 +17,24 @@ namespace GrannyManager.App.Avalonia.Views
             if (startNewCaseButton is not null)
                 startNewCaseButton.Click += StartNewCaseButton_Click;
 
+            var globalSearchTextBox = this.FindControl<TextBox>("GlobalSearchTextBox");
+            if (globalSearchTextBox is not null)
+            {
+                globalSearchTextBox.GotFocus += (_, _) =>
+                {
+                    if (DataContext is MainWindowViewModel viewModel)
+                        viewModel.IsSearchBoxFocused = true;
+                };
+
+                globalSearchTextBox.LostFocus += async (_, _) =>
+                {
+                    await System.Threading.Tasks.Task.Delay(180);
+
+                    if (DataContext is MainWindowViewModel viewModel)
+                        viewModel.IsSearchBoxFocused = false;
+                };
+            }
+
             _caseSecurityLockCoordinator = new CaseSecurityLockCoordinator(reason => SecureLockActiveCase(reason));
             _caseSecurityLockCoordinator.Start();
 
