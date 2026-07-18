@@ -66,8 +66,8 @@
                             Foreground="White"
                             FontWeight="SemiBold"
                             IsEnabled="{Binding CanAddPerson}"
-                            HorizontalContentAlignment="Center"
-                            VerticalContentAlignment="Center"/>
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"/>
                 </Grid>
 
                 <TextBlock Grid.Row="1"
@@ -207,14 +207,7 @@
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center"/>
 
-                        <Button Content="Export PDF"
-                                Height="36"
-                                Padding="16,0"
-                                Background="#17263A"
-                                Foreground="#DDE7F3"
-                                IsEnabled="{Binding HasSelectedPerson}"
-                                HorizontalContentAlignment="Center"
-                                VerticalContentAlignment="Center"/>
+                        
                     </StackPanel>
                 </Grid>
 

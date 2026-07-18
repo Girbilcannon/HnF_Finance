@@ -39,7 +39,7 @@
                            FontWeight="SemiBold"
                            HorizontalAlignment="Center"/>
 
-                <TextBlock Text="Build 0.10.89"
+                <TextBlock Text="Build 0.10.91"
                            Foreground="#8FBCE8"
                            FontSize="13"
                            FontWeight="SemiBold"
