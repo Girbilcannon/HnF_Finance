@@ -36,8 +36,7 @@
                                 <ComboBoxItem Content="Fuel"/>
                                 <ComboBoxItem Content="Debt Payment"/>
                                 <ComboBoxItem Content="Subscription"/>
-                                <ComboBoxItem Content="Multiple"/>
-                            <ComboBoxItem Content="Other"/>
+                                <ComboBoxItem Content="Other"/>
                             </ComboBox>
                         </StackPanel>
 
@@ -95,7 +94,6 @@
                             <ComboBoxItem Content="Bank/Debit"/>
                             <ComboBoxItem Content="Credit Card"/>
                             <ComboBoxItem Content="Cash/Check"/>
-                            <ComboBoxItem Content="Multiple"/>
                             <ComboBoxItem Content="Other"/>
                         </ComboBox>
                     </StackPanel>

@@ -68,13 +68,14 @@
                             </ComboBox>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Spacing="5">
-                            <TextBlock Text="Due Date" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
-                            <CalendarDatePicker Name="DueDatePicker"
-                                                Watermark="MM/DD/YYYY"
-                                                Background="#0F1B2A"
-                                                Foreground="White"
-                                                BorderBrush="#30445F"
-                                                MinHeight="36"/>
+                            <TextBlock Text="Due Date / Day" Foreground="#9EB4CC" FontSize="12" FontWeight="SemiBold"/>
+                            <TextBox Name="DueDateTextBox"
+                                     Watermark="Example: 1st, 15th, Friday, Jan 1"
+                                     Padding="12"
+                                     Background="#0F1B2A"
+                                     Foreground="White"
+                                     BorderBrush="#30445F"
+                                     MinHeight="36"/>
                         </StackPanel>
                     </Grid>
 
@@ -160,7 +161,6 @@
                                               MinHeight="36">
                                         <ComboBoxItem Content="Not Linked"/>
                                         <ComboBoxItem Content="Select Existing Bill"/>
-                                        <ComboBoxItem Content="Create Linked Bill From Debt"/>
                                     </ComboBox>
                                 </StackPanel>
 

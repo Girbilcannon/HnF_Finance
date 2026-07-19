@@ -20,6 +20,8 @@ public sealed partial class BillsViewModel : ViewModelBase
         if (activeCaseState is not null)
             activeCaseState.ActiveCaseChanged += (_, _) => LoadBills();
 
+        AppDataChangeNotifier.BillsChanged += (_, _) => LoadBills();
+
         LoadBills();
     }
 
@@ -236,6 +238,11 @@ public sealed partial class BillsViewModel : ViewModelBase
         LoadBills();
         StatusMessage = message;
         return true;
+    }
+
+    public void RefreshFromNavigation()
+    {
+        LoadBills();
     }
 
     private void LoadBills()

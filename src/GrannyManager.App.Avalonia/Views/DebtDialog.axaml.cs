@@ -16,7 +16,7 @@ namespace GrannyManager.App.Avalonia.Views
         private readonly TextBox? _currentBalanceTextBox;
         private readonly TextBox? _minimumPaymentTextBox;
         private readonly ComboBox? _paymentFrequencyComboBox;
-        private readonly CalendarDatePicker? _dueDatePicker;
+        private readonly TextBox? _dueDateTextBox;
         private readonly ComboBox? _statusComboBox;
         private readonly ComboBox? _priorityComboBox;
         private readonly ComboBox? _responsibilityOwnerComboBox;
@@ -48,7 +48,7 @@ namespace GrannyManager.App.Avalonia.Views
             _currentBalanceTextBox = this.FindControl<TextBox>("CurrentBalanceTextBox");
             _minimumPaymentTextBox = this.FindControl<TextBox>("MinimumPaymentTextBox");
             _paymentFrequencyComboBox = this.FindControl<ComboBox>("PaymentFrequencyComboBox");
-            _dueDatePicker = this.FindControl<CalendarDatePicker>("DueDatePicker");
+            _dueDateTextBox = this.FindControl<TextBox>("DueDateTextBox");
             _statusComboBox = this.FindControl<ComboBox>("StatusComboBox");
             _priorityComboBox = this.FindControl<ComboBox>("PriorityComboBox");
             _responsibilityOwnerComboBox = this.FindControl<ComboBox>("ResponsibilityOwnerComboBox");
@@ -120,8 +120,8 @@ namespace GrannyManager.App.Avalonia.Views
 
             SelectComboValue(_paymentFrequencyComboBox, string.IsNullOrWhiteSpace(_debt.PaymentFrequency) ? "Monthly" : _debt.PaymentFrequency);
 
-            if (_dueDatePicker is not null && DateTime.TryParse(_debt.DueDate, out var dueDate))
-                _dueDatePicker.SelectedDate = dueDate.Date;
+            if (_dueDateTextBox is not null)
+                _dueDateTextBox.Text = _debt.DueDate;
 
             SelectComboValue(_statusComboBox, string.IsNullOrWhiteSpace(_debt.Status) ? "Current" : _debt.Status);
             SelectComboValue(_priorityComboBox, string.IsNullOrWhiteSpace(_debt.Priority) ? "Normal" : _debt.Priority);
@@ -130,7 +130,11 @@ namespace GrannyManager.App.Avalonia.Views
             PopulatePersonCombo(_paidByComboBox, _debt.PaidBy, _outsidePayerTextBox);
             PopulateLinkedBills(_debt.LinkedBillId);
 
-            SelectComboValue(_paymentTrackingComboBox, string.IsNullOrWhiteSpace(_debt.PaymentTracking) ? "Not Linked" : _debt.PaymentTracking);
+                        var paymentTracking = string.IsNullOrWhiteSpace(_debt.PaymentTracking) ? "Not Linked" : _debt.PaymentTracking;
+            if (string.Equals(paymentTracking, "Create Linked Bill From Debt", StringComparison.OrdinalIgnoreCase))
+                paymentTracking = _debt.LinkedBillId > 0 ? "Select Existing Bill" : "Not Linked";
+
+            SelectComboValue(_paymentTrackingComboBox, paymentTracking);
 
             if (_isActiveCheckBox is not null)
                 _isActiveCheckBox.IsChecked = _debt.IsActive;
@@ -319,7 +323,7 @@ namespace GrannyManager.App.Avalonia.Views
             _debt.CurrentBalance = currentBalance;
             _debt.MinimumPayment = minimumPayment;
             _debt.PaymentFrequency = GetComboValue(_paymentFrequencyComboBox, "Monthly");
-            _debt.DueDate = _dueDatePicker?.SelectedDate?.Date.ToShortDateString() ?? string.Empty;
+            _debt.DueDate = _dueDateTextBox?.Text?.Trim() ?? string.Empty;
             _debt.Status = GetComboValue(_statusComboBox, "Current");
             _debt.Priority = GetComboValue(_priorityComboBox, "Normal");
             _debt.ResponsibilityOwner = GetPersonSelection(_responsibilityOwnerComboBox, _outsideOwnerTextBox);

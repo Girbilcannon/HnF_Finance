@@ -16,6 +16,8 @@ namespace GrannyManager.App.Avalonia.Views
         {
             InitializeComponent();
 
+            BuildWindowContextMenu();
+
             var startNewCaseButton = this.FindControl<Button>("StartNewCaseButton");
             if (startNewCaseButton is not null)
                 startNewCaseButton.Click += StartNewCaseButton_Click;
@@ -23,10 +25,6 @@ namespace GrannyManager.App.Avalonia.Views
             var caseSetupWizardButton = this.FindControl<Button>("CaseSetupWizardButton");
             if (caseSetupWizardButton is not null)
                 caseSetupWizardButton.Click += CaseSetupWizardButton_Click;
-
-            var refreshApplicationButton = this.FindControl<Button>("RefreshApplicationButton");
-            if (refreshApplicationButton is not null)
-                refreshApplicationButton.Click += RefreshApplicationButton_Click;
 
             var globalSearchTextBox = this.FindControl<TextBox>("GlobalSearchTextBox");
             if (globalSearchTextBox is not null)
@@ -88,7 +86,25 @@ namespace GrannyManager.App.Avalonia.Views
         }
 
 
-        private void RefreshApplicationButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+
+        private void BuildWindowContextMenu()
+        {
+            var refreshMenuItem = new MenuItem
+            {
+                Header = "Refresh app"
+            };
+            refreshMenuItem.Click += RefreshApplicationMenuItem_Click;
+
+            ContextMenu = new ContextMenu
+            {
+                Items =
+                {
+                    refreshMenuItem
+                }
+            };
+        }
+
+        private void RefreshApplicationMenuItem_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
         {
             RefreshApplicationWithoutChangingCaseOrSection();
         }
