@@ -1,5 +1,8 @@
 using System;
+using System.Linq;
+using System.Reflection;
 using Avalonia.Controls;
+using GrannyManager.Application.Services;
 using GrannyManager.App.Avalonia.Services.Security;
 using GrannyManager.App.Avalonia.ViewModels;
 
@@ -16,6 +19,14 @@ namespace GrannyManager.App.Avalonia.Views
             var startNewCaseButton = this.FindControl<Button>("StartNewCaseButton");
             if (startNewCaseButton is not null)
                 startNewCaseButton.Click += StartNewCaseButton_Click;
+
+            var caseSetupWizardButton = this.FindControl<Button>("CaseSetupWizardButton");
+            if (caseSetupWizardButton is not null)
+                caseSetupWizardButton.Click += CaseSetupWizardButton_Click;
+
+            var refreshApplicationButton = this.FindControl<Button>("RefreshApplicationButton");
+            if (refreshApplicationButton is not null)
+                refreshApplicationButton.Click += RefreshApplicationButton_Click;
 
             var globalSearchTextBox = this.FindControl<TextBox>("GlobalSearchTextBox");
             if (globalSearchTextBox is not null)
@@ -63,6 +74,55 @@ namespace GrannyManager.App.Avalonia.Views
 
                 dialog = new NewCaseDialog(dashboard.DefaultCaseRootFolder);
                 dialog.SetValidationMessage(message);
+            }
+        }
+
+
+        private async void CaseSetupWizardButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            if (DataContext is not MainWindowViewModel mainViewModel)
+                return;
+
+            var wizard = new FinanceSetupWizardWindow(mainViewModel.Dashboard);
+            await wizard.ShowDialog(this);
+        }
+
+
+        private void RefreshApplicationButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            RefreshApplicationWithoutChangingCaseOrSection();
+        }
+
+        private void RefreshApplicationWithoutChangingCaseOrSection()
+        {
+            if (DataContext is null)
+                return;
+
+            AppDataChangeNotifier.NotifyAllFinanceChanged();
+
+            var sectionProperties = DataContext
+                .GetType()
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Where(property => property.GetIndexParameters().Length == 0);
+
+            foreach (var property in sectionProperties)
+            {
+                var sectionViewModel = property.GetValue(DataContext);
+                if (sectionViewModel is null)
+                    continue;
+
+                var refreshMethod =
+                    sectionViewModel.GetType().GetMethod("RefreshFromNavigation", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) ??
+                    sectionViewModel.GetType().GetMethod("LoadItems", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) ??
+                    sectionViewModel.GetType().GetMethod("LoadBills", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) ??
+                    sectionViewModel.GetType().GetMethod("LoadAssets", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) ??
+                    sectionViewModel.GetType().GetMethod("LoadSources", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) ??
+                    sectionViewModel.GetType().GetMethod("LoadDebts", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) ??
+                    sectionViewModel.GetType().GetMethod("LoadPeople", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) ??
+                    sectionViewModel.GetType().GetMethod("LoadDocuments", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+                if (refreshMethod is not null && refreshMethod.GetParameters().Length == 0)
+                    refreshMethod.Invoke(sectionViewModel, null);
             }
         }
 

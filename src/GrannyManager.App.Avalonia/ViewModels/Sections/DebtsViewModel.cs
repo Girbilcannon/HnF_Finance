@@ -1,11 +1,11 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using GrannyManager.Application.Services;
-using GrannyManager.Application.State;
-using GrannyManager.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
+using GrannyManager.Application.Services;
+using GrannyManager.Application.State;
+using GrannyManager.Core.Models;
 
 namespace GrannyManager.App.Avalonia.ViewModels.Sections;
 
@@ -139,6 +139,100 @@ public sealed partial class DebtsViewModel : ViewModelBase
     public IReadOnlyList<HouseholdPerson> GetHouseholdPeople()
     {
         return _debtsService.LoadHouseholdPeople();
+    }
+
+    public IReadOnlyList<Bill> GetBills()
+    {
+        return _debtsService.LoadBills();
+    }
+
+    public IReadOnlyList<AssetItem> GetBankAccounts()
+    {
+        return _debtsService.LoadBankAccounts();
+    }
+
+    public IReadOnlyList<Debt> GetCreditCardDebts()
+    {
+        return _debtsService.LoadCreditCards();
+    }
+
+    public Bill CreateBlankBillForDebt(Debt debt)
+    {
+        return new Bill
+        {
+            BillName = string.IsNullOrWhiteSpace(debt?.DebtName) ? "Debt Payment" : $"{debt.DebtName} Payment",
+            Category = "Debt Payment",
+            Amount = debt?.MinimumPayment ?? 0m,
+            Frequency = string.IsNullOrWhiteSpace(debt?.PaymentFrequency) ? "Monthly" : debt.PaymentFrequency,
+            DueDate = debt?.DueDate ?? string.Empty,
+            PaymentMethod = "Cash/Check",
+            LinkedDebtId = debt?.Id ?? 0,
+            LinkedDebtName = debt?.DebtName ?? string.Empty,
+            PaidBy = string.IsNullOrWhiteSpace(debt?.PaidBy) ? "Self (Primary Person)" : debt.PaidBy,
+            ResponsibilityOwner = string.IsNullOrWhiteSpace(debt?.ResponsibilityOwner) ? "Self (Primary Person)" : debt.ResponsibilityOwner,
+            Priority = string.IsNullOrWhiteSpace(debt?.Priority) ? "Normal" : debt.Priority,
+            IsActive = debt?.IsActive ?? true,
+            Notes = string.IsNullOrWhiteSpace(debt?.DebtName) ? "Created from Debt dialog." : $"Created from Debt dialog for '{debt.DebtName}'."
+        };
+    }
+
+    public AssetItem CreateBlankBankAccount()
+    {
+        return new AssetItem
+        {
+            AssetType = "Bank Account",
+            AccountType = "Checking",
+            IsActive = true
+        };
+    }
+
+    public Debt CreateBlankCreditCardDebt()
+    {
+        return new Debt
+        {
+            DebtType = "Credit Card",
+            PaymentFrequency = "Monthly",
+            Status = "Current",
+            Priority = "Normal",
+            IsActive = true,
+            PaymentTracking = "Not Linked"
+        };
+    }
+
+    public bool SaveBill(Bill bill)
+    {
+        if (!_debtsService.SaveBill(bill, out var message))
+        {
+            StatusMessage = message;
+            return false;
+        }
+
+        RefreshAfterCrossSectionSave();
+        StatusMessage = message;
+        return true;
+    }
+
+    public void RefreshAfterCrossSectionSave()
+    {
+        AppDataChangeNotifier.NotifyAllFinanceChanged();
+        LoadDebts();
+    }
+
+    public bool SaveBankAccount(AssetItem bankAccount)
+    {
+        if (!_debtsService.SaveBankAccount(bankAccount, out var message))
+        {
+            StatusMessage = message;
+            return false;
+        }
+
+        StatusMessage = message;
+        return true;
+    }
+
+    public bool SaveCreditCardDebt(Debt debt)
+    {
+        return SaveDebt(debt);
     }
 
     public bool SaveDebt(Debt debt)

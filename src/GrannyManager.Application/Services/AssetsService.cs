@@ -93,8 +93,11 @@ public sealed class AssetsService
 
         try
         {
-            CreateRepository(activeCase.CaseFolderPath).Upsert(asset);
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            new AssetsRepository(databasePath).Upsert(asset);
+            SavingsBankAccountSyncService.Sync(databasePath);
             AppDataChangeNotifier.NotifyAssetsChanged();
+            AppDataChangeNotifier.NotifyAllowanceSavingsChanged();
             statusMessage = "Asset saved.";
             return true;
         }
@@ -124,8 +127,11 @@ public sealed class AssetsService
 
         try
         {
-            CreateRepository(activeCase.CaseFolderPath).Delete(id);
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            new AssetsRepository(databasePath).Delete(id);
+            SavingsBankAccountSyncService.Sync(databasePath);
             AppDataChangeNotifier.NotifyAssetsChanged();
+            AppDataChangeNotifier.NotifyAllowanceSavingsChanged();
             statusMessage = "Asset removed.";
             return true;
         }

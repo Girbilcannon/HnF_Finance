@@ -46,4 +46,15 @@ public static class AppDataChangeNotifier
     {
         DocumentsChanged?.Invoke(null, EventArgs.Empty);
     }
+
+    public static void NotifyAllFinanceChanged()
+    {
+        NotifyIncomeSourcesChanged();
+        NotifyHouseholdChanged();
+        NotifyBillsChanged();
+        NotifyAllowanceSavingsChanged();
+        NotifyAssetsChanged();
+        NotifyDebtsChanged();
+        NotifyDocumentsChanged();
+    }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using GrannyManager.Application.State;
@@ -117,7 +117,9 @@ public sealed class IncomeService
             var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
             var repository = new AssetsRepository(databasePath);
             repository.Upsert(asset);
+            SavingsBankAccountSyncService.Sync(databasePath);
             AppDataChangeNotifier.NotifyAssetsChanged();
+            AppDataChangeNotifier.NotifyAllowanceSavingsChanged();
             statusMessage = "Bank account saved.";
             return true;
         }
@@ -153,9 +155,12 @@ public sealed class IncomeService
 
         try
         {
-            var repository = CreateRepository(activeCase.CaseFolderPath);
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            var repository = new IncomeSourcesRepository(databasePath);
             repository.Upsert(source);
+            SavingsBankAccountSyncService.Sync(databasePath);
             AppDataChangeNotifier.NotifyIncomeSourcesChanged();
+            AppDataChangeNotifier.NotifyAllowanceSavingsChanged();
             statusMessage = "Income source saved.";
             return true;
         }
@@ -185,9 +190,12 @@ public sealed class IncomeService
 
         try
         {
-            var repository = CreateRepository(activeCase.CaseFolderPath);
+            var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
+            var repository = new IncomeSourcesRepository(databasePath);
             repository.Delete(id);
+            SavingsBankAccountSyncService.Sync(databasePath);
             AppDataChangeNotifier.NotifyIncomeSourcesChanged();
+            AppDataChangeNotifier.NotifyAllowanceSavingsChanged();
             statusMessage = "Income source removed.";
             return true;
         }

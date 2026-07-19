@@ -21,6 +21,10 @@ namespace GrannyManager.App.Avalonia.Views
         private readonly ComboBox? _priorityComboBox;
         private readonly ComboBox? _responsibilityOwnerComboBox;
         private readonly ComboBox? _paidByComboBox;
+        private readonly ComboBox? _paymentTrackingComboBox;
+        private readonly StackPanel? _linkedBillPanel;
+        private readonly ComboBox? _linkedBillComboBox;
+        private readonly Button? _createLinkedBillButton;
         private readonly StackPanel? _outsideOwnerPanel;
         private readonly TextBox? _outsideOwnerTextBox;
         private readonly StackPanel? _outsidePayerPanel;
@@ -29,6 +33,7 @@ namespace GrannyManager.App.Avalonia.Views
         private readonly TextBox? _notesTextBox;
 
         private readonly List<HouseholdPerson> _householdPeople = new();
+        private readonly List<Bill> _bills = new();
         private Debt _debt = new();
 
         public DebtDialog()
@@ -48,6 +53,10 @@ namespace GrannyManager.App.Avalonia.Views
             _priorityComboBox = this.FindControl<ComboBox>("PriorityComboBox");
             _responsibilityOwnerComboBox = this.FindControl<ComboBox>("ResponsibilityOwnerComboBox");
             _paidByComboBox = this.FindControl<ComboBox>("PaidByComboBox");
+            _paymentTrackingComboBox = this.FindControl<ComboBox>("PaymentTrackingComboBox");
+            _linkedBillPanel = this.FindControl<StackPanel>("LinkedBillPanel");
+            _linkedBillComboBox = this.FindControl<ComboBox>("LinkedBillComboBox");
+            _createLinkedBillButton = this.FindControl<Button>("CreateLinkedBillButton");
             _outsideOwnerPanel = this.FindControl<StackPanel>("OutsideOwnerPanel");
             _outsideOwnerTextBox = this.FindControl<TextBox>("OutsideOwnerTextBox");
             _outsidePayerPanel = this.FindControl<StackPanel>("OutsidePayerPanel");
@@ -61,6 +70,12 @@ namespace GrannyManager.App.Avalonia.Views
             if (_paidByComboBox is not null)
                 _paidByComboBox.SelectionChanged += (_, _) => RefreshOtherVisibility();
 
+            if (_paymentTrackingComboBox is not null)
+                _paymentTrackingComboBox.SelectionChanged += (_, _) => RefreshPaymentTrackingVisibility();
+
+            if (_createLinkedBillButton is not null)
+                _createLinkedBillButton.Click += (_, _) => CreateLinkedBillRequested?.Invoke(this, EventArgs.Empty);
+
             var cancelButton = this.FindControl<Button>("CancelButton");
             if (cancelButton is not null)
                 cancelButton.Click += (_, _) => Close(false);
@@ -71,14 +86,20 @@ namespace GrannyManager.App.Avalonia.Views
         }
 
         public Debt Debt => _debt;
+        public event EventHandler? CreateLinkedBillRequested;
 
-        public void SetMode(string title, Debt debt, IReadOnlyList<HouseholdPerson>? householdPeople = null)
+
+        public void SetMode(string title, Debt debt, IReadOnlyList<HouseholdPerson>? householdPeople = null, IReadOnlyList<Bill>? bills = null)
         {
             _debt = debt ?? new Debt();
 
             _householdPeople.Clear();
             if (householdPeople is not null)
                 _householdPeople.AddRange(householdPeople);
+
+            _bills.Clear();
+            if (bills is not null)
+                _bills.AddRange(bills.Where(bill => bill.IsActive || bill.Id == _debt.LinkedBillId));
 
             if (_dialogTitleTextBlock is not null)
                 _dialogTitleTextBlock.Text = title;
@@ -107,6 +128,9 @@ namespace GrannyManager.App.Avalonia.Views
 
             PopulatePersonCombo(_responsibilityOwnerComboBox, _debt.ResponsibilityOwner, _outsideOwnerTextBox);
             PopulatePersonCombo(_paidByComboBox, _debt.PaidBy, _outsidePayerTextBox);
+            PopulateLinkedBills(_debt.LinkedBillId);
+
+            SelectComboValue(_paymentTrackingComboBox, string.IsNullOrWhiteSpace(_debt.PaymentTracking) ? "Not Linked" : _debt.PaymentTracking);
 
             if (_isActiveCheckBox is not null)
                 _isActiveCheckBox.IsChecked = _debt.IsActive;
@@ -115,6 +139,49 @@ namespace GrannyManager.App.Avalonia.Views
                 _notesTextBox.Text = _debt.Notes;
 
             RefreshOtherVisibility();
+            RefreshPaymentTrackingVisibility();
+        }
+
+        private void PopulateLinkedBills(long selectedId)
+        {
+            if (_linkedBillComboBox is null)
+                return;
+
+            _linkedBillComboBox.Items.Clear();
+            _linkedBillComboBox.Items.Add(new ComboBoxItem { Content = "Choose bill", Tag = 0L });
+
+            foreach (var bill in _bills.OrderBy(bill => bill.BillName))
+                _linkedBillComboBox.Items.Add(new ComboBoxItem { Content = bill.BillName, Tag = bill.Id });
+
+            _linkedBillComboBox.SelectedIndex = 0;
+            for (var index = 1; index < _linkedBillComboBox.ItemCount; index++)
+            {
+                if (_linkedBillComboBox.Items[index] is ComboBoxItem item && item.Tag is long id && id == selectedId)
+                {
+                    _linkedBillComboBox.SelectedIndex = index;
+                    break;
+                }
+            }
+        }
+
+        public void AddAndSelectLinkedBill(Bill bill)
+        {
+            if (bill is null)
+                return;
+
+            var existingIndex = _bills.FindIndex(existing => existing.Id == bill.Id);
+            if (existingIndex >= 0)
+                _bills[existingIndex] = bill;
+            else
+                _bills.Add(bill);
+
+            _debt.PaymentTracking = "Select Existing Bill";
+            _debt.LinkedBillId = bill.Id;
+            _debt.LinkedBillName = bill.BillName;
+
+            PopulateLinkedBills(bill.Id);
+            SelectComboValue(_paymentTrackingComboBox, "Select Existing Bill");
+            RefreshPaymentTrackingVisibility();
         }
 
         private void PopulatePersonCombo(ComboBox? comboBox, string selectedText, TextBox? outsideTextBox)
@@ -170,6 +237,13 @@ namespace GrannyManager.App.Avalonia.Views
 
             if (_outsidePayerPanel is not null)
                 _outsidePayerPanel.IsVisible = GetComboValue(_paidByComboBox, "Self (Primary Person)") == "Other";
+        }
+
+        private void RefreshPaymentTrackingVisibility()
+        {
+            var tracking = GetComboValue(_paymentTrackingComboBox, "Not Linked");
+            if (_linkedBillPanel is not null)
+                _linkedBillPanel.IsVisible = tracking == "Select Existing Bill";
         }
 
         private static void SelectComboValue(ComboBox? comboBox, string value)
@@ -250,6 +324,27 @@ namespace GrannyManager.App.Avalonia.Views
             _debt.Priority = GetComboValue(_priorityComboBox, "Normal");
             _debt.ResponsibilityOwner = GetPersonSelection(_responsibilityOwnerComboBox, _outsideOwnerTextBox);
             _debt.PaidBy = GetPersonSelection(_paidByComboBox, _outsidePayerTextBox);
+            _debt.PaymentTracking = GetComboValue(_paymentTrackingComboBox, "Not Linked");
+            _debt.LinkedBillId = 0;
+            _debt.LinkedBillName = string.Empty;
+
+            if (_debt.PaymentTracking == "Select Existing Bill")
+            {
+                if (_linkedBillComboBox?.SelectedItem is ComboBoxItem selectedBill &&
+                    selectedBill.Tag is long billId &&
+                    billId > 0)
+                {
+                    _debt.LinkedBillId = billId;
+                    _debt.LinkedBillName = selectedBill.Content?.ToString() ?? string.Empty;
+                }
+                else
+                {
+                    if (_validationTextBlock is not null)
+                        _validationTextBlock.Text = "Choose the existing bill linked to this debt.";
+                    return;
+                }
+            }
+
             _debt.IsActive = _isActiveCheckBox?.IsChecked == true;
             _debt.Notes = _notesTextBox?.Text?.Trim() ?? string.Empty;
 

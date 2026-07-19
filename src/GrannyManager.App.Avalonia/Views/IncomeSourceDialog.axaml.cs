@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia.Controls;
 using GrannyManager.Core.Models;
 
@@ -19,9 +20,11 @@ namespace GrannyManager.App.Avalonia.Views
         private readonly ComboBox? _depositDestinationComboBox;
         private readonly StackPanel? _bankAccountPanel;
         private readonly StackPanel? _multipleBankAccountsPanel;
-        private readonly TextBlock? _createBankAccountPlaceholderTextBlock;
         private readonly ComboBox? _bankAccountComboBox;
         private readonly Button? _createBankAccountButton;
+        private readonly Button? _addBankAccountLineButton;
+        private readonly Button? _createBankAccountForMultipleButton;
+        private readonly StackPanel? _multipleBankAccountsHost;
         private readonly ComboBox? _householdPersonComboBox;
         private readonly CheckBox? _isActiveCheckBox;
         private readonly TextBox? _notesTextBox;
@@ -49,9 +52,11 @@ namespace GrannyManager.App.Avalonia.Views
             _depositDestinationComboBox = this.FindControl<ComboBox>("DepositDestinationComboBox");
             _bankAccountPanel = this.FindControl<StackPanel>("BankAccountPanel");
             _multipleBankAccountsPanel = this.FindControl<StackPanel>("MultipleBankAccountsPanel");
-            _createBankAccountPlaceholderTextBlock = this.FindControl<TextBlock>("CreateBankAccountPlaceholderTextBlock");
             _bankAccountComboBox = this.FindControl<ComboBox>("BankAccountComboBox");
             _createBankAccountButton = this.FindControl<Button>("CreateBankAccountButton");
+            _addBankAccountLineButton = this.FindControl<Button>("AddBankAccountLineButton");
+            _createBankAccountForMultipleButton = this.FindControl<Button>("CreateBankAccountForMultipleButton");
+            _multipleBankAccountsHost = this.FindControl<StackPanel>("MultipleBankAccountsHost");
             _householdPersonComboBox = this.FindControl<ComboBox>("HouseholdPersonComboBox");
             _isActiveCheckBox = this.FindControl<CheckBox>("IsActiveCheckBox");
             _notesTextBox = this.FindControl<TextBox>("NotesTextBox");
@@ -64,6 +69,18 @@ namespace GrannyManager.App.Avalonia.Views
 
             if (_createBankAccountButton is not null)
                 _createBankAccountButton.Click += async (_, _) => await CreateBankAccountAsync();
+
+            if (_addBankAccountLineButton is not null)
+                _addBankAccountLineButton.Click += (_, _) => AddMultipleBankAccountLine();
+
+            if (_createBankAccountForMultipleButton is not null)
+                _createBankAccountForMultipleButton.Click += async (_, _) =>
+                {
+                    var createdId = await CreateBankAccountAsync();
+                    SelectComboValue(_depositDestinationComboBox, "Select Multiple Bank Accounts");
+                    RefreshDepositDestinationVisibility();
+                    AddMultipleBankAccountLine(createdId);
+                };
 
             var cancelButton = this.FindControl<Button>("CancelButton");
             if (cancelButton is not null)
@@ -120,6 +137,7 @@ namespace GrannyManager.App.Avalonia.Views
             SelectComboValue(_depositDestinationComboBox, string.IsNullOrWhiteSpace(_source.DepositDestination) ? "Cash/Check" : _source.DepositDestination);
 
             PopulateBankAccounts(_source.LinkedBankAssetId);
+            PopulateMultipleBankAccountsFromSource();
             PopulateHouseholdPeople(_source.LinkedHouseholdPersonId);
 
             if (_isActiveCheckBox is not null)
@@ -132,14 +150,14 @@ namespace GrannyManager.App.Avalonia.Views
             RefreshDepositDestinationVisibility();
         }
 
-        private async System.Threading.Tasks.Task CreateBankAccountAsync()
+        private async System.Threading.Tasks.Task<long> CreateBankAccountAsync()
         {
             if (_createBlankBankAccount is null || _saveBankAccount is null)
-                return;
+                return 0;
 
             var owner = this.Owner as Window;
             if (owner is null)
-                return;
+                return 0;
 
             var asset = _createBlankBankAccount();
             var dialog = new AssetItemDialog();
@@ -147,10 +165,10 @@ namespace GrannyManager.App.Avalonia.Views
 
             var result = await dialog.ShowDialog<bool>(owner);
             if (!result)
-                return;
+                return 0;
 
             if (!_saveBankAccount(dialog.Asset))
-                return;
+                return 0;
 
             _bankAccounts.Clear();
             if (_reloadBankAccounts is not null)
@@ -159,6 +177,7 @@ namespace GrannyManager.App.Avalonia.Views
             PopulateBankAccounts(dialog.Asset.Id);
             SelectComboValue(_depositDestinationComboBox, "Select Bank Account");
             RefreshDepositDestinationVisibility();
+            return dialog.Asset.Id;
         }
 
         private void PopulateBankAccounts(long selectedId)
@@ -181,6 +200,161 @@ namespace GrannyManager.App.Avalonia.Views
                     break;
                 }
             }
+        }
+
+
+        private void PopulateMultipleBankAccountsFromSource()
+        {
+            if (_multipleBankAccountsHost is null)
+                return;
+
+            _multipleBankAccountsHost.Children.Clear();
+
+            if (!string.Equals(_source.DepositDestination, "Select Multiple Bank Accounts", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            if (!string.IsNullOrWhiteSpace(_source.LinkedBankAssetName))
+            {
+                foreach (var split in ParseStoredMultipleBankAccountSplits(_source.LinkedBankAssetName))
+                {
+                    var account = _bankAccounts.FirstOrDefault(a =>
+                        string.Equals(a.DisplayName, split.AccountName, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(a.AssetName, split.AccountName, StringComparison.OrdinalIgnoreCase) ||
+                        (!string.IsNullOrWhiteSpace(a.AccountLastFour) &&
+                         split.AccountName.Contains(a.AccountLastFour.Trim(), StringComparison.OrdinalIgnoreCase)));
+
+                    AddMultipleBankAccountLine(account?.Id ?? 0, split.Amount);
+                }
+            }
+
+            if (_multipleBankAccountsHost.Children.Count == 0)
+                AddMultipleBankAccountLine();
+        }
+
+        private static List<(string AccountName, string Amount)> ParseStoredMultipleBankAccountSplits(string storedValue)
+        {
+            var splits = new List<(string AccountName, string Amount)>();
+
+            if (string.IsNullOrWhiteSpace(storedValue))
+                return splits;
+
+            foreach (var rawPart in storedValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                var part = rawPart.Trim();
+                var colonIndex = part.LastIndexOf(':');
+
+                if (colonIndex < 0)
+                {
+                    splits.Add((part, string.Empty));
+                    continue;
+                }
+
+                var accountName = part[..colonIndex].Trim();
+                var amount = part[(colonIndex + 1)..].Trim().Replace("$", string.Empty).Trim();
+                splits.Add((accountName, amount));
+            }
+
+            return splits;
+        }
+
+        private void AddMultipleBankAccountLine(long selectedId = 0, string depositAmount = "")
+        {
+            if (_multipleBankAccountsHost is null)
+                return;
+
+            var row = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("*,160,Auto"),
+                ColumnSpacing = 8
+            };
+
+            var combo = new ComboBox
+            {
+                Background = global::Avalonia.Media.Brush.Parse("#0F1B2A"),
+                Foreground = global::Avalonia.Media.Brushes.White,
+                BorderBrush = global::Avalonia.Media.Brush.Parse("#30445F"),
+                MinHeight = 34
+            };
+
+            combo.Items.Add(new ComboBoxItem { Content = "Choose account", Tag = 0L });
+            foreach (var account in _bankAccounts)
+                combo.Items.Add(new ComboBoxItem { Content = account.DisplayName, Tag = account.Id });
+
+            combo.SelectedIndex = 0;
+            for (var index = 1; index < combo.ItemCount; index++)
+            {
+                if (combo.Items[index] is ComboBoxItem item && item.Tag is long id && id == selectedId)
+                {
+                    combo.SelectedIndex = index;
+                    break;
+                }
+            }
+
+            Grid.SetColumn(combo, 0);
+            row.Children.Add(combo);
+
+            var amountBox = new TextBox
+            {
+                Text = depositAmount,
+                Watermark = "Deposit Amount",
+                Height = 34,
+                Padding = new global::Avalonia.Thickness(10, 6),
+                Background = global::Avalonia.Media.Brush.Parse("#0F1B2A"),
+                Foreground = global::Avalonia.Media.Brushes.White,
+                BorderBrush = global::Avalonia.Media.Brush.Parse("#30445F"),
+                HorizontalAlignment = global::Avalonia.Layout.HorizontalAlignment.Stretch
+            };
+
+            Grid.SetColumn(amountBox, 1);
+            row.Children.Add(amountBox);
+
+            var remove = new Button
+            {
+                Content = "🗑",
+                Width = 34,
+                Height = 34,
+                Background = global::Avalonia.Media.Brush.Parse("#8B2E2E"),
+                Foreground = global::Avalonia.Media.Brushes.White,
+                BorderBrush = global::Avalonia.Media.Brush.Parse("#B84A4A"),
+                HorizontalContentAlignment = global::Avalonia.Layout.HorizontalAlignment.Center,
+                VerticalContentAlignment = global::Avalonia.Layout.VerticalAlignment.Center
+            };
+
+            remove.Click += (_, _) => _multipleBankAccountsHost.Children.Remove(row);
+            Grid.SetColumn(remove, 2);
+            row.Children.Add(remove);
+
+            _multipleBankAccountsHost.Children.Add(row);
+        }
+
+        private List<(long Id, string Name, string Amount)> GetSelectedMultipleBankAccounts()
+        {
+            var selected = new List<(long Id, string Name, string Amount)>();
+
+            if (_multipleBankAccountsHost is null)
+                return selected;
+
+            foreach (var child in _multipleBankAccountsHost.Children)
+            {
+                if (child is not Grid row)
+                    continue;
+
+                var combo = row.Children.OfType<ComboBox>().FirstOrDefault();
+                var amountBox = row.Children.OfType<TextBox>().FirstOrDefault();
+
+                if (combo?.SelectedItem is ComboBoxItem item &&
+                    item.Tag is long id &&
+                    id > 0)
+                {
+                    var name = item.Content?.ToString() ?? string.Empty;
+                    var amount = amountBox?.Text?.Trim() ?? string.Empty;
+
+                    if (!selected.Any(existing => existing.Id == id))
+                        selected.Add((id, name, amount));
+                }
+            }
+
+            return selected;
         }
 
         private void PopulateHouseholdPeople(long selectedId)
@@ -209,8 +383,17 @@ namespace GrannyManager.App.Avalonia.Views
 
         private void RefreshAmountLabel()
         {
+            var destination = GetComboValue(_depositDestinationComboBox, "Cash/Check");
+
             if (_amountLabelTextBlock is not null)
-                _amountLabelTextBlock.Text = _taxesWithheldCheckBox?.IsChecked == true ? "After Taxes" : "Gross Pay";
+            {
+                _amountLabelTextBlock.Text = destination == "Select Multiple Bank Accounts"
+                    ? "Contribution Amount (calculated from deposit amounts)"
+                    : (_taxesWithheldCheckBox?.IsChecked == true ? "After Taxes" : "Gross Pay");
+            }
+
+            if (_amountTextBox is not null)
+                _amountTextBox.IsEnabled = destination != "Select Multiple Bank Accounts";
         }
 
         private void RefreshDepositDestinationVisibility()
@@ -223,11 +406,14 @@ namespace GrannyManager.App.Avalonia.Views
             if (_multipleBankAccountsPanel is not null)
                 _multipleBankAccountsPanel.IsVisible = destination == "Select Multiple Bank Accounts";
 
-            if (_createBankAccountPlaceholderTextBlock is not null)
-                _createBankAccountPlaceholderTextBlock.IsVisible = destination == "Create Bank Account";
+            if (destination == "Select Multiple Bank Accounts" &&
+                _multipleBankAccountsHost is not null &&
+                _multipleBankAccountsHost.Children.Count == 0)
+            {
+                AddMultipleBankAccountLine();
+            }
 
-            if (destination == "Create Bank Account")
-                _ = CreateBankAccountAsync();
+            RefreshAmountLabel();
         }
 
         private void SaveAndClose()
@@ -243,13 +429,18 @@ namespace GrannyManager.App.Avalonia.Views
                 return;
             }
 
+            var selectedDepositDestination = GetComboValue(_depositDestinationComboBox, "Cash/Check");
             var amount = 0m;
-            var amountText = _amountTextBox?.Text?.Trim() ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(amountText) && !decimal.TryParse(amountText, out amount))
+
+            if (selectedDepositDestination != "Select Multiple Bank Accounts")
             {
-                if (_validationTextBlock is not null)
-                    _validationTextBlock.Text = "Amount must be a valid number.";
-                return;
+                var amountText = _amountTextBox?.Text?.Trim() ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(amountText) && !decimal.TryParse(amountText, out amount))
+                {
+                    if (_validationTextBlock is not null)
+                        _validationTextBlock.Text = "Amount must be a valid number.";
+                    return;
+                }
             }
 
             _source.SourceName = sourceName;
@@ -258,7 +449,7 @@ namespace GrannyManager.App.Avalonia.Views
             _source.TaxesWithheld = _taxesWithheldCheckBox?.IsChecked == true;
             _source.Amount = amount;
             _source.ExpectedDayOrDate = _expectedDayTextBox?.Text?.Trim() ?? string.Empty;
-            _source.DepositDestination = GetComboValue(_depositDestinationComboBox, "Cash/Check");
+            _source.DepositDestination = selectedDepositDestination;
 
             _source.LinkedBankAssetId = 0;
             _source.LinkedBankAssetName = string.Empty;
@@ -270,6 +461,28 @@ namespace GrannyManager.App.Avalonia.Views
                 var selectedName = selectedAccount.Content?.ToString() ?? string.Empty;
                 if (_source.LinkedBankAssetId > 0)
                     _source.LinkedBankAssetName = selectedName;
+            }
+            else if (_source.DepositDestination == "Select Multiple Bank Accounts")
+            {
+                var selectedAccounts = GetSelectedMultipleBankAccounts();
+                if (selectedAccounts.Count == 0)
+                {
+                    if (_validationTextBlock is not null)
+                        _validationTextBlock.Text = "Choose at least one bank account, or use + Create Bank Account first.";
+                    return;
+                }
+
+                var totalDepositAmount = selectedAccounts.Sum(account => ParseMoney(account.Amount));
+                if (totalDepositAmount <= 0m)
+                {
+                    if (_validationTextBlock is not null)
+                        _validationTextBlock.Text = "Enter a deposit amount for each selected bank account.";
+                    return;
+                }
+
+                _source.Amount = totalDepositAmount;
+                _source.LinkedBankAssetId = selectedAccounts[0].Id;
+                _source.LinkedBankAssetName = string.Join(", ", selectedAccounts.Select(account => $"{account.Name}: ${ParseMoney(account.Amount):0.##}"));
             }
 
             _source.LinkedHouseholdPersonId = 0;
@@ -288,6 +501,13 @@ namespace GrannyManager.App.Avalonia.Views
             _source.Notes = _notesTextBox?.Text?.Trim() ?? string.Empty;
 
             Close(true);
+        }
+
+
+        private static decimal ParseMoney(string? value)
+        {
+            var text = (value ?? string.Empty).Trim().Replace("$", string.Empty).Replace(",", string.Empty);
+            return decimal.TryParse(text, out var parsed) ? parsed : 0m;
         }
 
         private static void SelectComboValue(ComboBox? comboBox, string value)

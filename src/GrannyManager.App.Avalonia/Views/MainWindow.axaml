@@ -130,13 +130,24 @@
                 <StackPanel Grid.Row="2"
                             Spacing="4"
                             Margin="2,18,0,0">
-                    <TextBlock Text="Build: 0.10.96"
+                    <TextBlock Text="Build: 0.11.22"
                                Foreground="#6F8299"
                                FontSize="12"/>
 
                     <TextBlock Text="© 2026 Aaron Marine"
                                Foreground="#6F8299"
                                FontSize="12"/>
+
+                    <Button Name="RefreshApplicationButton"
+                            Content="Refresh app"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Padding="0"
+                            HorizontalAlignment="Left"
+                            Foreground="#8FBCE8"
+                            FontSize="12"
+                            HorizontalContentAlignment="Left"
+                            VerticalContentAlignment="Center"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -342,13 +353,13 @@
                                    FontSize="10"
                                    HorizontalAlignment="Center"/>
 
-                        <Button Content="Case Setup Wizard"
+                        <Button Name="CaseSetupWizardButton"
+                                Content="Case Setup Wizard"
                                 Height="40"
                                 Padding="18,0"
                                 Background="#17263A"
                                 Foreground="#DDE7F3"
                                 BorderBrush="#30445F"
-                                Command="{Binding Dashboard.StartWizardCommand}"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center"/>
                     </StackPanel>

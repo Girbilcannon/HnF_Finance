@@ -44,95 +44,42 @@
                                  BorderBrush="#30445F"/>
                     </StackPanel>
 
-                    <Grid ColumnDefinitions="*,*"
-                          ColumnSpacing="12">
-                        <StackPanel Grid.Column="0" Spacing="5">
-                            <TextBlock Text="Type"
-                                       Foreground="#9EB4CC"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"/>
-                            <ComboBox Name="ItemTypeComboBox"
-                                      Background="#0F1B2A"
-                                      Foreground="White"
-                                      BorderBrush="#30445F"
-                                      MinHeight="36">
-                                <ComboBoxItem Content="Allowance"/>
-                                <ComboBoxItem Content="Savings"/>
-                            </ComboBox>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1" Spacing="5">
-                            <TextBlock Text="Frequency"
-                                       Foreground="#9EB4CC"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"/>
-                            <ComboBox Name="FrequencyComboBox"
-                                      Background="#0F1B2A"
-                                      Foreground="White"
-                                      BorderBrush="#30445F"
-                                      MinHeight="36">
-                                <ComboBoxItem Content="Weekly"/>
-                                <ComboBoxItem Content="Every 2 Weeks"/>
-                                <ComboBoxItem Content="Twice Monthly"/>
-                                <ComboBoxItem Content="Monthly"/>
-                                <ComboBoxItem Content="Quarterly"/>
-                                <ComboBoxItem Content="Yearly"/>
-                                <ComboBoxItem Content="One-Time / Irregular"/>
-                            </ComboBox>
-                        </StackPanel>
-                    </Grid>
-
                     <StackPanel Spacing="5">
-                        <TextBlock Text="Amount"
+                        <TextBlock Text="Storage / Account"
                                    Foreground="#9EB4CC"
                                    FontSize="12"
                                    FontWeight="SemiBold"/>
-                        <TextBox Name="AmountTextBox"
-                                 Watermark="0.00"
+                        <ComboBox Name="StorageMethodComboBox"
+                                  Background="#0F1B2A"
+                                  Foreground="White"
+                                  BorderBrush="#30445F"
+                                  MinHeight="36">
+                            <ComboBoxItem Content="Cash/Check"/>
+                            <ComboBoxItem Content="Select Bank Account"/>
+                            <ComboBoxItem Content="Select Multiple Bank Accounts"/>
+                            <ComboBoxItem Content="Other"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Name="WhereStoredPanel"
+                                Spacing="5"
+                                IsVisible="False">
+                        <TextBlock Text="Storage Details"
+                                   Foreground="#9EB4CC"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"/>
+                        <TextBox Name="WhereStoredTextBox"
+                                 Watermark="Optional notes"
                                  Padding="12"
                                  Background="#0F1B2A"
                                  Foreground="White"
                                  BorderBrush="#30445F"/>
                     </StackPanel>
 
-                    <Grid ColumnDefinitions="*,*"
-                          ColumnSpacing="12">
-                        <StackPanel Grid.Column="0" Spacing="5">
-                            <TextBlock Text="Where Stored"
-                                       Foreground="#9EB4CC"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"/>
-                            <TextBox Name="WhereStoredTextBox"
-                                     Watermark="Envelope name, account nickname, drawer, etc."
-                                     Padding="12"
-                                     Background="#0F1B2A"
-                                     Foreground="White"
-                                     BorderBrush="#30445F"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1" Spacing="5">
-                            <TextBlock Text="Storage Method"
-                                       Foreground="#9EB4CC"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"/>
-                            <ComboBox Name="StorageMethodComboBox"
-                                      Background="#0F1B2A"
-                                      Foreground="White"
-                                      BorderBrush="#30445F"
-                                      MinHeight="36">
-                                <ComboBoxItem Content="Cash / Envelope"/>
-                                <ComboBoxItem Content="Cash Reserve"/>
-                                <ComboBoxItem Content="Bank Account"/>
-                                <ComboBoxItem Content="Multiple Bank Accounts"/>
-                                <ComboBoxItem Content="Other"/>
-                            </ComboBox>
-                        </StackPanel>
-                    </Grid>
-
                     <StackPanel Name="BankAccountPanel"
                                 Spacing="5"
                                 IsVisible="False">
-                        <TextBlock Text="Linked Bank Account"
+                        <TextBlock Text="Bank Account"
                                    Foreground="#9EB4CC"
                                    FontSize="12"
                                    FontWeight="SemiBold"/>
@@ -158,7 +105,7 @@
                     <StackPanel Name="MultipleBankAccountsPanel"
                                 Spacing="8"
                                 IsVisible="False">
-                        <TextBlock Text="Linked Bank Accounts"
+                        <TextBlock Text="Bank accounts / deposit amounts"
                                    Foreground="#9EB4CC"
                                    FontSize="12"
                                    FontWeight="SemiBold"/>
@@ -168,40 +115,30 @@
                                 CornerRadius="6"
                                 Padding="10">
                             <StackPanel Spacing="8">
-                                <Grid ColumnDefinitions="*,Auto"
-                                      ColumnSpacing="8">
-                                    <ComboBox Grid.Column="0"
-                                              Background="#0F1B2A"
-                                              Foreground="White"
-                                              BorderBrush="#30445F"
-                                              MinHeight="34"
-                                              IsEnabled="False">
-                                        <ComboBoxItem Content="Choose account"/>
-                                    </ComboBox>
+                                <StackPanel Name="MultipleBankAccountsHost"
+                                            Spacing="8"/>
 
-                                    <Button Grid.Column="1"
-                                            Content="🗑"
-                                            Width="34"
-                                            Height="34"
-                                            Background="#8B2E2E"
-                                            Foreground="White"
-                                            BorderBrush="#B84A4A"
-                                            IsEnabled="False"
-                                            HorizontalContentAlignment="Center"
-                                            VerticalContentAlignment="Center"/>
-                                </Grid>
-
-                                <Button Content="+"
-                                        Width="34"
+                                <Button Name="AddBankAccountLineButton"
+                                        Content="+ Add Bank Account Line"
                                         Height="34"
+                                        Padding="12,0"
                                         Background="#2E8B57"
                                         Foreground="White"
-                                        IsEnabled="False"
                                         HorizontalAlignment="Left"
                                         HorizontalContentAlignment="Center"
                                         VerticalContentAlignment="Center"/>
                             </StackPanel>
                         </Border>
+
+                        <Button Name="CreateBankAccountForMultipleButton"
+                                Content="+ Create Bank Account"
+                                Height="34"
+                                Padding="12,0"
+                                Background="#2E8B57"
+                                Foreground="White"
+                                HorizontalAlignment="Left"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"/>
                     </StackPanel>
 
                     <StackPanel Name="OtherStoragePanel"

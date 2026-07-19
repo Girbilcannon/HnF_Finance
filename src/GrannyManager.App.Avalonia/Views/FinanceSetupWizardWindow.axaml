@@ -1,0 +1,92 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GrannyManager.App.Avalonia.Views.FinanceSetupWizardWindow"
+        Title="Case Setup Wizard"
+        Width="900"
+        Height="700"
+        MinWidth="820"
+        MinHeight="640"
+        WindowStartupLocation="CenterOwner"
+        Icon="/Assets/AppIcon/windows/app.ico"
+        Background="#0B1624">
+
+    <Window.Styles>
+        <Style Selector="Button">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Styles>
+
+    <Border Background="#122238"
+            BorderBrush="#2A405A"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="24">
+
+        <Grid RowDefinitions="Auto,Auto,*,Auto"
+              RowSpacing="16">
+
+            <Grid Grid.Row="0"
+                  ColumnDefinitions="*,Auto"
+                  ColumnSpacing="16">
+
+                <StackPanel Grid.Column="0" Spacing="5">
+                    <TextBlock Text="Case Setup Wizard"
+                               Foreground="White"
+                               FontSize="28"
+                               FontWeight="SemiBold"/>
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Content="Close"
+                        Width="92"
+                        Height="38"
+                        Background="#17263A"
+                        Foreground="#DDE7F3"
+                        BorderBrush="#30445F"
+                        Click="CloseButton_Click"/>
+            </Grid>
+
+            <Border Grid.Row="1"
+                    Name="JumpBarBorder"
+                    IsVisible="False"
+                    Background="#0F1B2A"
+                    BorderBrush="#26384F"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12,8">
+
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <TextBlock Grid.Column="0"
+                               Text="Jump to setup section"
+                               Foreground="#9EB4CC"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+
+                    <ComboBox Grid.Column="1"
+                              Name="JumpComboBox"
+                              Height="34"
+                              Background="#17263A"
+                              Foreground="White"
+                              BorderBrush="#30445F"
+                              SelectionChanged="JumpComboBox_SelectionChanged"/>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Row="2"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+
+                <StackPanel Name="WizardHost"
+                            Spacing="14"/>
+            </ScrollViewer>
+
+            <TextBlock Grid.Row="3"
+                       Name="StatusTextBlock"
+                       Foreground="#FFD6DD"
+                       FontSize="12"
+                       TextWrapping="Wrap"/>
+        </Grid>
+    </Border>
+</Window>

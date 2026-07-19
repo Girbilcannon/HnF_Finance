@@ -103,7 +103,9 @@ public sealed class AllowanceSavingsService
             var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
             var repository = new AssetsRepository(databasePath);
             repository.Upsert(asset);
+            SavingsBankAccountSyncService.Sync(databasePath);
             AppDataChangeNotifier.NotifyAssetsChanged();
+            AppDataChangeNotifier.NotifyAllowanceSavingsChanged();
             statusMessage = "Bank account saved.";
             return true;
         }

@@ -130,6 +130,68 @@
                         </StackPanel>
                     </Grid>
 
+                    <Border Background="#0F1B2A"
+                            BorderBrush="#26384F"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="12">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Payment Bill Link"
+                                       Foreground="White"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"/>
+
+                            <TextBlock Text="Link this debt to the bill/payment record that pays it. Marking this debt inactive will also deactivate the linked bill."
+                                       Foreground="#AFC0D3"
+                                       FontSize="12"
+                                       TextWrapping="Wrap"/>
+
+                            <Grid ColumnDefinitions="*,*"
+                                  ColumnSpacing="12">
+                                <StackPanel Grid.Column="0" Spacing="5">
+                                    <TextBlock Text="Payment Tracking"
+                                               Foreground="#9EB4CC"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"/>
+                                    <ComboBox Name="PaymentTrackingComboBox"
+                                              Background="#0F1B2A"
+                                              Foreground="White"
+                                              BorderBrush="#30445F"
+                                              MinHeight="36">
+                                        <ComboBoxItem Content="Not Linked"/>
+                                        <ComboBoxItem Content="Select Existing Bill"/>
+                                        <ComboBoxItem Content="Create Linked Bill From Debt"/>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <StackPanel Name="LinkedBillPanel"
+                                            Grid.Column="1"
+                                            Spacing="5"
+                                            IsVisible="False">
+                                    <TextBlock Text="Linked Bill"
+                                               Foreground="#9EB4CC"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"/>
+                                    <ComboBox Name="LinkedBillComboBox"
+                                              Background="#0F1B2A"
+                                              Foreground="White"
+                                              BorderBrush="#30445F"
+                                              MinHeight="36"/>
+
+                                    <Button Name="CreateLinkedBillButton"
+                                            Content="+ Create Bill"
+                                            Height="34"
+                                            Padding="12,0"
+                                            Background="#2E8B57"
+                                            Foreground="White"
+                                            HorizontalAlignment="Left"
+                                            HorizontalContentAlignment="Center"
+                                            VerticalContentAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
                     <CheckBox Name="IsActiveCheckBox" Content="Active debt" Foreground="#DDE7F3"/>
 
                     <StackPanel Spacing="5">

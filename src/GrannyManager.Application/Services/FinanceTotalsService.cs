@@ -25,6 +25,8 @@ public sealed class FinanceTotalsService
         {
             var databasePath = CaseDatabaseLocator.GetDatabasePathForCaseFolder(activeCase.CaseFolderPath);
 
+            SavingsBankAccountSyncService.Sync(databasePath);
+
             var income = new IncomeSourcesRepository(databasePath)
                 .GetAll()
                 .Where(source => source.IsActive)

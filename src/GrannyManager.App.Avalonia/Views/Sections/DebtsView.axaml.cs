@@ -33,7 +33,8 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                 return;
 
             var dialog = new DebtDialog();
-            dialog.SetMode("Add Debt", viewModel.CreateBlankDebt(), viewModel.GetHouseholdPeople());
+            dialog.SetMode("Add Debt", viewModel.CreateBlankDebt(), viewModel.GetHouseholdPeople(), viewModel.GetBills());
+            dialog.CreateLinkedBillRequested += async (_, _) => await CreateLinkedBillForDebtAsync(owner, viewModel, dialog);
 
             var result = await dialog.ShowDialog<bool>(owner);
             if (result)
@@ -54,11 +55,46 @@ namespace GrannyManager.App.Avalonia.Views.Sections
                 return;
 
             var dialog = new DebtDialog();
-            dialog.SetMode("Edit Debt", debt, viewModel.GetHouseholdPeople());
+            dialog.SetMode("Edit Debt", debt, viewModel.GetHouseholdPeople(), viewModel.GetBills());
+            dialog.CreateLinkedBillRequested += async (_, _) => await CreateLinkedBillForDebtAsync(owner, viewModel, dialog);
 
             var result = await dialog.ShowDialog<bool>(owner);
             if (result)
                 viewModel.SaveDebt(dialog.Debt);
+        }
+
+
+        private async System.Threading.Tasks.Task CreateLinkedBillForDebtAsync(Window owner, DebtsViewModel viewModel, DebtDialog debtDialog)
+        {
+            var bill = viewModel.CreateBlankBillForDebt(debtDialog.Debt);
+
+            var dialog = new BillDialog();
+            dialog.SetMode(
+                "Create Linked Bill",
+                bill,
+                viewModel.GetHouseholdPeople(),
+                viewModel.GetBankAccounts(),
+                viewModel.GetCreditCardDebts(),
+                viewModel.CreateBlankBankAccount,
+                viewModel.SaveBankAccount,
+                viewModel.GetBankAccounts,
+                viewModel.CreateBlankCreditCardDebt,
+                viewModel.SaveCreditCardDebt,
+                viewModel.GetCreditCardDebts);
+
+            var result = await dialog.ShowDialog<bool>(owner);
+            if (!result)
+                return;
+
+            var savedBill = dialog.Bill;
+            savedBill.LinkedDebtId = debtDialog.Debt.Id;
+            savedBill.LinkedDebtName = debtDialog.Debt.DebtName;
+
+            if (!viewModel.SaveBill(savedBill))
+                return;
+
+            debtDialog.AddAndSelectLinkedBill(savedBill);
+            viewModel.RefreshAfterCrossSectionSave();
         }
 
         private async void RemoveButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
